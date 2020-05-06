@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    
+    <title>jiant.utils.config &#8212; jiant 2.0.dev0 documentation</title>
+
+    <link rel="stylesheet" href="../../../_static/material-icons.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/notosanscjkjp.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/roboto.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/material-design-lite-1.3.0/material.deep_purple-deep_orange.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_materialdesign_theme.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/sphinx_materialdesign_theme.js"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+<body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header "><header class="mdl-layout__header mdl-layout__header--waterfall ">
+    <div class="mdl-layout__header-row">
+        
+        <!-- Title -->
+        <span class="mdl-layout-title">
+            <a class="brand" href="../../../index.html">
+                jiant
+            </a>
+        </span>
+        
+        <nav class="mdl-navigation breadcrumb">
+            <a class="mdl-navigation__link" href="../../index.html">Module code</a><i class="material-icons">navigate_next</i>
+            <a class="mdl-navigation__link is-active">jiant.utils.config</a>
+        </nav>
+        <div class="mdl-layout-spacer"></div>
+        <nav class="mdl-navigation">
+        
+<form class="form-inline pull-sm-right" action="../../../search.html" method="get">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable mdl-textfield--floating-label mdl-textfield--align-right">
+        <label id="quick-search-icon" class="mdl-button mdl-js-button mdl-button--icon"  for="waterfall-exp">
+            <i class="material-icons">search</i>
+        </label>
+        <div class="mdl-textfield__expandable-holder">
+          <input class="mdl-textfield__input" type="text" name="q"  id="waterfall-exp" placeholder="Search" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </div>
+      </div>
+      <div class="mdl-tooltip" data-mdl-for="quick-search-icon">
+      Quick search
+      </div>
+</form>
+        
+        </nav>
+    </div>
+    <div class="mdl-layout__header-row header-links">
+      <div class="mdl-layout-spacer"></div>
+      <nav class="mdl-navigation">
+          <a  class="mdl-navigation__link" href="../../../index.html">
+                  <i class="material-icons navigation-link-icon">home</i>
+                  Docs
+              </a>
+          
+              <a  class="mdl-navigation__link" href="https://github.com/pyeres/jiant2">
+                  <i class="material-icons navigation-link-icon">link</i>
+                  GitHub
+              </a>
+      </nav>
+    </div>
+</header><header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../../index.html">
+              <span class="title-text">
+                  jiant
+              </span>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">Core Components</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/utils/index.html">Utils</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+        <main class="mdl-layout__content" tabIndex="0">
+<header class="mdl-layout__drawer">
+    
+          <!-- Title -->
+      <span class="mdl-layout-title">
+          <a class="title" href="../../../index.html">
+              <span class="title-text">
+                  jiant
+              </span>
+          </a>
+      </span>
+    
+    
+      <div class="globaltoc">
+        <span class="mdl-layout-title toc">Table Of Contents</span>
+        
+        
+            
+            <nav class="mdl-navigation">
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">Core Components</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../modules/utils/index.html">Utils</a></li>
+</ul>
+</li>
+</ul>
+
+            </nav>
+        
+        </div>
+    
+</header>
+
+    <div class="document">
+        <div class="page-content">
+        
+  <h1>Source code for jiant.utils.config</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This module contains utilities for manipulating configs.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">_jsonnet</span>  <span class="c1"># type: ignore</span>
+
+
+<div class="viewcode-block" id="json_merge_patch"><a class="viewcode-back" href="../../../modules/utils/index.html#jiant.utils.config.json_merge_patch">[docs]</a><span class="k">def</span> <span class="nf">json_merge_patch</span><span class="p">(</span><span class="n">target_json</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">patch_json</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Merge json objects according to JSON merge patch spec: https://tools.ietf.org/html/rfc7396.</span>
+
+<span class="sd">    Takes a target json string, and a patch json string and applies the patch json to the target</span>
+<span class="sd">    json according to &quot;JSON Merge Patch&quot; (defined by https://tools.ietf.org/html/rfc7396).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        target_json: the json to be overwritten by the patch json.</span>
+<span class="sd">        patch_json: the json used to overwrite the target json.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        json str after applying the patch json to the target json using &quot;JSON Merge Patch&quot; method.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">merged</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;local target = </span><span class="si">{target_json}</span><span class="s2">;</span>
+<span class="s2">                     local patch = </span><span class="si">{patch_json}</span><span class="s2">;</span>
+<span class="s2">                     std.mergePatch(target, patch)&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">target_json</span><span class="o">=</span><span class="n">target_json</span><span class="p">,</span> <span class="n">patch_json</span><span class="o">=</span><span class="n">patch_json</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_jsonnet</span><span class="o">.</span><span class="n">evaluate_snippet</span><span class="p">(</span><span class="s2">&quot;snippet&quot;</span><span class="p">,</span> <span class="n">merged</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="merge_jsons_in_order"><a class="viewcode-back" href="../../../modules/utils/index.html#jiant.utils.config.merge_jsons_in_order">[docs]</a><span class="k">def</span> <span class="nf">merge_jsons_in_order</span><span class="p">(</span><span class="n">jsons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Applies JSON Merge Patch process to a list of json documents in order.</span>
+
+<span class="sd">    Takes a list of json document strings and performs &quot;JSON Merge Patch&quot; (see json_merge_patch).</span>
+<span class="sd">    The first element in the list of json docs is treated as the base, subsequent docs (if any)</span>
+<span class="sd">    are applied as patches in order from first to last.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        jsons: list of json docs to merge into a composite json document.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The composite json document string.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base_json</span> <span class="o">=</span> <span class="n">jsons</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># json.loads is called to check that input strings are valid json.</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base_json</span><span class="p">)</span>
+    <span class="n">composite_json</span> <span class="o">=</span> <span class="n">base_json</span>
+    <span class="k">for</span> <span class="n">json_str</span> <span class="ow">in</span> <span class="n">jsons</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+        <span class="n">composite_json</span> <span class="o">=</span> <span class="n">json_merge_patch</span><span class="p">(</span><span class="n">composite_json</span><span class="p">,</span> <span class="n">json_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">composite_json</span></div>
+</pre></div>
+
+        </div>
+        <div class="side-doc-outline">
+            <div class="side-doc-outline--content"> 
+            </div>
+        </div>
+
+      <div class="clearer"></div>
+    </div><div class="pagenation">
+  </div>
+        <footer class="mdl-mini-footer">
+    <div class="mdl-mini-footer__left-section">
+      <div class="mdl-logo">jiant</div>
+      <div>
+        
+        <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">Core Components</a></li>
+</ul>
+
+      </div>
+    </div>
+
+    <div class="mdl-mini-footer__right-section">
+        <div>&copy; Copyright 2020, New York University.</div>
+      <div>Generated by <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.8.1 using <a href="https://github.com/myyasuda/sphinx_materialdesign_theme">sphinx_materialdesign_theme</a>.</div>
+    </div>
+</footer>
+        </main>
+    </div>
+  </body>
+</html>
