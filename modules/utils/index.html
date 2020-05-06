@@ -155,12 +155,12 @@ Show Source
     <div class="document">
         <div class="page-content">
         
-  <div class="section" id="module-jiant.utils.config">
-<span id="utils"></span><h1>Utils<a class="headerlink" href="#module-jiant.utils.config" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-jiant.utils.config_handlers">
+<span id="utils"></span><h1>Utils<a class="headerlink" href="#module-jiant.utils.config_handlers" title="Permalink to this headline">¶</a></h1>
 <p>This module contains utilities for manipulating configs.</p>
 <dl class="function">
-<dt id="jiant.utils.config.json_merge_patch">
-<code class="descclassname">jiant.utils.config.</code><code class="descname">json_merge_patch</code><span class="sig-paren">(</span><em>target_json: str</em>, <em>patch_json: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../../_modules/jiant/utils/config.html#json_merge_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jiant.utils.config.json_merge_patch" title="Permalink to this definition">¶</a></dt>
+<dt id="jiant.utils.config_handlers.json_merge_patch">
+<code class="descclassname">jiant.utils.config_handlers.</code><code class="descname">json_merge_patch</code><span class="sig-paren">(</span><em>target_json: str</em>, <em>patch_json: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../../_modules/jiant/utils/config_handlers.html#json_merge_patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jiant.utils.config_handlers.json_merge_patch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge json objects according to JSON merge patch spec: <a class="reference external" href="https://tools.ietf.org/html/rfc7396">https://tools.ietf.org/html/rfc7396</a>.</p>
 <p>Takes a target json string, and a patch json string and applies the patch json to the target
 json according to “JSON Merge Patch” (defined by <a class="reference external" href="https://tools.ietf.org/html/rfc7396">https://tools.ietf.org/html/rfc7396</a>).</p>
@@ -182,8 +182,8 @@ json according to “JSON Merge Patch” (defined by <a class="reference externa
 </dd></dl>
 
 <dl class="function">
-<dt id="jiant.utils.config.merge_jsons_in_order">
-<code class="descclassname">jiant.utils.config.</code><code class="descname">merge_jsons_in_order</code><span class="sig-paren">(</span><em>jsons: List[str]</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../../_modules/jiant/utils/config.html#merge_jsons_in_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jiant.utils.config.merge_jsons_in_order" title="Permalink to this definition">¶</a></dt>
+<dt id="jiant.utils.config_handlers.merge_jsons_in_order">
+<code class="descclassname">jiant.utils.config_handlers.</code><code class="descname">merge_jsons_in_order</code><span class="sig-paren">(</span><em>jsons: List[str]</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../../_modules/jiant/utils/config_handlers.html#merge_jsons_in_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jiant.utils.config_handlers.merge_jsons_in_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applies JSON Merge Patch process to a list of json documents in order.</p>
 <p>Takes a list of json document strings and performs “JSON Merge Patch” (see json_merge_patch).
 The first element in the list of json docs is treated as the base, subsequent docs (if any)
@@ -195,6 +195,25 @@ are applied as patches in order from first to last.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jsons</strong> – list of json docs to merge into a composite json document.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The composite json document string.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<hr class="docutils" />
+<span class="target" id="module-jiant.utils.data_handlers"></span><p>This module contains utils for handling data (e.g., validating data)</p>
+<dl class="function">
+<dt id="jiant.utils.data_handlers.md5_checksum">
+<code class="descclassname">jiant.utils.data_handlers.</code><code class="descname">md5_checksum</code><span class="sig-paren">(</span><em>filepath: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../../_modules/jiant/utils/data_handlers.html#md5_checksum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jiant.utils.data_handlers.md5_checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate MD5 checksum hash for a given file.</p>
+<p>Code from example: <a class="reference external" href="https://stackoverflow.com/a/3431838/8734015">https://stackoverflow.com/a/3431838/8734015</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> – file to calculate MD5 checksum.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">MD5 hash string.</td>
 </tr>
 </tbody>
 </table>
