@@ -2,6 +2,9 @@
 import json
 import os
 
+import jsonschema
+import pytest
+
 from jiant.utils import config_handlers
 
 
@@ -60,3 +63,30 @@ def test_merging_multiple_json_configs():
     sorted_merged_config = json.dumps(json.loads(merged_config), sort_keys=True)
     sorted_expected_config = json.dumps(json.loads(expected_config), sort_keys=True)
     assert sorted_merged_config == sorted_expected_config
+
+
+def test_apply_schema_to_valid_data_dict():
+    schema = {
+        "type": "object",
+        "properties": {
+            "version": {"type": "string"},
+            "tasks": {"type": "array", "items": {"type": "string"}, "uniqueItems": True},
+            "size": {"type": "integer", "minimum": 0},
+        },
+    }
+    data = {"version": "100", "size": 100}
+    jsonschema.validate(instance=data, schema=schema)
+
+
+def test_apply_schema_to_invalid_data_dict():
+    schema = {
+        "type": "object",
+        "properties": {
+            "version": {"type": "string"},
+            "tasks": {"type": "array", "items": {"type": "string"}, "uniqueItems": True},
+            "size": {"type": "integer", "minimum": 0},
+        },
+    }
+    data = {"version": "100", "size": 100, "tasks": ["a", "b", "a"]}
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(instance=data, schema=schema)
