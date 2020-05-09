@@ -1,7 +1,6 @@
 import pytest
 from dataclasses import dataclass
 
-import jiant.utils.python.checks as py_checks
 import jiant.utils.python.datastructures as py_datastructures
 
 
@@ -33,7 +32,7 @@ def test_chain_idx():
 
     # list
     assert py_datastructures.chain_idx(ls, [0]) == 1
-    assert py_checks.list_equal(py_datastructures.chain_idx(ls, [1]), [2])
+    assert py_datastructures.chain_idx(ls, [1]) == [2]
     assert py_datastructures.chain_idx(ls, [1, 0]) == 2
     assert py_datastructures.chain_idx(ls, [2, 0]) is None
     assert py_datastructures.chain_idx(ls, [2, 1, 0]) == 3
@@ -57,18 +56,12 @@ def test_chain_idx_get():
 
 
 def test_partition_list():
-    assert py_checks.list_equal(
-        py_datastructures.partition_list(list(range(10)), 5),
-        [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]],
-    )
-    assert py_checks.list_equal(
-        py_datastructures.partition_list(list(range(10)), 3),
-        [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]],
-    )
-    assert py_checks.list_equal(
-        py_datastructures.partition_list(list(range(10)), 1),
-        [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]],
-    )
+    assert py_datastructures.partition_list(list(range(10)), 5) == \
+        [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]
+    assert py_datastructures.partition_list(list(range(10)), 3) == \
+        [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]
+    assert py_datastructures.partition_list(list(range(10)), 1) == \
+        [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 
 
 def test_extended_dataclass_mixin():
@@ -77,7 +70,5 @@ def test_extended_dataclass_mixin():
         int1: int
         str1: str
 
-    assert py_checks.list_equal(
-        MyClass.get_fields(),
-        ["int1", "str1"],
-    )
+    assert MyClass.get_fields() == \
+       ["int1", "str1"]
