@@ -47,8 +47,6 @@ class ModelArchitectures(Enum):
         elif isinstance(transformers_model, transformers.BertPreTrainedModel) \
                 and transformers_model.__class__.__name__.startswith("XLMRoberta"):
             return cls.XLM_ROBERTA
-        elif isinstance(transformers_model, glove_lstm_modeling.GloveLSTMModel):
-            return cls.GLOVE_LSTM
         elif isinstance(transformers_model, transformers.modeling_albert.AlbertPreTrainedModel):
             return cls.ALBERT
         else:
