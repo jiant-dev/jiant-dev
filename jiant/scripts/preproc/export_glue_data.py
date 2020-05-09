@@ -1,9 +1,9 @@
-import argparse
 import csv
 import os
 import tqdm
 
 import jiant.utils.python.io as py_io
+import jiant.utils.zconf as zconf
 
 
 GLUE_CONVERSION = {
@@ -170,11 +170,14 @@ def preprocess_all_glue_data(input_base_path, output_base_path):
         )
 
 
+@zconf.run_config
+class RunConfiguration(zconf.RunConfig):
+    input_base_path = zconf.attr(type=str)
+    output_base_path = zconf.attr(type=str)
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input_base_path', type=str, required=True)
-    parser.add_argument('--output_base_path', type=str, required=True)
-    args = parser.parse_args()
+    args = RunConfiguration.default_run_cli()
     preprocess_all_glue_data(
         input_base_path=args.input_base_path,
         output_base_path=args.output_base_path,
