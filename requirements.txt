@@ -1,3 +1,4 @@
+attrs==19.3.0
 jsonnet==0.15.0
 numpy==1.18.4
 pandas==1.0.3
