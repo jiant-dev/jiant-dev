@@ -111,3 +111,36 @@ def zip_equal(*iterables):
         if sentinel in combo:
             raise ValueError('Iterables have different lengths')
         yield combo
+
+
+class ExtendedDataClassMixin:
+
+    @classmethod
+    def get_fields(cls):
+        # noinspection PyUnresolvedReferences
+        return list(cls.__dataclass_fields__)
+
+    @classmethod
+    def get_annotations(cls):
+        return cls.__annotations__
+
+    def to_dict(self):
+        return {
+            k: getattr(self, k)
+            for k in self.get_fields()
+        }
+
+    @classmethod
+    def from_dict(cls, kwargs):
+        # noinspection PyArgumentList
+        return cls(**kwargs)
+
+    def new(self, **new_kwargs):
+        kwargs = {
+            k: v
+            for k, v in self.to_dict().items()
+        }
+        for k, v in new_kwargs.items():
+            kwargs[k] = v
+        # noinspection PyArgumentList
+        return self.__class__(**kwargs)
