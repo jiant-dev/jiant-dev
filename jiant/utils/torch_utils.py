@@ -96,16 +96,14 @@ class ListDataset(Dataset):
 class DataLoaderWithLength(DataLoader):
     def __len__(self):
         # Todo: Revert after https://github.com/pytorch/pytorch/issues/36176 addressed
-        """
-        try:
-            return super().__len__()
-        except TypeError as e:
-            try:
-                return self.get_num_batches()
-            except TypeError:
-                pass
-            raise e
-        """
+        # try:
+        #     return super().__len__()
+        # except TypeError as e:
+        #     try:
+        #         return self.get_num_batches()
+        #     except TypeError:
+        #         pass
+        #     raise e
         return self.get_num_batches()
 
     def get_num_batches(self):

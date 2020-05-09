@@ -106,10 +106,8 @@ def compare_dataset_with_metadata(d1, d2):
 
 
 class DataCache:
-    """
-    We're going to liberally use pickling/torch.save/load.
-    There is no expectation that caches should be backward compatible.
-    """
+    # We're going to liberally use pickling/torch.save/load.
+    # There is no expectation that caches should be backward compatible.
 
     def get_all(self):
         raise NotImplementedError()
