@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import torch
 import torch.utils.data.dataloader as dataloader
 
-from jiant.utils.python.datastructures import ExtendedDataClassMixin, combine_dicts, BiMap
+from jiant.utils.python.datastructures import ExtendedDataClassMixin, combine_dicts
 
 
 @dataclass
@@ -58,13 +58,8 @@ class BaseDataRow(ExtendedDataClassMixin):
 
 class BaseBatch(BatchMixin, ExtendedDataClassMixin):
     @classmethod
-    def from_data_rows(cls, data_row_ls):
+    def from_data_rows(cls, data_row_ls: list):
         raise NotImplementedError
-
-
-def labels_to_bimap(labels):
-    label2id, id2label = BiMap(a=labels, b=list(range(len(labels)))).get_maps()
-    return label2id, id2label
 
 
 def data_row_collate_fn(batch):
@@ -122,7 +117,7 @@ class Task:
 
     TASK_TYPE = NotImplemented
 
-    def __init__(self, name, path_dict):
+    def __init__(self, name: str, path_dict: dict):
         self.name = name
         self.path_dict = path_dict
 

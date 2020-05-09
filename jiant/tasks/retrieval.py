@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from jiant.tasks.lib.cola import ColaTask
 from jiant.tasks.lib.mnli import MnliTask
@@ -28,19 +29,15 @@ TASK_DICT = {
 }
 
 
-def get_task(task_name, data_dir):
-    task_name = task_name.lower()
-    task_class = TASK_DICT[task_name]
-    return task_class(task_name, data_dir)
-
-
-def get_task_class(task_name):
+def get_task_class(task_name: str):
     task_class = TASK_DICT[task_name]
     assert issubclass(task_class, Task)
     return task_class
 
 
-def create_task_from_config(config: dict, base_path=None, verbose=False):
+def create_task_from_config(config: dict,
+                            base_path: Optional[str] = None,
+                            verbose: bool = False):
     task_class = get_task_class(config["task"])
     for k in config["paths"].keys():
         path = config["paths"][k]
@@ -57,7 +54,7 @@ def create_task_from_config(config: dict, base_path=None, verbose=False):
     return task_class(name=config["name"], path_dict=config["paths"], **task_kwargs)
 
 
-def create_task_from_config_path(config_path: str, verbose=False):
+def create_task_from_config_path(config_path: str, verbose: bool = False):
     return create_task_from_config(
         read_json(config_path),
         base_path=os.path.split(config_path)[0],
