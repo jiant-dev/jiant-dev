@@ -144,3 +144,16 @@ class ExtendedDataClassMixin:
             kwargs[k] = v
         # noinspection PyArgumentList
         return self.__class__(**kwargs)
+
+
+class BiMap:
+    def __init__(self, a, b):
+        self.a_to_b = {}
+        self.b_to_a = {}
+        for i, j in zip(a, b):
+            self.a_to_b[i] = j
+            self.b_to_a[j] = i
+        assert len(self.a_to_b) == len(self.b_to_a) == len(a) == len(b)
+
+    def get_maps(self):
+        return self.a_to_b, self.b_to_a

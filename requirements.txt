@@ -1,4 +1,5 @@
+jsonnet==0.15.0
+jsonnet==0.15.0
 torch==1.5.0
 torchvision==0.6.0
-jsonnet==0.15.0
 tqdm==4.46.0
