@@ -48,7 +48,6 @@ def export_model(model_type, output_base_path, model_class, tokenizer_class):
 def get_model_and_tokenizer_classes(model_type):
     class_lookup = {
         "bert": (transformers.BertForPreTraining, transformers.BertTokenizer),
-        "xlnet": (transformers.XLNetLMHeadModel, transformers.XLNetTokenizer),
         "xlm-clm-": (transformers.XLMWithLMHeadModel, transformers.XLMTokenizer),
         "roberta": (transformers.RobertaForMaskedLM, transformers.RobertaTokenizer),
         "albert": (transformers.AlbertForMaskedLM, transformers.AlbertTokenizer),

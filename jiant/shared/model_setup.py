@@ -12,7 +12,6 @@ def get_tokenizer(model_type, tokenizer_path):
         else:
             raise RuntimeError(model_type)
     elif model_arch in [
-        ModelArchitectures.XLNET,
         ModelArchitectures.XLM,
         ModelArchitectures.ROBERTA,
         ModelArchitectures.XLM_ROBERTA,

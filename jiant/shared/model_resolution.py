@@ -17,8 +17,6 @@ class ModelArchitectures(Enum):
     def from_model_type(cls, model_type):
         if model_type.startswith("bert-"):
             return cls.BERT
-        elif model_type.startswith("xlnet-"):
-            return cls.XLNET
         elif model_type.startswith("xlm-") and not model_type.startswith("xlm-roberta"):
             return cls.XLM
         elif model_type.startswith("roberta-"):
@@ -38,8 +36,6 @@ class ModelArchitectures(Enum):
             transformers_model, transformers.BertPreTrainedModel
         ) and transformers_model.__class__.__name__.startswith("Bert"):
             return cls.BERT
-        elif isinstance(transformers_model, transformers.XLNetPreTrainedModel):
-            return cls.XLNET
         elif isinstance(transformers_model, transformers.XLMPreTrainedModel):
             return cls.XLM_ROBERTA
         elif isinstance(
@@ -59,8 +55,6 @@ class ModelArchitectures(Enum):
     def from_tokenizer_class(cls, tokenizer_class):
         if isinstance(tokenizer_class, transformers.BertTokenizer):
             return cls.BERT
-        elif isinstance(tokenizer_class, transformers.XLNetTokenizer):
-            return cls.XLNET
         elif isinstance(tokenizer_class, transformers.XLMTokenizer):
             return cls.XLM_ROBERTA
         elif isinstance(tokenizer_class, transformers.RobertaTokenizer):
@@ -76,7 +70,6 @@ class ModelArchitectures(Enum):
     def is_transformers_model_arch(cls, model_arch):
         return model_arch in [
             cls.BERT,
-            cls.XLNET,
             cls.XLM,
             cls.ROBERTA,
             cls.ALBERT,
@@ -125,19 +118,6 @@ def build_featurization_spec(model_type, max_seq_length):
             pad_on_left=False,
             cls_token_segment_id=0,
             pad_token_segment_id=0,
-            pad_token_id=0,
-            pad_token_mask_id=0,
-            sequence_a_segment_id=0,
-            sequence_b_segment_id=1,
-            sep_token_extra=False,
-        )
-    elif model_arch == ModelArchitectures.XLNET:
-        return FeaturizationSpec(
-            max_seq_length=max_seq_length,
-            cls_token_at_end=True,
-            pad_on_left=True,
-            cls_token_segment_id=2,
-            pad_token_segment_id=4,
             pad_token_id=0,
             pad_token_mask_id=0,
             sequence_a_segment_id=0,
@@ -211,7 +191,6 @@ def build_featurization_spec(model_type, max_seq_length):
 
 TOKENIZER_CLASS_DICT = {
     ModelArchitectures.BERT: transformers.BertTokenizer,
-    ModelArchitectures.XLNET: transformers.XLMTokenizer,
     ModelArchitectures.XLM: transformers.XLMTokenizer,
     ModelArchitectures.ROBERTA: transformers.RobertaTokenizer,
     ModelArchitectures.XLM_ROBERTA: transformers.XLMRobertaTokenizer,
