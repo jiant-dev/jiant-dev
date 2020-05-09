@@ -117,12 +117,12 @@ def iter_chunk_convert_examples_to_dataset(examples: list,
                                            phase: str,
                                            verbose=False):
     for i, data_row in enumerate(iter_chunk_tokenize_and_featurize(
-                examples=examples,
-                tokenizer=tokenizer,
-                feat_spec=feat_spec,
-                phase=phase,
-                verbose=verbose,
-            )):
+        examples=examples,
+        tokenizer=tokenizer,
+        feat_spec=feat_spec,
+        phase=phase,
+        verbose=verbose,
+    )):
         metadata = {"example_id": i}
         yield {"data_row": data_row, "metadata": metadata}
 
@@ -132,7 +132,8 @@ def tokenize_and_featurize(examples: list,
                            feat_spec: FeaturizationSpec,
                            phase,
                            verbose=False):
-    # TODO: In future, will potentially yield multiple featurized examples per example (e.g. SQuAD)
+    # TODO: In future, will potentially yield multiple featurized examples
+    #  per example (e.g. SQuAD)
     # We'll need the 'phase' argument for then
     data_rows = [
         example.tokenize(tokenizer).featurize(tokenizer, feat_spec)
@@ -147,6 +148,7 @@ def iter_chunk_tokenize_and_featurize(examples: list,
                                       phase,
                                       verbose=False):
     for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose):
-        # TODO: In future, will potentially yield multiple featurized examples per example (e.g. SQuAD)
+        # TODO: In future, will potentially yield multiple featurized examples
+        #  per example (e.g. SQuAD)
         # We'll need the 'phase' argument for then
         yield example.tokenize(tokenizer).featurize(tokenizer, feat_spec)

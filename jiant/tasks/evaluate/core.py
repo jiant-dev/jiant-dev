@@ -184,20 +184,20 @@ class PearsonAndSpearmanEvaluationScheme(BaseLogitsEvaluationScheme):
 def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
     # Todo: move logic to task?
     if isinstance(task, (
-                tasks.MnliTask,
-                tasks.QnliTask,
-                tasks.RteTask,
-                tasks.SnliTask,
-                tasks.SstTask,
-                tasks.WnliTask,
-             )):
+        tasks.MnliTask,
+        tasks.QnliTask,
+        tasks.RteTask,
+        tasks.SnliTask,
+        tasks.SstTask,
+        tasks.WnliTask,
+    )):
         return SimpleAccuracyEvaluationScheme()
     elif isinstance(task, tasks.ColaTask):
         return MCCEvaluationScheme()
     elif isinstance(task, (
-                tasks.MrpcTask,
-                tasks.QqpTask,
-            )):
+        tasks.MrpcTask,
+        tasks.QqpTask,
+    )):
         return AccAndF1EvaluationScheme()
     elif isinstance(task, tasks.StsbTask):
         return PearsonAndSpearmanEvaluationScheme()

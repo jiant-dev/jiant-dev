@@ -145,7 +145,9 @@ def main(args: RunConfiguration):
         shared_caching.chunk_and_save(
             data=evaluation_scheme.get_labels_from_cache_and_examples(
                 task=task,
-                cache=shared_caching.ChunkedFilesDataCache(os.path.join(args.output_dir, PHASE.VAL)),
+                cache=shared_caching.ChunkedFilesDataCache(
+                    os.path.join(args.output_dir, PHASE.VAL)
+                ),
                 examples=val_examples,
             ),
             chunk_size=args.chunk_size,

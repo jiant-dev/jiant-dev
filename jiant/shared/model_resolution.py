@@ -82,13 +82,17 @@ class ModelArchitectures(Enum):
 
     @classmethod
     def from_encoder(cls, encoder):
-        if isinstance(encoder, transformers.BertModel) and encoder.__class__.__name__ == "BertModel":
+        if isinstance(encoder, transformers.BertModel) \
+                and encoder.__class__.__name__ == "BertModel":
             return cls.BERT
-        elif isinstance(encoder, transformers.RobertaModel) and encoder.__class__.__name__ == "RobertaModel":
+        elif isinstance(encoder, transformers.RobertaModel) \
+                and encoder.__class__.__name__ == "RobertaModel":
             return cls.ROBERTA
-        elif isinstance(encoder, transformers.AlbertModel) and encoder.__class__.__name__ == "AlbertModel":
+        elif isinstance(encoder, transformers.AlbertModel) \
+                and encoder.__class__.__name__ == "AlbertModel":
             return cls.ALBERT
-        elif isinstance(encoder, transformers.XLMRobertaModel) and encoder.__class__.__name__ == "XlmRobertaModel":
+        elif isinstance(encoder, transformers.XLMRobertaModel) \
+                and encoder.__class__.__name__ == "XlmRobertaModel":
             return cls.XLM_ROBERTA
         else:
             raise KeyError(type(encoder))

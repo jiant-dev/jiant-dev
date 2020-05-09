@@ -59,7 +59,7 @@ def partition_list(ls, n, strict=False):
     print(parts_per)
     result = []
     for i in range(n):
-        result.append(ls[i*parts_per: (i+1) * parts_per])
+        result.append(ls[i * parts_per: (i + 1) * parts_per])
     return result
 
 

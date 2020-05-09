@@ -234,8 +234,12 @@ class ChunkedFilesIterableDataset(torch.utils.data.dataset.IterableDataset):
         buffer_chunked_indices = self.get_buffer_chunked_indices()
         for buffer_chunked_index in buffer_chunked_indices:
             if self.verbose:
-                print(f"Loading buffer {seen} - {seen + len(buffer_chunked_index)} out of {len(self)}")
-            buffer = self.chunked_file_data_cache.load_from_indices(buffer_chunked_index, verbose=self.verbose)
+                print(f"Loading buffer {seen} - {seen + len(buffer_chunked_index)} "
+                      f"out of {len(self)}")
+            buffer = self.chunked_file_data_cache.load_from_indices(
+                buffer_chunked_index,
+                verbose=self.verbose
+            )
             for elem in buffer:
                 yield elem
             seen += len(buffer_chunked_index)
