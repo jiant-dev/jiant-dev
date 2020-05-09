@@ -34,18 +34,21 @@ class ModelArchitectures(Enum):
 
     @classmethod
     def from_transformers_model(cls, transformers_model):
-        if isinstance(transformers_model, transformers.BertPreTrainedModel) \
-                and transformers_model.__class__.__name__.startswith("Bert"):
+        if isinstance(
+            transformers_model, transformers.BertPreTrainedModel
+        ) and transformers_model.__class__.__name__.startswith("Bert"):
             return cls.BERT
         elif isinstance(transformers_model, transformers.XLNetPreTrainedModel):
             return cls.XLNET
         elif isinstance(transformers_model, transformers.XLMPreTrainedModel):
             return cls.XLM_ROBERTA
-        elif isinstance(transformers_model, transformers.BertPreTrainedModel) \
-                and transformers_model.__class__.__name__.startswith("Robert"):
+        elif isinstance(
+            transformers_model, transformers.BertPreTrainedModel
+        ) and transformers_model.__class__.__name__.startswith("Robert"):
             return cls.ROBERTA
-        elif isinstance(transformers_model, transformers.BertPreTrainedModel) \
-                and transformers_model.__class__.__name__.startswith("XLMRoberta"):
+        elif isinstance(
+            transformers_model, transformers.BertPreTrainedModel
+        ) and transformers_model.__class__.__name__.startswith("XLMRoberta"):
             return cls.XLM_ROBERTA
         elif isinstance(transformers_model, transformers.modeling_albert.AlbertPreTrainedModel):
             return cls.ALBERT
@@ -82,17 +85,25 @@ class ModelArchitectures(Enum):
 
     @classmethod
     def from_encoder(cls, encoder):
-        if isinstance(encoder, transformers.BertModel) \
-                and encoder.__class__.__name__ == "BertModel":
+        if (
+            isinstance(encoder, transformers.BertModel)
+            and encoder.__class__.__name__ == "BertModel"
+        ):
             return cls.BERT
-        elif isinstance(encoder, transformers.RobertaModel) \
-                and encoder.__class__.__name__ == "RobertaModel":
+        elif (
+            isinstance(encoder, transformers.RobertaModel)
+            and encoder.__class__.__name__ == "RobertaModel"
+        ):
             return cls.ROBERTA
-        elif isinstance(encoder, transformers.AlbertModel) \
-                and encoder.__class__.__name__ == "AlbertModel":
+        elif (
+            isinstance(encoder, transformers.AlbertModel)
+            and encoder.__class__.__name__ == "AlbertModel"
+        ):
             return cls.ALBERT
-        elif isinstance(encoder, transformers.XLMRobertaModel) \
-                and encoder.__class__.__name__ == "XlmRobertaModel":
+        elif (
+            isinstance(encoder, transformers.XLMRobertaModel)
+            and encoder.__class__.__name__ == "XlmRobertaModel"
+        ):
             return cls.XLM_ROBERTA
         else:
             raise KeyError(type(encoder))
@@ -167,14 +178,14 @@ def build_featurization_spec(model_type, max_seq_length):
         #
         return FeaturizationSpec(
             max_seq_length=max_seq_length,
-            cls_token_at_end=False,   # ?
+            cls_token_at_end=False,  # ?
             pad_on_left=False,  # ok
             cls_token_segment_id=0,  # ok
             pad_token_segment_id=0,  # ok
             pad_token_id=0,  # I think?
             pad_token_mask_id=0,  # I think?
-            sequence_a_segment_id=0,   # I think?
-            sequence_b_segment_id=1,   # I think?
+            sequence_a_segment_id=0,  # I think?
+            sequence_b_segment_id=1,  # I think?
             sep_token_extra=False,
         )
     elif model_arch == ModelArchitectures.XLM_ROBERTA:

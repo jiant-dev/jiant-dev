@@ -15,10 +15,7 @@ class Chunker:
 
     def get_slices(self):
         indices = list(range(0, self.length, self.chunk_size)) + [self.length]
-        return [
-            slice(start, end)
-            for start, end in zip(indices[:-1], indices[1:])
-        ]
+        return [slice(start, end) for start, end in zip(indices[:-1], indices[1:])]
 
     def get_chunks(self, data):
         assert len(data) == self.length
@@ -55,10 +52,7 @@ def convert_to_chunks(data, chunk_size: int):
     return chunked_data
 
 
-def chunk_and_save(data: list,
-                   chunk_size: int,
-                   data_args: dict,
-                   output_dir: str):
+def chunk_and_save(data: list, chunk_size: int, data_args: dict, output_dir: str):
     os.makedirs(output_dir, exist_ok=True)
     chunked_data = convert_to_chunks(data=data, chunk_size=chunk_size)
     for i, chunk in enumerate(chunked_data):
@@ -69,11 +63,9 @@ def chunk_and_save(data: list,
     torch.save(data_args, os.path.join(output_dir, "data_args.p"))
 
 
-def iter_chunk_and_save(data: Generator,
-                        chunk_size: int,
-                        data_args: dict,
-                        output_dir: str,
-                        recorder_callback=None):
+def iter_chunk_and_save(
+    data: Generator, chunk_size: int, data_args: dict, output_dir: str, recorder_callback=None
+):
     os.makedirs(output_dir, exist_ok=True)
     chunk_i = 0
     length = 0
@@ -154,10 +146,14 @@ class ChunkedFilesDataCache(DataCache):
         self.chunk_size = self.data_args["chunk_size"]
         self.chunker = Chunker.from_chunk_size(length=self.length, chunk_size=self.chunk_size)
 
-    def get_iterable_dataset(self, buffer_size=None, shuffle=False,
-                             subset_num: Union[None, int] = None,
-                             explicit_subset: Union[None, Sequence] = None,
-                             verbose=False):
+    def get_iterable_dataset(
+        self,
+        buffer_size=None,
+        shuffle=False,
+        subset_num: Union[None, int] = None,
+        explicit_subset: Union[None, Sequence] = None,
+        verbose=False,
+    ):
         return ChunkedFilesIterableDataset(
             buffer_size=buffer_size,
             shuffle=shuffle,
@@ -178,7 +174,7 @@ class ChunkedFilesDataCache(DataCache):
         reverse_index = np.arange(len(indices)).astype(int)
         result = [None] * len(indices)
         for chunk_i in sorted(list(set(chunk_arr))):
-            selector = (chunk_arr == chunk_i)
+            selector = chunk_arr == chunk_i
             chunk = self.load_chunk(chunk_i)
             selected_chunk_sub_index_arr = chunk_sub_index_arr[selector]
             selected_reverse_index = reverse_index[selector]
@@ -206,11 +202,15 @@ class ChunkedFilesDataCache(DataCache):
 
 
 class ChunkedFilesIterableDataset(torch.utils.data.dataset.IterableDataset):
-    def __init__(self, buffer_size, shuffle,
-                 chunked_file_data_cache: ChunkedFilesDataCache,
-                 subset_num: Union[int, None] = None,
-                 explicit_subset: Union[Sequence, None] = None,
-                 verbose=False):
+    def __init__(
+        self,
+        buffer_size,
+        shuffle,
+        chunked_file_data_cache: ChunkedFilesDataCache,
+        subset_num: Union[int, None] = None,
+        explicit_subset: Union[Sequence, None] = None,
+        verbose=False,
+    ):
         self.buffer_size = buffer_size
         self.shuffle = shuffle
         self.subset_num = subset_num
@@ -234,11 +234,12 @@ class ChunkedFilesIterableDataset(torch.utils.data.dataset.IterableDataset):
         buffer_chunked_indices = self.get_buffer_chunked_indices()
         for buffer_chunked_index in buffer_chunked_indices:
             if self.verbose:
-                print(f"Loading buffer {seen} - {seen + len(buffer_chunked_index)} "
-                      f"out of {len(self)}")
+                print(
+                    f"Loading buffer {seen} - {seen + len(buffer_chunked_index)}"
+                    f" out of {len(self)}"
+                )
             buffer = self.chunked_file_data_cache.load_from_indices(
-                buffer_chunked_index,
-                verbose=self.verbose
+                buffer_chunked_index, verbose=self.verbose
             )
             for elem in buffer:
                 yield elem
@@ -252,7 +253,7 @@ class ChunkedFilesIterableDataset(torch.utils.data.dataset.IterableDataset):
         if self.shuffle:
             np.random.shuffle(indices)
         if self.subset_num:
-            indices = indices[:self.subset_num]
+            indices = indices[: self.subset_num]
         buffer_chunked_indices = convert_to_chunks(indices, chunk_size=self.buffer_size)
         return buffer_chunked_indices
 

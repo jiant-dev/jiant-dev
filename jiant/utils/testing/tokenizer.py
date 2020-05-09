@@ -16,8 +16,7 @@ class SimpleSpaceTokenizer:
         if add_special:
             vocabulary = self.SPECIAL_TOKENS + vocabulary
         self.tokens_to_ids, self.ids_to_tokens = BiMap(
-            a=vocabulary,
-            b=list(range(len(vocabulary)))
+            a=vocabulary, b=list(range(len(vocabulary)))
         ).get_maps()
 
     def convert_tokens_to_ids(self, tokens: List[str]) -> List[int]:
@@ -25,8 +24,7 @@ class SimpleSpaceTokenizer:
 
     def tokenize(self, string: str) -> List[str]:
         return [
-            token if token in self.tokens_to_ids else self.unk_token
-            for token in string.split()
+            token if token in self.tokens_to_ids else self.unk_token for token in string.split()
         ]
 
     @classmethod

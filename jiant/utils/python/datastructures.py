@@ -45,10 +45,7 @@ def combine_dicts(dict_ls, strict=True, dict_class=dict):
 
 
 def sort_dict(d):
-    return {
-        k: d[k]
-        for k in sorted(list(d.keys()))
-    }
+    return {k: d[k] for k in sorted(list(d.keys()))}
 
 
 def partition_list(ls, n, strict=False):
@@ -59,7 +56,7 @@ def partition_list(ls, n, strict=False):
     print(parts_per)
     result = []
     for i in range(n):
-        result.append(ls[i * parts_per: (i + 1) * parts_per])
+        result.append(ls[i * parts_per : (i + 1) * parts_per])
     return result
 
 
@@ -74,6 +71,7 @@ class ReusableGenerator(Iterable):
         pass
     ```
     """
+
     def __init__(self, generator_function, *args, **kwargs):
         self.generator_function = generator_function
         self.args = args
@@ -84,7 +82,6 @@ class ReusableGenerator(Iterable):
 
 
 class InfiniteYield(Iterator):
-
     def __init__(self, iterable: Iterable):
         self.iterable = iterable
         self.iterator = iter(itertools.cycle(self.iterable))
@@ -109,12 +106,11 @@ def zip_equal(*iterables):
     sentinel = object()
     for combo in itertools.zip_longest(*iterables, fillvalue=sentinel):
         if sentinel in combo:
-            raise ValueError('Iterables have different lengths')
+            raise ValueError("Iterables have different lengths")
         yield combo
 
 
 class ExtendedDataClassMixin:
-
     @classmethod
     def get_fields(cls):
         # noinspection PyUnresolvedReferences
@@ -125,10 +121,7 @@ class ExtendedDataClassMixin:
         return cls.__annotations__
 
     def to_dict(self):
-        return {
-            k: getattr(self, k)
-            for k in self.get_fields()
-        }
+        return {k: getattr(self, k) for k in self.get_fields()}
 
     @classmethod
     def from_dict(cls, kwargs):
@@ -136,10 +129,7 @@ class ExtendedDataClassMixin:
         return cls(**kwargs)
 
     def new(self, **new_kwargs):
-        kwargs = {
-            k: v
-            for k, v in self.to_dict().items()
-        }
+        kwargs = {k: v for k, v in self.to_dict().items()}
         for k, v in new_kwargs.items():
             kwargs[k] = v
         # noinspection PyArgumentList

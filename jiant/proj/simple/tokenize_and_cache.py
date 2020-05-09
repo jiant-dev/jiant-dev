@@ -32,35 +32,21 @@ class RunConfiguration(zconf.RunConfig):
 def chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration):
     if args.do_iter:
         iter_chunk_and_save(
-            phase=phase,
-            examples=examples,
-            feat_spec=feat_spec,
-            tokenizer=tokenizer,
-            args=args
+            phase=phase, examples=examples, feat_spec=feat_spec, tokenizer=tokenizer, args=args
         )
     else:
         full_chunk_and_save(
-            phase=phase,
-            examples=examples,
-            feat_spec=feat_spec,
-            tokenizer=tokenizer,
-            args=args
+            phase=phase, examples=examples, feat_spec=feat_spec, tokenizer=tokenizer, args=args
         )
 
 
 def full_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration):
     dataset = preprocessing.convert_examples_to_dataset(
-        examples=examples,
-        feat_spec=feat_spec,
-        tokenizer=tokenizer,
-        phase=phase,
-        verbose=True,
+        examples=examples, feat_spec=feat_spec, tokenizer=tokenizer, phase=phase, verbose=True,
     )
     if args.smart_truncate:
         dataset, length = preprocessing.experimental_smart_truncate(
-            dataset=dataset,
-            max_seq_length=args.max_seq_length,
-            verbose=True,
+            dataset=dataset, max_seq_length=args.max_seq_length, verbose=True,
         )
         os.makedirs(os.path.join(args.output_dir, phase), exist_ok=True)
         py_io.write_json(
@@ -77,11 +63,7 @@ def full_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfigur
 
 def iter_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration):
     dataset_generator = preprocessing.iter_chunk_convert_examples_to_dataset(
-        examples=examples,
-        feat_spec=feat_spec,
-        tokenizer=tokenizer,
-        phase=phase,
-        verbose=True,
+        examples=examples, feat_spec=feat_spec, tokenizer=tokenizer, phase=phase, verbose=True,
     )
     max_valid_length_recorder = preprocessing.MaxValidLengthRecorder(args.max_seq_length)
     shared_caching.iter_chunk_and_save(
@@ -105,17 +87,12 @@ def iter_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfigur
 
 
 def main(args: RunConfiguration):
-    task = tasks.create_task_from_config_path(
-        config_path=args.task_config_path,
-        verbose=True,
-    )
+    task = tasks.create_task_from_config_path(config_path=args.task_config_path, verbose=True,)
     feat_spec = model_resolution.build_featurization_spec(
-        model_type=args.model_type,
-        max_seq_length=args.max_seq_length,
+        model_type=args.model_type, max_seq_length=args.max_seq_length,
     )
     tokenizer = model_setup.get_tokenizer(
-        model_type=args.model_type,
-        tokenizer_path=args.model_tokenizer_path,
+        model_type=args.model_type, tokenizer_path=args.model_tokenizer_path,
     )
     phases = args.phases.split(",")
     assert set(phases) <= {PHASE.TRAIN, PHASE.VAL, PHASE.TEST}
@@ -168,10 +145,7 @@ def main(args: RunConfiguration):
         paths_dict[PHASE.TEST] = os.path.join(args.output_dir, PHASE.TEST)
 
     if not args.skip_write_output_paths:
-        py_io.write_json(
-            data=paths_dict,
-            path=os.path.join(args.output_dir, "paths.json")
-        )
+        py_io.write_json(data=paths_dict, path=os.path.join(args.output_dir, "paths.json"))
 
 
 if __name__ == "__main__":

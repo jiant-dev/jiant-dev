@@ -66,8 +66,7 @@ def get_model_and_tokenizer_classes(model_type):
 def main():
     args = RunConfiguration.default_run_cli()
     lookup_and_export_model(
-        model_type=args.model_type,
-        output_base_path=args.output_base_path,
+        model_type=args.model_type, output_base_path=args.output_base_path,
     )
 
 

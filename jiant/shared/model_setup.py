@@ -12,15 +12,15 @@ def get_tokenizer(model_type, tokenizer_path):
         else:
             raise RuntimeError(model_type)
     elif model_arch in [
-        ModelArchitectures.XLNET, ModelArchitectures.XLM,
-        ModelArchitectures.ROBERTA, ModelArchitectures.XLM_ROBERTA,
+        ModelArchitectures.XLNET,
+        ModelArchitectures.XLM,
+        ModelArchitectures.ROBERTA,
+        ModelArchitectures.XLM_ROBERTA,
     ]:
         do_lower_case = False
     elif model_arch in [ModelArchitectures.ALBERT]:
         do_lower_case = True
     else:
         raise RuntimeError(str(tokenizer_class))
-    tokenizer = tokenizer_class.from_pretrained(
-        tokenizer_path, do_lower_case=do_lower_case,
-    )
+    tokenizer = tokenizer_class.from_pretrained(tokenizer_path, do_lower_case=do_lower_case,)
     return tokenizer

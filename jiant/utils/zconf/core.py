@@ -17,10 +17,18 @@ def _is_true(x):
 
 
 # noinspection PyShadowingBuiltins
-def argparse_attr(default=attr.NOTHING, validator=None,
-                  repr=True, eq=None, order=None, hash=True, init=True,
-                  converter=None, opt_string=None,
-                  **argparse_kwargs):
+def argparse_attr(
+    default=attr.NOTHING,
+    validator=None,
+    repr=True,
+    eq=None,
+    order=None,
+    hash=True,
+    init=True,
+    converter=None,
+    opt_string=None,
+    **argparse_kwargs,
+):
     if opt_string is None:
         opt_string_ls = []
     elif isinstance(opt_string, str):
@@ -44,10 +52,7 @@ def argparse_attr(default=attr.NOTHING, validator=None,
         hash=hash,
         init=init,
         converter=converter,
-        metadata={
-            "opt_string_ls": opt_string_ls,
-            "argparse_kwargs": argparse_kwargs,
-        },
+        metadata={"opt_string_ls": opt_string_ls, "argparse_kwargs": argparse_kwargs},
         kw_only=True,
     )
 
@@ -69,18 +74,11 @@ def update_parser(parser, class_with_attributes: Any):
             else:
                 argparse_arg_name = f"--{attribute.name}"
 
-            parser.add_argument(
-                argparse_arg_name, *opt_string_ls,
-                **argparse_kwargs
-            )
+            parser.add_argument(argparse_arg_name, *opt_string_ls, **argparse_kwargs)
 
 
-def read_parser(parser, class_with_attributes: Any,
-                skip_non_class_attributes=None, args=None):
-    attribute_name_set = {
-        attribute.name
-        for attribute in class_with_attributes.__attrs_attrs__
-    }
+def read_parser(parser, class_with_attributes: Any, skip_non_class_attributes=None, args=None):
+    attribute_name_set = {attribute.name for attribute in class_with_attributes.__attrs_attrs__}
 
     kwargs = dict()
     leftover_kwargs = dict()
@@ -104,19 +102,11 @@ def read_parser(parser, class_with_attributes: Any,
 
 # == Class Methods
 def run_cli(cls, args=None, prog=None, description=None):
-    parser = argparse.ArgumentParser(
-        prog=prog,
-        description=description,
-    )
+    parser = argparse.ArgumentParser(prog=prog, description=description,)
     update_parser(
-        parser=parser,
-        class_with_attributes=cls,
+        parser=parser, class_with_attributes=cls,
     )
-    result = read_parser(
-        parser=parser,
-        class_with_attributes=cls,
-        args=args,
-    )
+    result = read_parser(parser=parser, class_with_attributes=cls, args=args,)
     assert isinstance(result, cls)
     return result
 
@@ -158,60 +148,41 @@ def _inst_copy(self):
 class RunConfig:
     @classmethod
     def run_cli(cls, prog=None, description=None):
-        parser = argparse.ArgumentParser(
-            prog=prog,
-            description=description,
-        )
+        parser = argparse.ArgumentParser(prog=prog, description=description,)
         return cls.run_from_parser(parser=parser)
 
     @classmethod
     def run_from_parser(cls, parser):
         update_parser(
-            parser=parser,
-            class_with_attributes=cls,
+            parser=parser, class_with_attributes=cls,
         )
-        result = read_parser(
-            parser=parser,
-            class_with_attributes=cls,
-        )
+        result = read_parser(parser=parser, class_with_attributes=cls,)
         assert isinstance(result, cls)
         return result
 
     @classmethod
     def get_attr_dict(cls):
         # noinspection PyUnresolvedReferences
-        return {
-            attr_.name: attr_
-            for attr_ in cls.__attrs_attrs__
-        }
+        return {attr_.name: attr_ for attr_ in cls.__attrs_attrs__}
 
     @classmethod
     def run_cli_json_prepend(cls, cl_args=None, prog=None, description=None):
         # Prototype
         # Assumptions: no positional?
-        parser = argparse.ArgumentParser(
-            prog=prog,
-            description=description,
-        )
-        result = cls.run_from_parser_json_prepend(
-            parser=parser,
-            cl_args=cl_args,
-        )
+        parser = argparse.ArgumentParser(prog=prog, description=description,)
+        result = cls.run_from_parser_json_prepend(parser=parser, cl_args=cl_args,)
         return result
 
     @classmethod
     def run_from_parser_json_prepend(cls, parser, cl_args):
-        parser.add_argument("--ZZsrc", type=str, action='append')
+        parser.add_argument("--ZZsrc", type=str, action="append")
         parser.add_argument("--ZZoverrides", type=str, nargs="+")
         pre_args, _ = parser.parse_known_args(cl_args)
         if cl_args is None:
             cl_args = sys.argv[1:]
         if pre_args.ZZsrc is not None:
             # Import configs from ZZsrc JSONs
-            imported_dict_ls = [
-                read_json(path)
-                for path in pre_args.ZZsrc
-            ]
+            imported_dict_ls = [read_json(path) for path in pre_args.ZZsrc]
             combined_imported_dict = combine_dicts(imported_dict_ls, strict=True)
 
             # Record which args are going to be overridden
@@ -243,8 +214,7 @@ class RunConfig:
             assert pre_args.ZZoverrides is None
             submitted_args = cl_args
         update_parser(
-            parser=parser,
-            class_with_attributes=cls,
+            parser=parser, class_with_attributes=cls,
         )
         result, _ = read_parser(
             parser=parser,
@@ -261,11 +231,7 @@ class RunConfig:
 
     @classmethod
     def default_run_cli(cls, cl_args=None, prog=None, description=None):
-        return cls.run_cli_json_prepend(
-            cl_args=cl_args,
-            prog=prog,
-            description=description,
-        )
+        return cls.run_cli_json_prepend(cl_args=cl_args, prog=prog, description=description,)
 
     @classmethod
     def _is_store_true_arg(cls, attr_):

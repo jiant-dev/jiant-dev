@@ -21,9 +21,9 @@ class MaxValidLengthRecorder:
         self.max_valid_length = max(self.max_valid_length, valid_length)
 
 
-def experimental_smart_truncate(dataset: torch_utils.ListDataset,
-                                max_seq_length: int,
-                                verbose: bool = False):
+def experimental_smart_truncate(
+    dataset: torch_utils.ListDataset, max_seq_length: int, verbose: bool = False
+):
     if "input_mask" not in dataset.data[0]["data_row"].get_fields():
         raise RuntimeError("Smart truncate not supported")
     valid_length_ls = []
@@ -38,30 +38,30 @@ def experimental_smart_truncate(dataset: torch_utils.ListDataset,
 
     new_datum_ls = []
     for datum in maybe_tqdm(dataset.data, desc="Smart truncate data", verbose=verbose):
-        new_datum_ls.append(experimental_smart_truncate_datum(
-            datum=datum,
-            max_seq_length=max_seq_length,
-            max_valid_length=max_valid_length,
-        ))
+        new_datum_ls.append(
+            experimental_smart_truncate_datum(
+                datum=datum, max_seq_length=max_seq_length, max_valid_length=max_valid_length,
+            )
+        )
     new_dataset = torch_utils.ListDataset(new_datum_ls)
     return new_dataset, max_valid_length
 
 
-def experimental_smart_truncate_cache(cache: shared_caching.ChunkedFilesDataCache,
-                                      max_seq_length: int,
-                                      max_valid_length: int,
-                                      verbose: bool = False):
-    for chunk_i in maybe_trange(cache.num_chunks, desc="Smart truncate chunks",
-                                verbose=verbose):
+def experimental_smart_truncate_cache(
+    cache: shared_caching.ChunkedFilesDataCache,
+    max_seq_length: int,
+    max_valid_length: int,
+    verbose: bool = False,
+):
+    for chunk_i in maybe_trange(cache.num_chunks, desc="Smart truncate chunks", verbose=verbose):
         chunk = torch.load(cache.get_chunk_path(chunk_i))
         new_chunk = []
-        for datum in maybe_tqdm(chunk, desc="Smart truncate chunk-datum",
-                                verbose=verbose):
-            new_chunk.append(experimental_smart_truncate_datum(
-                datum=datum,
-                max_seq_length=max_seq_length,
-                max_valid_length=max_valid_length,
-            ))
+        for datum in maybe_tqdm(chunk, desc="Smart truncate chunk-datum", verbose=verbose):
+            new_chunk.append(
+                experimental_smart_truncate_datum(
+                    datum=datum, max_seq_length=max_seq_length, max_valid_length=max_valid_length,
+                )
+            )
         torch.save(new_chunk, cache.get_chunk_path(chunk_i))
 
 
@@ -88,50 +88,39 @@ def experimental_smart_truncate_datum(datum, max_seq_length, max_valid_length):
     }
 
 
-def convert_examples_to_dataset(examples: list,
-                                tokenizer,
-                                feat_spec: FeaturizationSpec,
-                                phase: str,
-                                verbose=False):
+def convert_examples_to_dataset(
+    examples: list, tokenizer, feat_spec: FeaturizationSpec, phase: str, verbose=False
+):
     data_rows = tokenize_and_featurize(
-        examples=examples,
-        tokenizer=tokenizer,
-        feat_spec=feat_spec,
-        phase=phase,
-        verbose=verbose,
+        examples=examples, tokenizer=tokenizer, feat_spec=feat_spec, phase=phase, verbose=verbose,
     )
     metadata = {"example_id": list(range(len(data_rows)))}
     data = []
     for i, data_row in enumerate(data_rows):
-        metadata_row = {
-            k: v[i]
-            for k, v in metadata.items()
-        }
+        metadata_row = {k: v[i] for k, v in metadata.items()}
         data.append({"data_row": data_row, "metadata": metadata_row})
     return torch_utils.ListDataset(data)
 
 
-def iter_chunk_convert_examples_to_dataset(examples: list,
-                                           tokenizer,
-                                           feat_spec: FeaturizationSpec,
-                                           phase: str,
-                                           verbose=False):
-    for i, data_row in enumerate(iter_chunk_tokenize_and_featurize(
-        examples=examples,
-        tokenizer=tokenizer,
-        feat_spec=feat_spec,
-        phase=phase,
-        verbose=verbose,
-    )):
+def iter_chunk_convert_examples_to_dataset(
+    examples: list, tokenizer, feat_spec: FeaturizationSpec, phase: str, verbose=False
+):
+    for i, data_row in enumerate(
+        iter_chunk_tokenize_and_featurize(
+            examples=examples,
+            tokenizer=tokenizer,
+            feat_spec=feat_spec,
+            phase=phase,
+            verbose=verbose,
+        )
+    ):
         metadata = {"example_id": i}
         yield {"data_row": data_row, "metadata": metadata}
 
 
-def tokenize_and_featurize(examples: list,
-                           tokenizer,
-                           feat_spec: FeaturizationSpec,
-                           phase,
-                           verbose=False):
+def tokenize_and_featurize(
+    examples: list, tokenizer, feat_spec: FeaturizationSpec, phase, verbose=False
+):
     # TODO: In future, will potentially yield multiple featurized examples
     #  per example (e.g. SQuAD)
     # We'll need the 'phase' argument for then
@@ -142,11 +131,9 @@ def tokenize_and_featurize(examples: list,
     return data_rows
 
 
-def iter_chunk_tokenize_and_featurize(examples: list,
-                                      tokenizer,
-                                      feat_spec: FeaturizationSpec,
-                                      phase,
-                                      verbose=False):
+def iter_chunk_tokenize_and_featurize(
+    examples: list, tokenizer, feat_spec: FeaturizationSpec, phase, verbose=False
+):
     for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose):
         # TODO: In future, will potentially yield multiple featurized examples
         #  per example (e.g. SQuAD)

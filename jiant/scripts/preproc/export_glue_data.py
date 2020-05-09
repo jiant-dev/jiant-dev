@@ -10,101 +10,107 @@ GLUE_CONVERSION = {
     "cola": {
         "data": {
             "train": {"cols": {"sentence": 3, "label": 1}},
-            "val": {"cols": {"sentence": 3, "label": 1},
-                    "meta": {"filename": "dev"}},
+            "val": {"cols": {"sentence": 3, "label": 1}, "meta": {"filename": "dev"}},
             "test": {"cols": {"text_a": 1}, "meta": {"skiprows": 1}},
         },
         "dir_name": "CoLA",
     },
     "mnli": {
         "data": {
-            "train": {"cols": {"premise": 8, "hypothesis": 9, "label": 11},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"premise": 8, "hypothesis": 9, "label": 15},
-                    "meta": {"filename": "dev_matched", "skiprows": 1}},
-            "val_mismatched": {"cols": {"premise": 8, "hypothesis": 9, "label": 15},
-                               "meta": {"filename": "dev_mismatched", "skiprows": 1}},
-            "test": {"cols": {"premise": 8, "hypothesis": 9},
-                     "meta": {"filename": "test_matched", "skiprows": 1}},
-            "test_mismatched": {"cols": {"premise": 8, "hypothesis": 9},
-                                "meta": {"filename": "test_mismatched", "skiprows": 1}},
+            "train": {
+                "cols": {"premise": 8, "hypothesis": 9, "label": 11},
+                "meta": {"skiprows": 1},
+            },
+            "val": {
+                "cols": {"premise": 8, "hypothesis": 9, "label": 15},
+                "meta": {"filename": "dev_matched", "skiprows": 1},
+            },
+            "val_mismatched": {
+                "cols": {"premise": 8, "hypothesis": 9, "label": 15},
+                "meta": {"filename": "dev_mismatched", "skiprows": 1},
+            },
+            "test": {
+                "cols": {"premise": 8, "hypothesis": 9},
+                "meta": {"filename": "test_matched", "skiprows": 1},
+            },
+            "test_mismatched": {
+                "cols": {"premise": 8, "hypothesis": 9},
+                "meta": {"filename": "test_mismatched", "skiprows": 1},
+            },
         },
         "dir_name": "MNLI",
     },
     "mrpc": {
         "data": {
-            "train": {"cols": {"text_a": 3, "text_b": 4, "label": 0},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"text_a": 3, "text_b": 4, "label": 0},
-                    "meta": {"filename": "dev", "skiprows": 1}},
-            "test": {"cols": {"text_a": 3, "text_b": 4},
-                     "meta": {"skiprows": 1}},
+            "train": {"cols": {"text_a": 3, "text_b": 4, "label": 0}, "meta": {"skiprows": 1}},
+            "val": {
+                "cols": {"text_a": 3, "text_b": 4, "label": 0},
+                "meta": {"filename": "dev", "skiprows": 1},
+            },
+            "test": {"cols": {"text_a": 3, "text_b": 4}, "meta": {"skiprows": 1}},
         },
         "dir_name": "MRPC",
     },
     "qnli": {
         "data": {
-            "train": {"cols": {"premise": 1, "hypothesis": 2, "label": 3},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"premise": 1, "hypothesis": 2, "label": 3},
-                    "meta": {"filename": "dev", "skiprows": 1}},
-            "test": {"cols": {"premise": 1, "hypothesis": 2},
-                     "meta": {"skiprows": 1}},
+            "train": {"cols": {"premise": 1, "hypothesis": 2, "label": 3}, "meta": {"skiprows": 1}},
+            "val": {
+                "cols": {"premise": 1, "hypothesis": 2, "label": 3},
+                "meta": {"filename": "dev", "skiprows": 1},
+            },
+            "test": {"cols": {"premise": 1, "hypothesis": 2}, "meta": {"skiprows": 1}},
         },
         "dir_name": "QNLI",
     },
     "qqp": {
         "data": {
-            "train": {"cols": {"text_a": 3, "text_b": 4, "label": 5},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"text_a": 3, "text_b": 4, "label": 5},
-                    "meta": {"filename": "dev", "skiprows": 1}},
-            "test": {"cols": {"text_a": 1, "text_b": 2},
-                     "meta": {"skiprows": 1}},
+            "train": {"cols": {"text_a": 3, "text_b": 4, "label": 5}, "meta": {"skiprows": 1}},
+            "val": {
+                "cols": {"text_a": 3, "text_b": 4, "label": 5},
+                "meta": {"filename": "dev", "skiprows": 1},
+            },
+            "test": {"cols": {"text_a": 1, "text_b": 2}, "meta": {"skiprows": 1}},
         },
         "dir_name": "QQP",
     },
     "rte": {
         "data": {
-            "train": {"cols": {"premise": 1, "hypothesis": 2, "label": 3},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"premise": 1, "hypothesis": 2, "label": 3},
-                    "meta": {"filename": "dev", "skiprows": 1}},
-            "test": {"cols": {"premise": 1, "hypothesis": 2},
-                     "meta": {"skiprows": 1}},
+            "train": {"cols": {"premise": 1, "hypothesis": 2, "label": 3}, "meta": {"skiprows": 1}},
+            "val": {
+                "cols": {"premise": 1, "hypothesis": 2, "label": 3},
+                "meta": {"filename": "dev", "skiprows": 1},
+            },
+            "test": {"cols": {"premise": 1, "hypothesis": 2}, "meta": {"skiprows": 1}},
         },
         "dir_name": "RTE",
     },
     "sst": {
         "data": {
-            "train": {"cols": {"text": 0, "label": 1},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"text": 0, "label": 1},
-                    "meta": {"filename": "dev", "skiprows": 1}},
-            "test": {"cols": {"text": 1},
-                     "meta": {"skiprows": 1}},
+            "train": {"cols": {"text": 0, "label": 1}, "meta": {"skiprows": 1}},
+            "val": {"cols": {"text": 0, "label": 1}, "meta": {"filename": "dev", "skiprows": 1}},
+            "test": {"cols": {"text": 1}, "meta": {"skiprows": 1}},
         },
         "dir_name": "SST-2",
     },
     "stsb": {
         "data": {
-            "train": {"cols": {"text_a": 7, "text_b": 8, "label": 9},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"text_a": 7, "text_b": 8, "label": 9},
-                    "meta": {"filename": "dev", "skiprows": 1}},
-            "test": {"cols": {"text_a": 7, "text_b": 8},
-                     "meta": {"skiprows": 1}},
+            "train": {"cols": {"text_a": 7, "text_b": 8, "label": 9}, "meta": {"skiprows": 1}},
+            "val": {
+                "cols": {"text_a": 7, "text_b": 8, "label": 9},
+                "meta": {"filename": "dev", "skiprows": 1},
+            },
+            "test": {"cols": {"text_a": 7, "text_b": 8}, "meta": {"skiprows": 1}},
         },
         "dir_name": "STS-B",
     },
     "wnli": {
         "data": {
-            "train": {"cols": {"premise": 1, "hypothesis": 2, "label": 3},
-                      "meta": {"skiprows": 1}},
-            "val": {"cols": {"premise": 1, "hypothesis": 2, "label": 3},
-                    "meta": {"filename": "dev", "skiprows": 1}},
-            "test": {"cols": {"premise": 1, "hypothesis": 2},
-                     "meta": {"skiprows": 1}},
+            "train": {"cols": {"premise": 1, "hypothesis": 2, "label": 3}, "meta": {"skiprows": 1}},
+            "val": {
+                "cols": {"premise": 1, "hypothesis": 2, "label": 3},
+                "meta": {"filename": "dev", "skiprows": 1},
+            },
+            "test": {"cols": {"premise": 1, "hypothesis": 2}, "meta": {"skiprows": 1}},
         },
         "dir_name": "WNLI",
     },
@@ -151,22 +157,17 @@ def preprocess_all_glue_data(input_base_path, output_base_path):
     for task_name in tqdm.tqdm(GLUE_CONVERSION):
         task_data_path = os.path.join(output_base_path, "data", task_name)
         os.makedirs(task_data_path, exist_ok=True)
-        task_all_examples = get_full_examples(
-            task_name=task_name,
-            input_base_path=input_base_path,
-        )
+        task_all_examples = get_full_examples(task_name=task_name, input_base_path=input_base_path,)
         config = {"task": task_name, "paths": {}, "name": task_name}
         for phase, phase_data in task_all_examples.items():
             phase_data_path = os.path.join(task_data_path, f"{phase}.jsonl")
             py_io.write_jsonl(
-                data=phase_data,
-                path=phase_data_path,
+                data=phase_data, path=phase_data_path,
             )
             config["paths"][phase] = phase_data_path
 
         py_io.write_json(
-            data=config,
-            path=os.path.join(output_base_path, "configs", f"{task_name}.json")
+            data=config, path=os.path.join(output_base_path, "configs", f"{task_name}.json")
         )
 
 
@@ -179,8 +180,7 @@ class RunConfiguration(zconf.RunConfig):
 def main():
     args = RunConfiguration.default_run_cli()
     preprocess_all_glue_data(
-        input_base_path=args.input_base_path,
-        output_base_path=args.output_base_path,
+        input_base_path=args.input_base_path, output_base_path=args.output_base_path,
     )
 
 

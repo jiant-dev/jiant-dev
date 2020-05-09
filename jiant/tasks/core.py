@@ -26,10 +26,9 @@ class FeaturizationSpec:
 class BatchMixin(ExtendedDataClassMixin):
     def to(self, device):
         # noinspection PyArgumentList
-        return self.__class__(**{
-            k: self._val_to_device(v, device)
-            for k, v in self.to_dict().items()
-        })
+        return self.__class__(
+            **{k: self._val_to_device(v, device) for k, v in self.to_dict().items()}
+        )
 
     @classmethod
     def _val_to_device(cls, v, device):
@@ -84,17 +83,11 @@ class BatchTuple(NamedTuple):
     metadata: dict
 
     def to(self, device):
-        return BatchTuple(
-            batch=self.batch.to(device),
-            metadata=self.metadata,
-        )
+        return BatchTuple(batch=self.batch.to(device), metadata=self.metadata,)
 
 
 def metadata_collate_fn(metadata: list):
-    return {
-        k: [d[k] for d in metadata]
-        for k in metadata[0].keys()
-    }
+    return {k: [d[k] for d in metadata] for k in metadata[0].keys()}
 
 
 def flat_collate_fn(batch):

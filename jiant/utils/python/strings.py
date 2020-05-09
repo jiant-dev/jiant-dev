@@ -1,11 +1,11 @@
 def remove_prefix(s, prefix):
     assert s.startswith(prefix)
-    return s[len(prefix):]
+    return s[len(prefix) :]
 
 
 def remove_suffix(s, suffix):
     assert s.endswith(suffix)
-    return s[:-len(suffix)]
+    return s[: -len(suffix)]
 
 
 def replace_prefix(s, prefix, new_prefix):

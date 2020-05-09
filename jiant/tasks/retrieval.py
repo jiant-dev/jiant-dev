@@ -35,9 +35,7 @@ def get_task_class(task_name: str):
     return task_class
 
 
-def create_task_from_config(config: dict,
-                            base_path: Optional[str] = None,
-                            verbose: bool = False):
+def create_task_from_config(config: dict, base_path: Optional[str] = None, verbose: bool = False):
     task_class = get_task_class(config["task"])
     for k in config["paths"].keys():
         path = config["paths"][k]
@@ -56,7 +54,5 @@ def create_task_from_config(config: dict,
 
 def create_task_from_config_path(config_path: str, verbose: bool = False):
     return create_task_from_config(
-        read_json(config_path),
-        base_path=os.path.split(config_path)[0],
-        verbose=verbose,
+        read_json(config_path), base_path=os.path.split(config_path)[0], verbose=verbose,
     )

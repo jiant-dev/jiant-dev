@@ -45,11 +45,9 @@ class BaseEvaluationScheme:
     def get_preds_from_accumulator(self, task, accumulator):
         raise NotImplementedError()
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: BaseAccumulator,
-                                         tokenizer,
-                                         labels) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: BaseAccumulator, tokenizer, labels
+    ) -> Metrics:
         raise NotImplementedError()
 
 
@@ -87,23 +85,17 @@ class BaseLogitsEvaluationScheme(BaseEvaluationScheme):
     def get_preds_from_accumulator(self, task, accumulator):
         raise NotImplementedError()
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: ConcatenateLogitsAccumulator,
-                                         tokenizer,
-                                         labels: list) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
+    ) -> Metrics:
         preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
-        return self.compute_metrics_from_preds_and_labels(
-            preds=preds,
-            labels=labels,
-        )
+        return self.compute_metrics_from_preds_and_labels(preds=preds, labels=labels,)
 
     def compute_metrics_from_preds_and_labels(self, preds, labels):
         raise NotImplementedError()
 
 
 class SimpleAccuracyEvaluationScheme(BaseLogitsEvaluationScheme):
-
     @classmethod
     def get_preds_from_accumulator(cls, task, accumulator):
         logits = accumulator.get_accumulated()
@@ -113,14 +105,10 @@ class SimpleAccuracyEvaluationScheme(BaseLogitsEvaluationScheme):
     def compute_metrics_from_preds_and_labels(cls, preds, labels):
         # noinspection PyUnresolvedReferences
         acc = float((preds == labels).mean())
-        return Metrics(
-            major=acc,
-            minor={"acc": acc},
-        )
+        return Metrics(major=acc, minor={"acc": acc},)
 
 
 class AccAndF1EvaluationScheme(BaseLogitsEvaluationScheme):
-
     def get_preds_from_accumulator(self, task, accumulator):
         logits = accumulator.get_accumulated()
         return np.argmax(logits, axis=1)
@@ -136,14 +124,10 @@ class AccAndF1EvaluationScheme(BaseLogitsEvaluationScheme):
             "f1": f1,
             "acc_and_f1": (acc + f1) / 2,
         }
-        return Metrics(
-            major=minor["acc_and_f1"],
-            minor=minor,
-        )
+        return Metrics(major=minor["acc_and_f1"], minor=minor,)
 
 
 class MCCEvaluationScheme(BaseLogitsEvaluationScheme):
-
     def get_preds_from_accumulator(self, task, accumulator):
         logits = accumulator.get_accumulated()
         return np.argmax(logits, axis=1)
@@ -151,14 +135,10 @@ class MCCEvaluationScheme(BaseLogitsEvaluationScheme):
     @classmethod
     def compute_metrics_from_preds_and_labels(cls, preds, labels):
         mcc = matthews_corrcoef(labels, preds)
-        return Metrics(
-            major=mcc,
-            minor={"mcc": mcc},
-        )
+        return Metrics(major=mcc, minor={"mcc": mcc},)
 
 
 class PearsonAndSpearmanEvaluationScheme(BaseLogitsEvaluationScheme):
-
     def get_labels_from_cache_and_examples(self, task, cache, examples):
         return get_label_vals_from_cache(cache=cache)
 
@@ -175,29 +155,26 @@ class PearsonAndSpearmanEvaluationScheme(BaseLogitsEvaluationScheme):
             "spearmanr": spearman_corr,
             "corr": (pearson_corr + spearman_corr) / 2,
         }
-        return Metrics(
-            major=minor["corr"],
-            minor=minor,
-        )
+        return Metrics(major=minor["corr"], minor=minor,)
 
 
 def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
     # Todo: move logic to task?
-    if isinstance(task, (
-        tasks.MnliTask,
-        tasks.QnliTask,
-        tasks.RteTask,
-        tasks.SnliTask,
-        tasks.SstTask,
-        tasks.WnliTask,
-    )):
+    if isinstance(
+        task,
+        (
+            tasks.MnliTask,
+            tasks.QnliTask,
+            tasks.RteTask,
+            tasks.SnliTask,
+            tasks.SstTask,
+            tasks.WnliTask,
+        ),
+    ):
         return SimpleAccuracyEvaluationScheme()
     elif isinstance(task, tasks.ColaTask):
         return MCCEvaluationScheme()
-    elif isinstance(task, (
-        tasks.MrpcTask,
-        tasks.QqpTask,
-    )):
+    elif isinstance(task, (tasks.MrpcTask, tasks.QqpTask,)):
         return AccAndF1EvaluationScheme()
     elif isinstance(task, tasks.StsbTask):
         return PearsonAndSpearmanEvaluationScheme()
@@ -214,17 +191,15 @@ def get_label_id_from_data_row(data_row):
 
 
 def get_label_ids_from_cache(cache):
-    return np.array([
-        get_label_id_from_data_row(data_row=datum["data_row"])
-        for datum in cache.iter_all()
-    ])
+    return np.array(
+        [get_label_id_from_data_row(data_row=datum["data_row"]) for datum in cache.iter_all()]
+    )
 
 
 def get_label_vals_from_cache(cache):
-    return np.array([
-        get_label_val_from_data_row(data_row=datum["data_row"])
-        for datum in cache.iter_all()
-    ])
+    return np.array(
+        [get_label_val_from_data_row(data_row=datum["data_row"]) for datum in cache.iter_all()]
+    )
 
 
 def get_label_val_from_data_row(data_row):
@@ -259,13 +234,10 @@ def write_val_results(results, output_dir, verbose=True, do_write_preds=True):
     if do_write_preds:
         if len(results["logits"].shape) == 2:
             write_preds(
-                logits=results["logits"],
-                output_path=os.path.join(output_dir, "val_preds.csv"),
+                logits=results["logits"], output_path=os.path.join(output_dir, "val_preds.csv"),
             )
         else:
             torch.save(results["logits"], os.path.join(output_dir, "val_preds.p"))
     write_metrics(
-        results=results,
-        output_path=os.path.join(output_dir, "val_metrics.json"),
-        verbose=verbose,
+        results=results, output_path=os.path.join(output_dir, "val_metrics.json"), verbose=verbose,
     )

@@ -32,10 +32,7 @@ def read_jsonl(path):
 
 def write_jsonl(data, path):
     assert isinstance(data, list)
-    lines = [
-        to_jsonl(elem)
-        for elem in data
-    ]
+    lines = [to_jsonl(elem) for elem in data]
     write_file("\n".join(lines), path)
 
 

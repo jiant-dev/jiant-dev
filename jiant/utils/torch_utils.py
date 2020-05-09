@@ -17,7 +17,7 @@ def normalize_embedding_tensor(embedding):
 
 def embedding_norm_loss(raw_embedding):
     norms = raw_embedding.norm(dim=1)
-    return F.mse_loss(norms, torch.ones_like(norms), reduction='none')
+    return F.mse_loss(norms, torch.ones_like(norms), reduction="none")
 
 
 def get_val(x):
@@ -43,10 +43,7 @@ def copy_state_dict(state_dict, target_device=None):
     if target_device is None:
         return copied_state_dict
     else:
-        return {
-            k: v.to(target_device)
-            for k, v in copied_state_dict.items()
-        }
+        return {k: v.to(target_device) for k, v in copied_state_dict.items()}
 
 
 def get_parent_child_module_list(model):
@@ -58,6 +55,7 @@ def get_parent_child_module_list(model):
 
 
 class IdentityModule(nn.Module):
+    # noinspection PyMethodMayBeStatic
     def forward(self, *inputs):
         if len(inputs) == 1:
             return inputs[0]
