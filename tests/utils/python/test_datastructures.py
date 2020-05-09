@@ -1,4 +1,5 @@
 import pytest
+from dataclasses import dataclass
 
 import jiant.utils.python.checks as py_checks
 import jiant.utils.python.datastructures as py_datastructures
@@ -67,4 +68,16 @@ def test_partition_list():
     assert py_checks.list_equal(
         py_datastructures.partition_list(list(range(10)), 1),
         [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]],
+    )
+
+
+def test_extended_dataclass_mixin():
+    @dataclass
+    class MyClass(py_datastructures.ExtendedDataClassMixin):
+        int1: int
+        str1: str
+
+    assert py_checks.list_equal(
+        MyClass.get_fields(),
+        ["int1", "str1"],
     )

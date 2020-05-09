@@ -20,9 +20,11 @@ def identity(*args):
         return args[0]
 
 
+# noinspection PyUnusedLocal
 def always_false(*args, **kwargs):
     return False
 
 
+# noinspection PyUnusedLocal
 def always_true(*args, **kwargs):
     return True
