@@ -127,7 +127,7 @@ class Task:
         return self.path_dict["test"]
 
     @classmethod
-    def collate_fn(cls, batch: Batch):
+    def collate_fn(cls, batch):
         # cls.collate_fn
         elem = batch[0]
         if isinstance(elem, Mapping):  # dict

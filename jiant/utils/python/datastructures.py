@@ -1,29 +1,29 @@
 import math
 import itertools
-from typing import Collection, Any, Sequence, Iterable, Iterator, Union
+from typing import Mapping, Any, Sequence, Iterable, Iterator, Union
 
 
-def take_one(ls: Union[Sequence, Collection]) -> Any:
+def take_one(ls: Union[Sequence, Mapping]) -> Any:
     if not len(ls) == 1:
         raise IndexError(f"has more than one element ({len(ls)})")
     return next(iter(ls))
 
 
-def chain_idx_get(container: Collection, key_list: Sequence, default: Any) -> Any:
+def chain_idx_get(container: Union[Sequence, Mapping], key_list: Sequence, default: Any) -> Any:
     try:
         return chain_idx(container, key_list)
     except (KeyError, IndexError, TypeError):
         return default
 
 
-def chain_idx(container: Collection, key_list: Sequence) -> Any:
+def chain_idx(container: Union[Sequence, Mapping], key_list: Sequence) -> Any:
     curr = container
     for key in key_list:
         curr = curr[key]
     return curr
 
 
-def group_by(ls, key_func):
+def group_by(ls: Sequence, key_func) -> dict:
     result = {}
     for elem in ls:
         key = key_func(elem)
@@ -33,7 +33,7 @@ def group_by(ls, key_func):
     return result
 
 
-def combine_dicts(dict_ls, strict=True, dict_class=dict):
+def combine_dicts(dict_ls: Sequence[dict], strict=True, dict_class=dict):
     new_dict = dict_class()
     for i, dictionary in enumerate(dict_ls):
         for k, v in dictionary.items():
@@ -44,7 +44,7 @@ def combine_dicts(dict_ls, strict=True, dict_class=dict):
     return new_dict
 
 
-def sort_dict(d):
+def sort_dict(d: dict):
     return {k: d[k] for k in sorted(list(d.keys()))}
 
 
