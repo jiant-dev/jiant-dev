@@ -25,17 +25,12 @@ jobs:
           name: black formatting check
           command: |
               source venv/bin/activate
-              black jiant/
+              black --check jiant/
       - run:
           name: flake8
           command: |
               source venv/bin/activate
               flake8 --docstring-convention google jiant/
-      - run:
-          name: mypy
-          command: |
-              source venv/bin/activate
-              mypy jiant/
       - run:
           name: Unit Tests
           command: |
