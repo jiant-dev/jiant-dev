@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from typing import List
 
 from jiant.tasks.core import (
-    BaseExample, BaseTokenizedExample, BaseDataRow, BatchMixin, Task, TaskTypes,
+    BaseExample,
+    BaseTokenizedExample,
+    BaseDataRow,
+    BatchMixin,
+    Task,
+    TaskTypes,
 )
 from jiant.tasks.lib.templates.shared import double_sentence_featurize, labels_to_bimap
 from jiant.utils.python.io import read_jsonl
@@ -89,10 +94,12 @@ class SnliTask(Task):
         for (i, line) in enumerate(lines):
             if line["gold_label"] == "-":
                 continue
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                input_premise=line["sentence1"],
-                input_hypothesis=line["sentence2"],
-                label=line["gold_label"] if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    input_premise=line["sentence1"],
+                    input_hypothesis=line["sentence2"],
+                    label=line["gold_label"] if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples

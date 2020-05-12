@@ -36,16 +36,16 @@ class InputSet:
     segment_ids: List
 
 
-def single_sentence_featurize(guid: str,
-                              input_tokens: List[str],
-                              label_id: int,
-                              tokenizer,
-                              feat_spec: FeaturizationSpec,
-                              data_row_class):
+def single_sentence_featurize(
+    guid: str,
+    input_tokens: List[str],
+    label_id: int,
+    tokenizer,
+    feat_spec: FeaturizationSpec,
+    data_row_class,
+):
     unpadded_inputs = construct_single_input_tokens_and_segment_ids(
-        input_tokens=input_tokens,
-        tokenizer=tokenizer,
-        feat_spec=feat_spec,
+        input_tokens=input_tokens, tokenizer=tokenizer, feat_spec=feat_spec,
     )
     return create_generic_data_row_from_tokens_and_segments(
         guid=guid,
@@ -58,13 +58,15 @@ def single_sentence_featurize(guid: str,
     )
 
 
-def double_sentence_featurize(guid: str,
-                              input_tokens_a: List[str],
-                              input_tokens_b: List[str],
-                              label_id: int,
-                              tokenizer,
-                              feat_spec: FeaturizationSpec,
-                              data_row_class):
+def double_sentence_featurize(
+    guid: str,
+    input_tokens_a: List[str],
+    input_tokens_b: List[str],
+    label_id: int,
+    tokenizer,
+    feat_spec: FeaturizationSpec,
+    data_row_class,
+):
     unpadded_inputs = construct_double_input_tokens_and_segment_ids(
         input_tokens_a=input_tokens_a,
         input_tokens_b=input_tokens_b,
@@ -83,14 +85,13 @@ def double_sentence_featurize(guid: str,
     )
 
 
-def construct_single_input_tokens_and_segment_ids(input_tokens: List[str],
-                                                  tokenizer,
-                                                  feat_spec: FeaturizationSpec):
+def construct_single_input_tokens_and_segment_ids(
+    input_tokens: List[str], tokenizer, feat_spec: FeaturizationSpec
+):
     special_tokens_count = 2  # CLS, SEP
 
-    input_tokens, = truncate_sequences(
-        tokens_ls=[input_tokens],
-        max_length=feat_spec.max_seq_length - special_tokens_count,
+    (input_tokens,) = truncate_sequences(
+        tokens_ls=[input_tokens], max_length=feat_spec.max_seq_length - special_tokens_count,
     )
 
     return add_cls_token(
@@ -104,10 +105,9 @@ def construct_single_input_tokens_and_segment_ids(input_tokens: List[str],
     )
 
 
-def construct_double_input_tokens_and_segment_ids(input_tokens_a: List[str],
-                                                  input_tokens_b: List[str],
-                                                  tokenizer,
-                                                  feat_spec: FeaturizationSpec):
+def construct_double_input_tokens_and_segment_ids(
+    input_tokens_a: List[str], input_tokens_b: List[str], tokenizer, feat_spec: FeaturizationSpec
+):
 
     if feat_spec.sep_token_extra:
         maybe_extra_sep = [tokenizer.sep_token]
@@ -124,9 +124,11 @@ def construct_double_input_tokens_and_segment_ids(input_tokens_a: List[str],
     )
 
     unpadded_tokens = (
-        input_tokens_a + [tokenizer.sep_token]
+        input_tokens_a
+        + [tokenizer.sep_token]
         + maybe_extra_sep
-        + input_tokens_b + [tokenizer.sep_token]
+        + input_tokens_b
+        + [tokenizer.sep_token]
     )
     unpadded_segment_ids = (
         [feat_spec.sequence_a_segment_id] * len(input_tokens_a)
@@ -143,10 +145,12 @@ def construct_double_input_tokens_and_segment_ids(input_tokens_a: List[str],
     )
 
 
-def add_cls_token(unpadded_tokens: List[str],
-                  unpadded_segment_ids: List[int],
-                  tokenizer,
-                  feat_spec: FeaturizationSpec):
+def add_cls_token(
+    unpadded_tokens: List[str],
+    unpadded_segment_ids: List[int],
+    tokenizer,
+    feat_spec: FeaturizationSpec,
+):
     if feat_spec.cls_token_at_end:
         return UnpaddedInputs(
             unpadded_tokens=unpadded_tokens + [tokenizer.cls_token],
@@ -162,13 +166,14 @@ def add_cls_token(unpadded_tokens: List[str],
 
 
 def create_generic_data_row_from_tokens_and_segments(
-        guid: str,
-        unpadded_tokens: List[str],
-        unpadded_segment_ids: List[int],
-        label_id: int,
-        tokenizer,
-        feat_spec: FeaturizationSpec,
-        data_row_class):
+    guid: str,
+    unpadded_tokens: List[str],
+    unpadded_segment_ids: List[int],
+    label_id: int,
+    tokenizer,
+    feat_spec: FeaturizationSpec,
+    data_row_class,
+):
     input_set = create_input_set_from_tokens_and_segments(
         unpadded_tokens=unpadded_tokens,
         unpadded_segment_ids=unpadded_segment_ids,
@@ -185,10 +190,12 @@ def create_generic_data_row_from_tokens_and_segments(
     )
 
 
-def create_input_set_from_tokens_and_segments(unpadded_tokens: List[str],
-                                              unpadded_segment_ids: List[int],
-                                              tokenizer,
-                                              feat_spec: FeaturizationSpec):
+def create_input_set_from_tokens_and_segments(
+    unpadded_tokens: List[str],
+    unpadded_segment_ids: List[int],
+    tokenizer,
+    feat_spec: FeaturizationSpec,
+):
     assert len(unpadded_tokens) == len(unpadded_segment_ids)
     input_ids = tokenizer.convert_tokens_to_ids(unpadded_tokens)
     input_mask = [1] * len(input_ids)
@@ -201,10 +208,12 @@ def create_input_set_from_tokens_and_segments(unpadded_tokens: List[str],
     return input_set
 
 
-def pad_features_with_feat_spec(input_ids: List[int],
-                                input_mask: List[int],
-                                unpadded_segment_ids: List[int],
-                                feat_spec: FeaturizationSpec):
+def pad_features_with_feat_spec(
+    input_ids: List[int],
+    input_mask: List[int],
+    unpadded_segment_ids: List[int],
+    feat_spec: FeaturizationSpec,
+):
     return InputSet(
         input_ids=pad_single_with_feat_spec(
             ls=input_ids, feat_spec=feat_spec, pad_idx=feat_spec.pad_token_id,
@@ -218,10 +227,9 @@ def pad_features_with_feat_spec(input_ids: List[int],
     )
 
 
-def pad_single_with_feat_spec(ls: List[int],
-                              feat_spec: FeaturizationSpec,
-                              pad_idx: int,
-                              check=True):
+def pad_single_with_feat_spec(
+    ls: List[int], feat_spec: FeaturizationSpec, pad_idx: int, check=True
+):
     return pad_to_max_seq_length(
         ls=ls,
         max_seq_length=feat_spec.max_seq_length,

@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from typing import List
 
 from jiant.tasks.core import (
-    BaseExample, BaseTokenizedExample, BaseDataRow, BatchMixin, Task, TaskTypes,
+    BaseExample,
+    BaseTokenizedExample,
+    BaseDataRow,
+    BatchMixin,
+    Task,
+    TaskTypes,
 )
 from jiant.tasks.lib.templates.shared import double_sentence_featurize, labels_to_bimap
 from jiant.utils.python.io import read_jsonl
@@ -87,10 +92,12 @@ class QnliTask(Task):
     def _create_examples(cls, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                input_premise=line["premise"],
-                input_hypothesis=line["hypothesis"],
-                label=line["label"] if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    input_premise=line["premise"],
+                    input_hypothesis=line["hypothesis"],
+                    label=line["label"] if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples

@@ -4,8 +4,12 @@ from dataclasses import dataclass
 from typing import List
 
 from jiant.tasks.core import (
-    BaseExample, BaseTokenizedExample, BaseDataRow, BatchMixin,
-    Task, TaskTypes,
+    BaseExample,
+    BaseTokenizedExample,
+    BaseDataRow,
+    BatchMixin,
+    Task,
+    TaskTypes,
 )
 from jiant.tasks.lib.templates.shared import (
     construct_double_input_tokens_and_segment_ids,
@@ -101,10 +105,12 @@ class StsbTask(Task):
     def _create_examples(cls, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                text_a=line["text_a"],
-                text_b=line["text_b"],
-                label=float(line["label"]) if set_type != "test" else 0,
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    text_a=line["text_a"],
+                    text_b=line["text_b"],
+                    label=float(line["label"]) if set_type != "test" else 0,
+                )
+            )
         return examples
