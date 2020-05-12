@@ -1,15 +1,35 @@
 import math
 import itertools
-from typing import Mapping, Any, Sequence, Iterable, Iterator, Union
+from typing import Mapping, Any, Sequence, Iterable, Iterator, Union, Tuple, Dict
 
 
 def take_one(ls: Union[Sequence, Mapping]) -> Any:
+    """Extract item from a collection containing a just one item.
+
+    Args:
+        ls (Union[Sequence, Mapping]): collection containing a single item.
+
+    Returns:
+        Single item from collection.
+
+    """
     if not len(ls) == 1:
         raise IndexError(f"has more than one element ({len(ls)})")
     return next(iter(ls))
 
 
 def chain_idx_get(container: Union[Sequence, Mapping], key_list: Sequence, default: Any) -> Any:
+    """Retrieve entry at a path from a arbitrarily nested collection, return default if not found.
+
+    Args:
+        container (Union[Sequence, Mapping]): collection from which to try to retrieve element.
+        key_list (Sequence): list of index and/or keys specifying the path to the requested element.
+        default (Any): default value to return if no value exists at the specified path.
+
+    Returns:
+        Entry found at the specified path (or default value if no entry is found at that path).
+
+    """
     try:
         return chain_idx(container, key_list)
     except (KeyError, IndexError, TypeError):
@@ -17,6 +37,16 @@ def chain_idx_get(container: Union[Sequence, Mapping], key_list: Sequence, defau
 
 
 def chain_idx(container: Union[Sequence, Mapping], key_list: Sequence) -> Any:
+    """Retrieve entry at a path from a arbitrarily nested collection.
+
+    Args:
+        container (Union[Sequence, Mapping]): collection from which to try to retrieve element.
+        key_list (Sequence): list of index and/or keys specifying the path to the requested element.
+
+    Returns:
+        Entry found at the specified path.
+
+    """
     curr = container
     for key in key_list:
         curr = curr[key]
@@ -24,6 +54,20 @@ def chain_idx(container: Union[Sequence, Mapping], key_list: Sequence) -> Any:
 
 
 def group_by(ls: Sequence, key_func) -> dict:
+    """Apply a function to every element of a sequence.
+
+    Args:
+        ls (Sequence): sequence to process.
+        key_func: function to apply.
+
+    Returns:
+        Dict mapping the result of applying the fn to the corresponding component in the sequence.
+
+    Examples:
+        group_by([1,2,3], lambda x: x**2)
+        {1: [1], 4: [2], 9: [3]}
+
+    """
     result = {}
     for elem in ls:
         key = key_func(elem)
@@ -34,6 +78,17 @@ def group_by(ls: Sequence, key_func) -> dict:
 
 
 def combine_dicts(dict_ls: Sequence[dict], strict=True, dict_class=dict):
+    """Merges entries from one or more dicts into a single dict (shallow copy).
+
+    Args:
+        dict_ls (Sequence[dict]): sequence of dictionaries to combine.
+        strict (bool): whether to throw an exception in the event of key collision, else overwrite.
+        dict_class (dictionary): dictionary class for the destination dict.
+
+    Returns:
+        Dictionary containing the entries from the input dicts.
+
+    """
     new_dict = dict_class()
     for i, dictionary in enumerate(dict_ls):
         for k, v in dictionary.items():
@@ -134,7 +189,15 @@ class ExtendedDataClassMixin:
 
 
 class BiMap:
-    def __init__(self, a, b):
+    """Maintains (bijective) mappings between two sets.
+
+    Args:
+        a (Sequence): sequence of set a elements.
+        b (Sequence): sequence of set b elements.
+
+    """
+
+    def __init__(self, a: Sequence, b: Sequence):
         self.a_to_b = {}
         self.b_to_a = {}
         for i, j in zip(a, b):
@@ -142,5 +205,11 @@ class BiMap:
             self.b_to_a[j] = i
         assert len(self.a_to_b) == len(self.b_to_a) == len(a) == len(b)
 
-    def get_maps(self):
+    def get_maps(self) -> Tuple[Dict, Dict]:
+        """Return stored mappings.
+
+        Returns:
+            Tuple[Dict, Dict]: mappings from elements of a to b, and mappings from b to a.
+
+        """
         return self.a_to_b, self.b_to_a
