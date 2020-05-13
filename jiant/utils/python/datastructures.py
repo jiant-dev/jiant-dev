@@ -4,13 +4,13 @@ from typing import Mapping, Any, Sequence, Iterable, Iterator, Union, Tuple, Dic
 
 
 def take_one(ls: Union[Sequence, Mapping]) -> Any:
-    """Extract item from a collection containing a just one item.
+    """Extract element from a collection containing just one element.
 
     Args:
-        ls (Union[Sequence, Mapping]): collection containing a single item.
+        ls (Union[Sequence, Mapping]): collection containing one element.
 
     Returns:
-        Single item from collection.
+        Element extracted from collection.
 
     """
     if not len(ls) == 1:
@@ -19,15 +19,15 @@ def take_one(ls: Union[Sequence, Mapping]) -> Any:
 
 
 def chain_idx_get(container: Union[Sequence, Mapping], key_list: Sequence, default: Any) -> Any:
-    """Retrieve entry at a path from a arbitrarily nested collection, return default if not found.
+    """Get an element at a path in an arbitrarily nested container, return default if not found.
 
     Args:
-        container (Union[Sequence, Mapping]): collection from which to try to retrieve element.
-        key_list (Sequence): list of index and/or keys specifying the path to the requested element.
+        container (Union[Sequence, Mapping]): container from which to try to retrieve element.
+        key_list (Sequence): list of index and/or keys specifying the path.
         default (Any): default value to return if no value exists at the specified path.
 
     Returns:
-        Entry found at the specified path (or default value if no entry is found at that path).
+        Element found at the specified path, or default value if no entry is found at that path.
 
     """
     try:
@@ -37,14 +37,14 @@ def chain_idx_get(container: Union[Sequence, Mapping], key_list: Sequence, defau
 
 
 def chain_idx(container: Union[Sequence, Mapping], key_list: Sequence) -> Any:
-    """Retrieve entry at a path from a arbitrarily nested collection.
+    """Get an element at a path in an arbitrarily nested container.
 
     Args:
-        container (Union[Sequence, Mapping]): collection from which to try to retrieve element.
-        key_list (Sequence): list of index and/or keys specifying the path to the requested element.
+        container (Union[Sequence, Mapping]): container from which to try to retrieve element.
+        key_list (Sequence): list of index and/or keys specifying the path.
 
     Returns:
-        Entry found at the specified path.
+        Element found at the specified path.
 
     """
     curr = container
@@ -54,18 +54,18 @@ def chain_idx(container: Union[Sequence, Mapping], key_list: Sequence) -> Any:
 
 
 def group_by(ls: Sequence, key_func) -> dict:
-    """Apply a function to every element of a sequence.
+    """Group elements by the result of the function applied to each element.
 
     Args:
-        ls (Sequence): sequence to process.
+        ls (Sequence): elements to group.
         key_func: function to apply.
 
     Returns:
-        Dict mapping the result of applying the fn to the corresponding component in the sequence.
+        Dict grouping elements (values) by the result of the function applied to the element (keys).
 
     Examples:
-        group_by([1,2,3], lambda x: x**2)
-        {1: [1], 4: [2], 9: [3]}
+        group_by([1, 2, 3, 4, 5], lambda x: x%2==0)
+        # Output: {False: [1, 3, 5], True: [2, 4]}
 
     """
     result = {}
