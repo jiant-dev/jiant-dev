@@ -21,9 +21,7 @@ class MaxValidLengthRecorder:
         self.max_valid_length = max(self.max_valid_length, valid_length)
 
 
-def smart_truncate(
-    dataset: torch_utils.ListDataset, max_seq_length: int, verbose: bool = False
-):
+def smart_truncate(dataset: torch_utils.ListDataset, max_seq_length: int, verbose: bool = False):
     if "input_mask" not in dataset.data[0]["data_row"].get_fields():
         raise RuntimeError("Smart truncate not supported")
     valid_length_ls = []
