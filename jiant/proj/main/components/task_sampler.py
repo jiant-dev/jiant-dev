@@ -5,9 +5,7 @@ from typing import Union, Optional, Dict
 
 
 class BaseMultiTaskSampler(metaclass=abc.ABCMeta):
-    def __init__(self,
-                 task_dict: dict, rng: Union[int, np.random.RandomState, None]
-                 ):
+    def __init__(self, task_dict: dict, rng: Union[int, np.random.RandomState, None]):
         self.task_dict = task_dict
         if isinstance(rng, int) or rng is None:
             rng = np.random.RandomState(rng)
@@ -21,18 +19,18 @@ class BaseMultiTaskSampler(metaclass=abc.ABCMeta):
 
 
 class UniformMultiTaskSampler(BaseMultiTaskSampler):
-
     def pop(self):
         task_name = self.rng.choice(list(self.task_dict))
         return task_name, self.task_dict[task_name]
 
 
 class ProportionalMultiTaskSampler(BaseMultiTaskSampler):
-
-    def __init__(self,
-                 task_dict: dict, rng: Union[int, np.random.RandomState],
-                 task_to_num_examples_dict: dict,
-                 ):
+    def __init__(
+        self,
+        task_dict: dict,
+        rng: Union[int, np.random.RandomState],
+        task_to_num_examples_dict: dict,
+    ):
         super().__init__(task_dict=task_dict, rng=rng)
         assert task_dict.keys() == task_to_num_examples_dict.keys()
         self.task_to_examples_dict = task_to_num_examples_dict
@@ -46,11 +44,12 @@ class ProportionalMultiTaskSampler(BaseMultiTaskSampler):
 
 
 class SpecifiedProbMultiTaskSampler(BaseMultiTaskSampler):
-
-    def __init__(self,
-                 task_dict: dict, rng: Union[int, np.random.RandomState],
-                 task_to_unweighted_probs: dict,
-                 ):
+    def __init__(
+        self,
+        task_dict: dict,
+        rng: Union[int, np.random.RandomState],
+        task_to_unweighted_probs: dict,
+    ):
         super().__init__(task_dict=task_dict, rng=rng)
         assert task_dict.keys() == task_to_unweighted_probs.keys()
         self.task_to_unweighted_probs = task_to_unweighted_probs
@@ -64,13 +63,14 @@ class SpecifiedProbMultiTaskSampler(BaseMultiTaskSampler):
 
 
 class TemperatureMultiTaskSampler(BaseMultiTaskSampler):
-
-    def __init__(self,
-                 task_dict: dict, rng: Union[int, np.random.RandomState],
-                 task_to_num_examples_dict: dict,
-                 temperature: float,
-                 examples_cap: Optional[int],
-                 ):
+    def __init__(
+        self,
+        task_dict: dict,
+        rng: Union[int, np.random.RandomState],
+        task_to_num_examples_dict: dict,
+        temperature: float,
+        examples_cap: Optional[int],
+    ):
         super().__init__(task_dict=task_dict, rng=rng)
         assert task_dict.keys() == task_to_num_examples_dict.keys()
         self.task_to_num_examples_dict = task_to_num_examples_dict
@@ -78,7 +78,7 @@ class TemperatureMultiTaskSampler(BaseMultiTaskSampler):
         self.examples_cap = examples_cap
         self.task_names = list(task_to_num_examples_dict.keys())
         self.task_num_examples = np.array([task_to_num_examples_dict[k] for k in self.task_names])
-        raw_n = self.task_num_examples.clip(max=examples_cap) ** (1/self.temperature)
+        raw_n = self.task_num_examples.clip(max=examples_cap) ** (1 / self.temperature)
         self.task_p = raw_n / raw_n.sum()
 
     def pop(self):
@@ -86,10 +86,9 @@ class TemperatureMultiTaskSampler(BaseMultiTaskSampler):
         return task_name, self.task_dict[task_name]
 
 
-def create_task_sampler(sampler_config: dict,
-                        task_dict: dict,
-                        task_to_num_examples_dict: dict,
-                        rng=None) -> BaseMultiTaskSampler:
+def create_task_sampler(
+    sampler_config: dict, task_dict: dict, task_to_num_examples_dict: dict, rng=None
+) -> BaseMultiTaskSampler:
     sampler_type = sampler_config["sampler_type"]
     if sampler_type == "UniformMultiTaskSampler":
         assert len(sampler_config) == 1
@@ -97,9 +96,7 @@ def create_task_sampler(sampler_config: dict,
     elif sampler_type == "ProportionalMultiTaskSampler":
         assert len(sampler_config) == 1
         return ProportionalMultiTaskSampler(
-            task_dict=task_dict,
-            rng=rng,
-            task_to_num_examples_dict=task_to_num_examples_dict,
+            task_dict=task_dict, rng=rng, task_to_num_examples_dict=task_to_num_examples_dict,
         )
     elif sampler_type == "SpecifiedProbMultiTaskSampler":
         assert len(sampler_config) == 2
@@ -132,16 +129,17 @@ class EqualMetricAggregator(BaseMetricAggregator):
 
 
 class WeightedMetricAggregator(BaseMetricAggregator):
-
     def __init__(self, weights_dict: Dict[str, float]):
         self.weights_dict = weights_dict
         self.total_weights = sum([x for x in weights_dict.values()])
 
     def aggregate(self, major_metrics_dict: Dict[str, float]):
-        return np.sum([
-            x * self.weights_dict[task_name]
-            for task_name, x in major_metrics_dict.items()
-        ]) / self.total_weights
+        return (
+            np.sum(
+                [x * self.weights_dict[task_name] for task_name, x in major_metrics_dict.items()]
+            )
+            / self.total_weights
+        )
 
 
 def create_metric_aggregator(metric_aggregator_config: Dict) -> BaseMetricAggregator:
@@ -151,23 +149,17 @@ def create_metric_aggregator(metric_aggregator_config: Dict) -> BaseMetricAggreg
         return EqualMetricAggregator()
     elif metric_aggregator_type == "WeightedMetricAggregator":
         assert len(metric_aggregator_config) == 2
-        return WeightedMetricAggregator(
-            weights_dict=metric_aggregator_config["weights_dict"]
-        )
+        return WeightedMetricAggregator(weights_dict=metric_aggregator_config["weights_dict"])
     else:
         raise KeyError(metric_aggregator_type)
 
 
 def compute_aggregate_major_metrics_from_results_dict(metrics_aggregator, results_dict):
     major_metrics_dict = {
-        task_name: results["metrics"].major
-        for task_name, results in results_dict.items()
+        task_name: results["metrics"].major for task_name, results in results_dict.items()
     }
     return metrics_aggregator.aggregate(major_metrics_dict=major_metrics_dict)
 
 
 def get_metrics_dict_from_results_dict(results_dict):
-    return {
-        task_name: results["metrics"].to_dict()
-        for task_name, results in results_dict.items()
-    }
+    return {task_name: results["metrics"].to_dict() for task_name, results in results_dict.items()}

@@ -1,5 +1,4 @@
 class AbstractMetarunner:
-
     def begin_training(self):
         raise NotImplementedError()
 

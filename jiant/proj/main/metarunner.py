@@ -25,9 +25,7 @@ class ValState(ExtendedDataClassMixin):
     def new(self):
         # noinspection PyArgumentList
         return self.__class__(
-            score=self.score,
-            metrics=self.metrics,
-            train_state=self.train_state.new(),
+            score=self.score, metrics=self.metrics, train_state=self.train_state.new(),
         )
 
     def to_dict(self):
@@ -38,8 +36,7 @@ class ValState(ExtendedDataClassMixin):
         }
 
 
-def get_should_early_stop_func(eval_every_steps: int,
-                               no_improvements_for_n_evals: int):
+def get_should_early_stop_func(eval_every_steps: int, no_improvements_for_n_evals: int):
     assert eval_every_steps != 0
     if no_improvements_for_n_evals == 0:
         return always_false
@@ -47,25 +44,30 @@ def get_should_early_stop_func(eval_every_steps: int,
         return lambda metarunner: (
             metarunner.train_state.global_steps is not None
             and metarunner.best_val_state is not None
-            and (metarunner.best_val_state.train_state.global_steps - metarunner.train_state.global_steps)
-            / eval_every_steps > no_improvements_for_n_evals
+            and (
+                metarunner.best_val_state.train_state.global_steps
+                - metarunner.train_state.global_steps
+            )
+            / eval_every_steps
+            > no_improvements_for_n_evals
         )
 
 
 class JiantMetarunner(AbstractMetarunner):
-    def __init__(self,
-                 runner: jiant_runner.JiantRunner,
-                 save_every_steps,
-                 eval_every_steps,
-                 save_checkpoint_every_steps,
-                 no_improvements_for_n_evals,
-                 checkpoint_saver,
-                 output_dir,
-                 verbose: bool = True,
-                 save_best_model: bool = True,
-                 load_best_model: bool = True,
-                 log_writer: BaseZLogger = PRINT_LOGGER
-                 ):
+    def __init__(
+        self,
+        runner: jiant_runner.JiantRunner,
+        save_every_steps,
+        eval_every_steps,
+        save_checkpoint_every_steps,
+        no_improvements_for_n_evals,
+        checkpoint_saver,
+        output_dir,
+        verbose: bool = True,
+        save_best_model: bool = True,
+        load_best_model: bool = True,
+        log_writer: BaseZLogger = PRINT_LOGGER,
+    ):
         self.runner = runner
         self.save_every_steps = save_every_steps
         self.eval_every_steps = eval_every_steps
@@ -100,8 +102,7 @@ class JiantMetarunner(AbstractMetarunner):
             train_iterator = self.runner.run_train_context(verbose=self.verbose)
         else:
             train_iterator = self.runner.resume_train_context(
-                train_state=self.train_state,
-                verbose=self.verbose,
+                train_state=self.train_state, verbose=self.verbose,
             )
         for train_state in train_iterator:
             self.train_state = train_state
@@ -142,15 +143,15 @@ class JiantMetarunner(AbstractMetarunner):
 
     def should_break_training(self) -> bool:
         if compare_steps_max_steps(
-                step=self.train_state.global_steps,
-                max_steps=self.global_train_config.max_steps):
+            step=self.train_state.global_steps, max_steps=self.global_train_config.max_steps
+        ):
             return True
 
         if self.num_evals_since_improvement >= self.no_improvements_for_n_evals:
-            self.log_writer.write_entry("early_stopping", {
-                "message": "early_stopped",
-                "train_state": self.train_state.to_dict()
-            })
+            self.log_writer.write_entry(
+                "early_stopping",
+                {"message": "early_stopped", "train_state": self.train_state.to_dict()},
+            )
             self.log_writer.flush()
             return True
 
@@ -198,7 +199,7 @@ class JiantMetarunner(AbstractMetarunner):
         self.num_evals_since_improvement += 1
         val_results_dict = self.runner.run_val(
             task_name_list=self.runner.jiant_task_container.task_run_config.train_val_task_list,
-            use_subset=True
+            use_subset=True,
         )
         aggregated_major = jiant_task_sampler.compute_aggregate_major_metrics_from_results_dict(
             metrics_aggregator=self.runner.jiant_task_container.metrics_aggregator,
@@ -227,13 +228,15 @@ class JiantMetarunner(AbstractMetarunner):
                     file_name="best_model",
                 )
             self.best_state_dict = copy_state_dict(
-                state_dict=get_model_for_saving(self.model).state_dict(),
-                target_device=CPU_DEVICE,
+                state_dict=get_model_for_saving(self.model).state_dict(), target_device=CPU_DEVICE,
             )
             self.num_evals_since_improvement = 0
-        self.log_writer.write_entry("early_stopping", {
-            "num_evals_since_improvement": self.num_evals_since_improvement,
-            "train_state": self.train_state.to_dict()
-        })
+        self.log_writer.write_entry(
+            "early_stopping",
+            {
+                "num_evals_since_improvement": self.num_evals_since_improvement,
+                "train_state": self.train_state.to_dict(),
+            },
+        )
         self.log_writer.flush()
         self.val_state_history.append(val_state)

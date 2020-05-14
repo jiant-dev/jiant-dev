@@ -25,7 +25,7 @@ def get_tokenizer(model_type, tokenizer_path):
         do_lower_case = True
     else:
         raise RuntimeError(str(tokenizer_class))
-    tokenizer = tokenizer_class.from_pretrained(tokenizer_path, do_lower_case=do_lower_case,)
+    tokenizer = tokenizer_class.from_pretrained(tokenizer_path, do_lower_case=do_lower_case)
     return tokenizer
 
 
@@ -51,8 +51,16 @@ class OptimizerScheduler:
         self.scheduler.load_state_dict(state_dict["scheduler"], strict=strict)
 
 
-def create_optimizer(model, learning_rate, t_total, warmup_steps, warmup_proportion,
-                     optimizer_epsilon=1e-8, optimizer_type="adam", verbose=False):
+def create_optimizer(
+    model,
+    learning_rate,
+    t_total,
+    warmup_steps,
+    warmup_proportion,
+    optimizer_epsilon=1e-8,
+    optimizer_type="adam",
+    verbose=False,
+):
     return create_optimizer_from_params(
         named_parameters=list(model.named_parameters()),
         learning_rate=learning_rate,
@@ -65,14 +73,24 @@ def create_optimizer(model, learning_rate, t_total, warmup_steps, warmup_proport
     )
 
 
-def create_optimizer_from_params(named_parameters, learning_rate, t_total, warmup_steps, warmup_proportion,
-                                 optimizer_epsilon=1e-8, optimizer_type="adam", verbose=False):
+def create_optimizer_from_params(
+    named_parameters,
+    learning_rate,
+    t_total,
+    warmup_steps,
+    warmup_proportion,
+    optimizer_epsilon=1e-8,
+    optimizer_type="adam",
+    verbose=False,
+):
     # Prepare optimizer
     no_decay = [
-        'bias',
-        'LayerNorm.bias', 'LayerNorm.weight',
-        'adapter.down_project.weight', 'adapter.up_project.weight',
-        'weighted_sum.weights',
+        "bias",
+        "LayerNorm.bias",
+        "LayerNorm.weight",
+        "adapter.down_project.weight",
+        "adapter.up_project.weight",
+        "weighted_sum.weights",
     ]
     if verbose:
         print("No optimizer decay for:")
@@ -81,32 +99,22 @@ def create_optimizer_from_params(named_parameters, learning_rate, t_total, warmu
                 print(f"  {n}")
 
     used_named_parameters = [
-        (n, p)
-        for n, p in named_parameters
-        if p.requires_grad
-        and 'weighted_sum.weights' not in n
+        (n, p) for n, p in named_parameters if p.requires_grad and "weighted_sum.weights" not in n
     ]
     weighted_sum_params = [
-        (n, p)
-        for n, p in named_parameters
-        if p.requires_grad
-        and 'weighted_sum.weights' in n
+        (n, p) for n, p in named_parameters if p.requires_grad and "weighted_sum.weights" in n
     ]
 
     optimizer_grouped_parameters = [
         {
-            'params': [p for n, p in used_named_parameters if not any(nd in n for nd in no_decay)],
-            'weight_decay': 0.01,
+            "params": [p for n, p in used_named_parameters if not any(nd in n for nd in no_decay)],
+            "weight_decay": 0.01,
         },
         {
-            'params': [p for n, p in used_named_parameters if any(nd in n for nd in no_decay)],
-            'weight_decay': 0.0,
+            "params": [p for n, p in used_named_parameters if any(nd in n for nd in no_decay)],
+            "weight_decay": 0.0,
         },
-        {
-            'params': [p for n, p in weighted_sum_params],
-            'weight_decay': 0.0,
-            'lr': 0.01,
-        }
+        {"params": [p for n, p in weighted_sum_params], "weight_decay": 0.0, "lr": 0.01,},
     ]
 
     if optimizer_type == "adam":
@@ -118,22 +126,17 @@ def create_optimizer_from_params(named_parameters, learning_rate, t_total, warmu
     elif optimizer_type == "radam":
         if verbose:
             print("Using RAdam")
-        optimizer = RAdam(
-            optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon
-        )
+        optimizer = RAdam(optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon)
     else:
         raise KeyError(optimizer_type)
 
     warmup_steps = resolve_warmup_steps(
-        t_total=t_total, warmup_steps=warmup_steps,
-        warmup_proportion=warmup_proportion,
+        t_total=t_total, warmup_steps=warmup_steps, warmup_proportion=warmup_proportion,
     )
     scheduler = transformers.get_linear_schedule_with_warmup(
-        optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total)
-    optimizer_scheduler = OptimizerScheduler(
-        optimizer=optimizer,
-        scheduler=scheduler,
+        optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
     )
+    optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
     return optimizer_scheduler
 
 
@@ -155,12 +158,10 @@ def fp16ize(model, optimizer, fp16_opt_level):
         # noinspection PyUnresolvedReferences,PyPackageRequirements
         from apex import amp
     except ImportError:
-        raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
-    model, optimizer = amp.initialize(
-        model,
-        optimizer,
-        opt_level=fp16_opt_level
-    )
+        raise ImportError(
+            "Please install apex from https://www.github.com/nvidia/apex to use fp16 training."
+        )
+    model, optimizer = amp.initialize(model, optimizer, opt_level=fp16_opt_level)
     return model, optimizer
 
 
@@ -170,21 +171,13 @@ def parallelize_gpu(model):
 
 def parallelize_dist(model, local_rank):
     return torch.nn.parallel.DistributedDataParallel(
-        model,
-        device_ids=[local_rank],
-        output_device=local_rank,
+        model, device_ids=[local_rank], output_device=local_rank,
     )
 
 
-def raw_special_model_setup(model, optimizer,
-                            fp16, fp16_opt_level,
-                            n_gpu, local_rank):
+def raw_special_model_setup(model, optimizer, fp16, fp16_opt_level, n_gpu, local_rank):
     if fp16:
-        model, optimizer = fp16ize(
-            model=model,
-            optimizer=optimizer,
-            fp16_opt_level=fp16_opt_level
-        )
+        model, optimizer = fp16ize(model=model, optimizer=optimizer, fp16_opt_level=fp16_opt_level)
     if n_gpu > 1:
         model = parallelize_gpu(model=model)
     if local_rank != -1:
@@ -192,14 +185,16 @@ def raw_special_model_setup(model, optimizer,
     return model, optimizer
 
 
-def special_model_setup(model_wrapper, optimizer_scheduler,
-                        fp16, fp16_opt_level,
-                        n_gpu, local_rank):
+def special_model_setup(
+    model_wrapper, optimizer_scheduler, fp16, fp16_opt_level, n_gpu, local_rank
+):
     model, optimizer = raw_special_model_setup(
         model=model_wrapper.model,
         optimizer=optimizer_scheduler.optimizer,
-        fp16=fp16, fp16_opt_level=fp16_opt_level,
-        n_gpu=n_gpu, local_rank=local_rank,
+        fp16=fp16,
+        fp16_opt_level=fp16_opt_level,
+        n_gpu=n_gpu,
+        local_rank=local_rank,
     )
     model_wrapper.model = model
     optimizer_scheduler.optimizer = optimizer

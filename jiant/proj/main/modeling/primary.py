@@ -8,12 +8,14 @@ from jiant.proj.main.components.outputs import construct_output_from_dict
 
 
 class JiantModel(nn.Module):
-    def __init__(self,
-                 task_dict: Dict[str, tasks.Task],
-                 encoder: nn.Module,
-                 taskmodels_dict: Dict[str, taskmodels.Taskmodel],
-                 task_to_taskmodel_map: Dict[str, str],
-                 tokenizer):
+    def __init__(
+        self,
+        task_dict: Dict[str, tasks.Task],
+        encoder: nn.Module,
+        taskmodels_dict: Dict[str, taskmodels.Taskmodel],
+        task_to_taskmodel_map: Dict[str, str],
+        tokenizer,
+    ):
         super().__init__()
         self.task_dict = task_dict
         self.encoder = encoder
@@ -21,10 +23,7 @@ class JiantModel(nn.Module):
         self.task_to_taskmodel_map = task_to_taskmodel_map
         self.tokenizer = tokenizer
 
-    def forward(self,
-                batch: tasks.BatchMixin,
-                task: tasks.Task,
-                compute_loss: bool = False):
+    def forward(self, batch: tasks.BatchMixin, task: tasks.Task, compute_loss: bool = False):
 
         if isinstance(batch, dict):
             batch = task.Batch.from_dict(batch)
@@ -37,25 +36,24 @@ class JiantModel(nn.Module):
         taskmodel_key = self.task_to_submodel_map[task_name]
         taskmodel = self.submodels_dict[taskmodel_key]
         return taskmodel(
-            batch=batch,
-            task=task,
-            tokenizer=self.tokenizer,
-            compute_loss=compute_loss,
+            batch=batch, task=task, tokenizer=self.tokenizer, compute_loss=compute_loss,
         ).to_dict()
 
 
-def wrap_jiant_forward(jiant_model: Union[JiantModel, nn.DataParallel],
-                       batch: tasks.BatchMixin,
-                       task: tasks.Task,
-                       compute_loss: bool = False):
+def wrap_jiant_forward(
+    jiant_model: Union[JiantModel, nn.DataParallel],
+    batch: tasks.BatchMixin,
+    task: tasks.Task,
+    compute_loss: bool = False,
+):
     """ Handling multi-gpu ugliness """
     assert isinstance(jiant_model, (JiantModel, nn.DataParallel))
     is_multi_gpu = isinstance(jiant_model, nn.DataParallel)
-    model_output = construct_output_from_dict(jiant_model(
-        batch=batch.to_dict() if is_multi_gpu else batch,
-        task=task,
-        compute_loss=compute_loss,
-    ))
+    model_output = construct_output_from_dict(
+        jiant_model(
+            batch=batch.to_dict() if is_multi_gpu else batch, task=task, compute_loss=compute_loss,
+        )
+    )
     if is_multi_gpu:
         model_output.loss = model_output.loss.sum()
     return model_output

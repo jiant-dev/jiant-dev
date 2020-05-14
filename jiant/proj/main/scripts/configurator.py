@@ -18,9 +18,14 @@ class Registry:
 def write_configs(config_dict, base_path, check_paths=True):
     os.makedirs(base_path, exist_ok=True)
     config_keys = [
-        'task_config_path_dict', 'task_cache_config_dict', 'sampler_config',
-        'global_train_config', 'task_specific_configs_dict', 'metric_aggregator_config',
-        "taskmodels_config", "task_run_config",
+        "task_config_path_dict",
+        "task_cache_config_dict",
+        "sampler_config",
+        "global_train_config",
+        "task_specific_configs_dict",
+        "metric_aggregator_config",
+        "taskmodels_config",
+        "task_run_config",
     ]
     for path in config_dict["task_config_path_dict"].values():
         if check_paths:
@@ -31,20 +36,21 @@ def write_configs(config_dict, base_path, check_paths=True):
                 assert os.path.exists(path)
     for config_key in config_keys:
         py_io.write_json(
-            config_dict[config_key],
-            os.path.join(base_path, f"{config_key}.json"),
+            config_dict[config_key], os.path.join(base_path, f"{config_key}.json"),
         )
     py_io.write_json(config_dict, os.path.join(base_path, "full.json"))
-    py_io.write_json({
-        f"{config_key}_path": os.path.join(base_path, f"{config_key}.json")
-        for config_key in config_keys
-    }, path=os.path.join(base_path, "zz_full.json"))
+    py_io.write_json(
+        {
+            f"{config_key}_path": os.path.join(base_path, f"{config_key}.json")
+            for config_key in config_keys
+        },
+        path=os.path.join(base_path, "zz_full.json"),
+    )
 
 
 def write_configs_from_full(full_config_path):
     write_configs(
-        config_dict=py_io.read_json(full_config_path),
-        base_path=os.path.split(full_config_path)[0],
+        config_dict=py_io.read_json(full_config_path), base_path=os.path.split(full_config_path)[0],
     )
 
 
@@ -61,20 +67,23 @@ def cap_examples(num_examples, cap):
 
 
 @Registry.register
-def single_task_config(task_config_path,
-                       train_batch_size=None,
-                       task_cache_base_path=None,
-                       epochs=None, max_steps=None,
-                       task_cache_train_path=None,
-                       task_cache_val_path=None,
-                       task_cache_val_labels_path=None,
-                       eval_batch_multiplier=2,
-                       eval_batch_size=None,
-                       gradient_accumulation_steps=1,
-                       eval_subset_num=500,
-                       num_gpus=1,
-                       warmup_steps_proportion=0.1,
-                       phases=("train", "val")):
+def single_task_config(
+    task_config_path,
+    train_batch_size=None,
+    task_cache_base_path=None,
+    epochs=None,
+    max_steps=None,
+    task_cache_train_path=None,
+    task_cache_val_path=None,
+    task_cache_val_labels_path=None,
+    eval_batch_multiplier=2,
+    eval_batch_size=None,
+    gradient_accumulation_steps=1,
+    eval_subset_num=500,
+    num_gpus=1,
+    warmup_steps_proportion=0.1,
+    phases=("train", "val"),
+):
     task_config = py_io.read_json(os.path.expandvars(task_config_path))
     task_name = task_config["name"]
 
@@ -113,15 +122,9 @@ def single_task_config(task_config_path,
             eval_batch_size = train_batch_size * eval_batch_multiplier
 
     config_dict = {
-        "task_config_path_dict": {
-            task_name: os.path.expandvars(task_config_path),
-        },
-        "task_cache_config_dict": {
-            task_name: cache_path_dict,
-        },
-        "sampler_config": {
-            "sampler_type": "UniformMultiTaskSampler",
-        },
+        "task_config_path_dict": {task_name: os.path.expandvars(task_config_path)},
+        "task_cache_config_dict": {task_name: cache_path_dict},
+        "sampler_config": {"sampler_type": "UniformMultiTaskSampler"},
         "global_train_config": {
             "max_steps": max_steps,
             "warmup_steps": int(max_steps * warmup_steps_proportion),
@@ -134,32 +137,29 @@ def single_task_config(task_config_path,
                 "eval_subset_num": eval_subset_num,
             },
         },
-        "taskmodels_config": {
-            "task_to_taskmodel_map": {
-                task_name: task_name,
-            },
-        },
+        "taskmodels_config": {"task_to_taskmodel_map": {task_name: task_name}},
         "task_run_config": {
             "train_task_list": [task_name] if do_train else [],
             "train_val_task_list": [task_name] if do_train else [],
             "val_task_list": [task_name] if do_val else [],
             "test_task_list": [],
         },
-        "metric_aggregator_config": {
-            "metric_aggregator_type": "EqualMetricAggregator",
-        },
+        "metric_aggregator_config": {"metric_aggregator_type": "EqualMetricAggregator"},
     }
     return config_dict
 
 
 @Registry.register
-def simple_multi_task_config(task_meta_config_dict,
-                             task_cache_dict,
-                             task_name_list=None,
-                             epochs=None, max_steps=None,
-                             num_gpus=1,
-                             train_examples_cap=None,
-                             warmup_steps_proportion=0.1):
+def simple_multi_task_config(
+    task_meta_config_dict,
+    task_cache_dict,
+    task_name_list=None,
+    epochs=None,
+    max_steps=None,
+    num_gpus=1,
+    train_examples_cap=None,
+    warmup_steps_proportion=0.1,
+):
     if isinstance(task_meta_config_dict, str):
         task_meta_config_dict = py_io.read_json(os.path.expandvars(task_meta_config_dict))
     if isinstance(task_cache_dict, str):
@@ -224,7 +224,9 @@ def simple_multi_task_config(task_meta_config_dict,
             task_name: {
                 "train_batch_size": task_meta_config_dict[task_name]["train_batch_size"],
                 "eval_batch_size": task_meta_config_dict[task_name]["eval_batch_size"],
-                "gradient_accumulation_steps": task_meta_config_dict[task_name]["gradient_accumulation_steps"],
+                "gradient_accumulation_steps": task_meta_config_dict[task_name][
+                    "gradient_accumulation_steps"
+                ],
                 "eval_subset_num": task_meta_config_dict[task_name]["eval_subset_num"],
             }
             for task_name in task_name_list
@@ -234,10 +236,7 @@ def simple_multi_task_config(task_meta_config_dict,
                 task_name: task_meta_config_dict[task_name]["task_to_taskmodel_map"]
                 for task_name in task_name_list
             },
-            "taskmodel_config_map": {
-                task_name: None
-                for task_name in task_name_list
-            },
+            "taskmodel_config_map": {task_name: None for task_name in task_name_list},
         },
         "task_run_config": {
             "train_task_list": task_name_list,
@@ -245,9 +244,7 @@ def simple_multi_task_config(task_meta_config_dict,
             "val_task_list": task_name_list,
             "test_task_list": task_name_list,
         },
-        "metric_aggregator_config": {
-            "metric_aggregator_type": "EqualMetricAggregator",
-        },
+        "metric_aggregator_config": {"metric_aggregator_type": "EqualMetricAggregator"},
     }
     return config_dict
 
@@ -266,8 +263,7 @@ def main():
         args = JsonRunConfiguration.default_run_cli(cl_args=cl_args)
         config_dict = Registry.func_dict[args.func](**py_io.read_json(args.path))
         write_configs(
-            config_dict=config_dict,
-            base_path=args.output_base_path,
+            config_dict=config_dict, base_path=args.output_base_path,
         )
     else:
         raise zconf.ModeLookupError(mode)

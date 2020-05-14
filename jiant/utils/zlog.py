@@ -102,10 +102,14 @@ class ZLogger(BaseZLogger):
 
 
 class ZBufferedLogger(ZLogger):
-    def __init__(self, fol_path,
-                 default_buffer_size=1,
-                 buffer_size_dict=None,
-                 log_errors=True, overwrite=False):
+    def __init__(
+        self,
+        fol_path,
+        default_buffer_size=1,
+        buffer_size_dict=None,
+        log_errors=True,
+        overwrite=False,
+    ):
         super().__init__(fol_path=fol_path, log_errors=log_errors, overwrite=overwrite)
         self.default_buffer_size = default_buffer_size
         self.buffer_size_dict = buffer_size_dict.copy() if buffer_size_dict else {}
@@ -127,10 +131,9 @@ class ZBufferedLogger(ZLogger):
     def _write_buffer(self, key):
         if not self.buffer_dict[key]:
             return
-        self.handles[key].write("".join(
-            py_io.to_jsonl(entry) + "\n"
-            for entry in self.buffer_dict[key]
-        ))
+        self.handles[key].write(
+            "".join(py_io.to_jsonl(entry) + "\n" for entry in self.buffer_dict[key])
+        )
         self.buffer_dict[key] = []
 
     def flush(self, key=None):

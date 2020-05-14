@@ -28,8 +28,8 @@ class RunConfiguration(zconf.RunConfig):
     model_load_mode = zconf.attr(default="from_ptt", type=str)
 
     # === Running Setup === #
-    do_train = zconf.attr(action='store_true')
-    do_val = zconf.attr(action='store_true')
+    do_train = zconf.attr(action="store_true")
+    do_val = zconf.attr(action="store_true")
     do_save = zconf.attr(action="store_true")
     write_val_preds = zconf.attr(action="store_true")
     write_test_preds = zconf.attr(action="store_true")
@@ -48,12 +48,12 @@ class RunConfiguration(zconf.RunConfig):
     optimizer_type = zconf.attr(default="adam", type=str)
 
     # Specialized config
-    no_cuda = zconf.attr(action='store_true')
-    fp16 = zconf.attr(action='store_true')
-    fp16_opt_level = zconf.attr(default='O1', type=str)
+    no_cuda = zconf.attr(action="store_true")
+    fp16 = zconf.attr(action="store_true")
+    fp16_opt_level = zconf.attr(default="O1", type=str)
     local_rank = zconf.attr(default=-1, type=int)
-    server_ip = zconf.attr(default='', type=str)
-    server_port = zconf.attr(default='', type=str)
+    server_ip = zconf.attr(default="", type=str)
+    server_port = zconf.attr(default="", type=str)
 
 
 @zconf.run_config
@@ -61,10 +61,12 @@ class ResumeConfiguration(zconf.RunConfig):
     checkpoint_path = zconf.attr(type=str)
 
 
-def setup_runner(args: RunConfiguration,
-                 jiant_task_container: container_setup.JiantTaskContainer,
-                 quick_init_out,
-                 verbose: bool = True) -> jiant_runner.JiantRunner:
+def setup_runner(
+    args: RunConfiguration,
+    jiant_task_container: container_setup.JiantTaskContainer,
+    quick_init_out,
+    verbose: bool = True,
+) -> jiant_runner.JiantRunner:
     with distributed.only_first_process(local_rank=args.local_rank):
         # load the model
         jiant_model = jiant_model_setup.setup_jiant_style_model(
@@ -75,9 +77,7 @@ def setup_runner(args: RunConfiguration,
             taskmodels_config=jiant_task_container.taskmodels_config,
         )
         jiant_model_setup.delegate_load_from_path(
-            jiant_model=jiant_model,
-            weights_path=args.model_path,
-            load_mode=args.model_load_mode
+            jiant_model=jiant_model, weights_path=args.model_path, load_mode=args.model_load_mode
         )
         jiant_model.to(quick_init_out.device)
 
@@ -93,8 +93,10 @@ def setup_runner(args: RunConfiguration,
     jiant_model, optimizer = model_setup.raw_special_model_setup(
         model=jiant_model,
         optimizer=optimizer_scheduler.optimizer,
-        fp16=args.fp16, fp16_opt_level=args.fp16_opt_level,
-        n_gpu=quick_init_out.n_gpu, local_rank=args.local_rank,
+        fp16=args.fp16,
+        fp16_opt_level=args.fp16_opt_level,
+        n_gpu=quick_init_out.n_gpu,
+        local_rank=args.local_rank,
     )
     optimizer_scheduler.optimizer = optimizer
     rparams = jiant_runner.RunnerParameters(
@@ -120,8 +122,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
     print(quick_init_out.n_gpu)
     with quick_init_out.log_writer.log_context():
         jiant_task_container = container_setup.create_jiant_task_container_from_json(
-            jiant_task_container_config_path=args.jiant_task_container_config_path,
-            verbose=True,
+            jiant_task_container_config_path=args.jiant_task_container_config_path, verbose=True,
         )
         runner = setup_runner(
             args=args,
@@ -158,7 +159,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
         if args.do_save:
             torch.save(
                 torch_utils.get_model_for_saving(runner.jiant_model).state_dict(),
-                os.path.join(args.output_dir, "model.p")
+                os.path.join(args.output_dir, "model.p"),
             )
 
         if args.do_val:
@@ -175,7 +176,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
             if args.write_val_preds:
                 jiant_evaluate.write_preds(
                     eval_results_dict=val_results_dict,
-                    path=os.path.join(args.output_dir, "val_preds.p")
+                    path=os.path.join(args.output_dir, "val_preds.p"),
                 )
         else:
             assert not args.write_val_preds
@@ -186,7 +187,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
             )
             jiant_evaluate.write_preds(
                 eval_results_dict=test_results_dict,
-                path=os.path.join(args.output_dir, "test_preds.p")
+                path=os.path.join(args.output_dir, "test_preds.p"),
             )
 
     if args.delete_checkpoint_if_done and args.save_checkpoint_every_steps:

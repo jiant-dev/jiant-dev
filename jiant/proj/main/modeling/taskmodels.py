@@ -26,16 +26,12 @@ class ClassificationModel(Taskmodel):
         self.classification_head = classification_head
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
-        encoder_output = get_output_from_encoder_and_batch(
-            encoder=self.encoder,
-            batch=batch,
-        )
+        encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
         logits = self.classification_head(pooled=encoder_output.pooled)
         if compute_loss:
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(
-                logits.view(-1, self.classification_head.num_labels),
-                batch.label_id.view(-1),
+                logits.view(-1, self.classification_head.num_labels), batch.label_id.view(-1),
             )
             return LogitsAndLossOutput(logits=logits, loss=loss, other=encoder_output.other)
         else:
@@ -48,10 +44,7 @@ class RegressionModel(Taskmodel):
         self.regression_head = regression_head
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
-        encoder_output = get_output_from_encoder_and_batch(
-            encoder=self.encoder,
-            batch=batch,
-        )
+        encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
         logits = self.regression_head(pooled=encoder_output.pooled)
         if compute_loss:
             loss_fct = nn.MSELoss()
@@ -88,48 +81,38 @@ class MultipleChoiceModel(Taskmodel):
         reshaped_outputs = []
         if encoder_output_other_ls[0]:
             for j in range(len(encoder_output_other_ls[0])):
-                reshaped_outputs.append([
-                    torch.stack([misc[j][layer_i] for misc in encoder_output_other_ls], dim=1)
-                    for layer_i in range(len(encoder_output_other_ls[0][0]))
-                ])
+                reshaped_outputs.append(
+                    [
+                        torch.stack([misc[j][layer_i] for misc in encoder_output_other_ls], dim=1)
+                        for layer_i in range(len(encoder_output_other_ls[0][0]))
+                    ]
+                )
             reshaped_outputs = tuple(reshaped_outputs)
 
-        logits = torch.cat([
-            choice_score.unsqueeze(1).squeeze(-1)
-            for choice_score in choice_score_list
-        ], dim=1)
+        logits = torch.cat(
+            [choice_score.unsqueeze(1).squeeze(-1) for choice_score in choice_score_list], dim=1
+        )
 
         if compute_loss:
             loss_fct = nn.CrossEntropyLoss()
-            loss = loss_fct(
-                logits.view(-1, self.num_choices),
-                batch.label_id.view(-1),
-            )
+            loss = loss_fct(logits.view(-1, self.num_choices), batch.label_id.view(-1))
             return LogitsAndLossOutput(logits=logits, loss=loss, other=reshaped_outputs)
         else:
             return LogitsOutput(logits=logits, other=reshaped_outputs)
 
 
 class SpanComparisonModel(Taskmodel):
-    def __init__(self, encoder,
-                 span_comparison_head: heads.SpanComparisonHead):
+    def __init__(self, encoder, span_comparison_head: heads.SpanComparisonHead):
         super().__init__(encoder=encoder)
         self.span_comparison_head = span_comparison_head
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
-        encoder_output = get_output_from_encoder_and_batch(
-            encoder=self.encoder,
-            batch=batch,
-        )
-        logits = self.span_comparison_head(
-            unpooled=encoder_output.unpooled,
-            spans=batch.spans,
-        )
+        encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
+        logits = self.span_comparison_head(unpooled=encoder_output.unpooled, spans=batch.spans)
         if compute_loss:
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(
-                logits.view(-1, self.span_comparison_head.num_labels),
-                batch.label_id.view(-1),
+                logits.view(-1, self.span_comparison_head.num_labels), batch.label_id.view(-1),
             )
             return LogitsAndLossOutput(logits=logits, loss=loss, other=encoder_output.other)
         else:
@@ -138,28 +121,20 @@ class SpanComparisonModel(Taskmodel):
 
 class TokenClassificationModel(Taskmodel):
     """ From RobertaForTokenClassification """
-    def __init__(self, encoder,
-                 token_classification_head: heads.TokenClassificationHead):
+
+    def __init__(self, encoder, token_classification_head: heads.TokenClassificationHead):
         super().__init__(encoder=encoder)
         self.token_classification_head = token_classification_head
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
-        encoder_output = get_output_from_encoder_and_batch(
-            encoder=self.encoder,
-            batch=batch,
-        )
-        logits = self.token_classification_head(
-            unpooled=encoder_output.unpooled,
-        )
+        encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
+        logits = self.token_classification_head(unpooled=encoder_output.unpooled)
         if compute_loss:
             loss_fct = nn.CrossEntropyLoss()
             active_loss = batch.label_mask.view(-1) == 1
             active_logits = logits.view(-1, self.token_classification_head.num_labels)[active_loss]
             active_labels = batch.label_ids.view(-1)[active_loss]
-            loss = loss_fct(
-                active_logits,
-                active_labels,
-            )
+            loss = loss_fct(active_logits, active_labels)
             return LogitsAndLossOutput(logits=logits, loss=loss, other=encoder_output.other)
         else:
             return LogitsOutput(logits=logits, other=encoder_output.other)
@@ -171,10 +146,7 @@ class QAModel(Taskmodel):
         self.qa_head = qa_head
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
-        encoder_output = get_output_from_encoder_and_batch(
-            encoder=self.encoder,
-            batch=batch,
-        )
+        encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
         logits = self.qa_head(unpooled=encoder_output.unpooled)
         if compute_loss:
             loss = compute_qa_loss(
@@ -194,9 +166,7 @@ class MLMModel(Taskmodel):
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
         masked_batch = batch.get_masked(
-            mlm_probability=task.mlm_probability,
-            tokenizer=tokenizer,
-            do_mask=task.do_mask,
+            mlm_probability=task.mlm_probability, tokenizer=tokenizer, do_mask=task.do_mask,
         )
         encoder_output = get_output_from_encoder(
             encoder=self.encoder,
@@ -206,10 +176,7 @@ class MLMModel(Taskmodel):
         )
         logits = self.mlm_head(unpooled=encoder_output.unpooled)
         if compute_loss:
-            loss = compute_mlm_loss(
-                logits=logits,
-                masked_lm_labels=masked_batch.masked_lm_labels,
-            )
+            loss = compute_mlm_loss(logits=logits, masked_lm_labels=masked_batch.masked_lm_labels)
             return LogitsAndLossOutput(logits=logits, loss=loss, other=encoder_output.other)
         else:
             return LogitsOutput(logits=logits, other=encoder_output.other)
@@ -223,19 +190,13 @@ class EmbeddingModel(Taskmodel):
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
         with transformer_utils.output_hidden_states_context(self.encoder):
-            encoder_output = get_output_from_encoder_and_batch(
-                encoder=self.encoder,
-                batch=batch,
-            )
+            encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
         # A tuple of layers of hidden states
         hidden_states = take_one(encoder_output.other)
         layer_hidden_states = hidden_states[self.layer]
 
         if isinstance(self.pooler_head, heads.MeanPoolerHead):
-            logits = self.pooler_head(
-                unpooled=layer_hidden_states,
-                input_mask=batch.input_mask,
-            )
+            logits = self.pooler_head(unpooled=layer_hidden_states, input_mask=batch.input_mask)
         elif isinstance(self.pooler_head, heads.FirstPoolerHead):
             logits = self.pooler_head(layer_hidden_states)
         else:
@@ -251,10 +212,7 @@ class EmbeddingModel(Taskmodel):
                 other=encoder_output.other,
             )
         else:
-            return LogitsOutput(
-                logits=logits,
-                other=encoder_output.other,
-            )
+            return LogitsOutput(logits=logits, other=encoder_output.other)
 
 
 @dataclass
@@ -275,23 +233,12 @@ def get_output_from_encoder_and_batch(encoder, batch) -> EncoderOutput:
 
 
 def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> EncoderOutput:
-    output = encoder(
-        input_ids=input_ids,
-        token_type_ids=segment_ids,
-        attention_mask=input_mask,
-    )
+    output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
     if len(output) == 2:
-        return EncoderOutput(
-            pooled=output[1],
-            unpooled=output[0],
-        )
+        return EncoderOutput(pooled=output[1], unpooled=output[0],)
     elif len(output) > 2:
         # Extend later with attention, hidden_acts, etc
-        return EncoderOutput(
-            pooled=output[1],
-            unpooled=output[0],
-            other=output[2:]
-        )
+        return EncoderOutput(pooled=output[1], unpooled=output[0], other=output[2:])
     else:
         raise RuntimeError()
 
@@ -299,10 +246,7 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
 def compute_mlm_loss(logits, masked_lm_labels):
     vocab_size = logits.shape[-1]
     loss_fct = nn.CrossEntropyLoss()
-    return loss_fct(
-        logits.view(-1, vocab_size),
-        masked_lm_labels.view(-1)
-    )
+    return loss_fct(logits.view(-1, vocab_size), masked_lm_labels.view(-1))
 
 
 def compute_qa_loss(logits, start_positions, end_positions):

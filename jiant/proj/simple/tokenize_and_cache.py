@@ -86,7 +86,7 @@ def iter_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfigur
 
 
 def main(args: RunConfiguration):
-    task = tasks.create_task_from_config_path(config_path=args.task_config_path, verbose=True,)
+    task = tasks.create_task_from_config_path(config_path=args.task_config_path, verbose=True)
     feat_spec = model_resolution.build_featurization_spec(
         model_type=args.model_type, max_seq_length=args.max_seq_length,
     )

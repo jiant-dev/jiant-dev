@@ -23,10 +23,7 @@ def quick_init(args, verbose=True) -> QuickInitContainer:
         print_args(args)
     init_server_logging(server_ip=args.server_ip, server_port=args.server_port, verbose=verbose)
     device, n_gpu = init_cuda_from_args(
-        no_cuda=args.no_cuda,
-        local_rank=args.local_rank,
-        fp16=args.fp16,
-        verbose=verbose,
+        no_cuda=args.no_cuda, local_rank=args.local_rank, fp16=args.fp16, verbose=verbose,
     )
     args.seed = init_seed(given_seed=args.seed, n_gpu=n_gpu, verbose=verbose)
     init_output_dir(output_dir=args.output_dir, force_overwrite=args.force_overwrite)
@@ -40,6 +37,7 @@ def init_server_logging(server_ip, server_port, verbose=True):
         # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
         # noinspection PyUnresolvedReferences,PyPackageRequirements
         import ptvsd
+
         if verbose:
             print("Waiting for debugger attach")
         ptvsd.enable_attach(address=(server_ip, server_port), redirect_output=True)
@@ -56,10 +54,12 @@ def init_cuda_from_args(no_cuda, local_rank, fp16, verbose=True):
         n_gpu = 1
         # Initializes the distributed backend which will take care of synchronizing nodes/GPUs
         # noinspection PyUnresolvedReferences
-        torch.distributed.init_process_group(backend='nccl')
+        torch.distributed.init_process_group(backend="nccl")
     if verbose:
-        print("device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
-            device, n_gpu, bool(local_rank != -1), fp16)
+        print(
+            "device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
+                device, n_gpu, bool(local_rank != -1), fp16
+            )
         )
 
     return device, n_gpu
@@ -106,7 +106,7 @@ def save_args(args, verbose=True):
 
 def get_seed(seed):
     if seed == -1:
-        return int(np.random.randint(0, 2**32 - 1))
+        return int(np.random.randint(0, 2 ** 32 - 1))
     else:
         return seed
 

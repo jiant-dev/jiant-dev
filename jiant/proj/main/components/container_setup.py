@@ -58,13 +58,9 @@ class JiantTaskContainer:
     metrics_aggregator: jiant_task_sampler.BaseMetricAggregator
 
 
-def create_task_dict(task_config_dict: dict,
-                     verbose: bool = True) -> Dict[str, tasks.Task]:
+def create_task_dict(task_config_dict: dict, verbose: bool = True) -> Dict[str, tasks.Task]:
     task_dict = {
-        task_name: tasks.create_task_from_config_path(
-            config_path=task_config_path,
-            verbose=False,
-        )
+        task_name: tasks.create_task_from_config_path(config_path=task_config_path, verbose=False)
         for task_name, task_config_path in task_config_dict.items()
     }
     if verbose:
@@ -114,23 +110,19 @@ def create_task_specific_configs(task_specific_configs_dict) -> Dict[str, TaskSp
     return task_specific_configs
 
 
-def create_jiant_task_container(task_config_path_dict: Dict,
-                                task_cache_config_dict: Dict,
-                                sampler_config: Dict,
-                                global_train_config: Dict,
-                                task_specific_configs_dict: Dict,
-                                metric_aggregator_config: Dict,
-                                taskmodels_config: Dict,
-                                task_run_config: Dict,
-                                verbose: bool = True) \
-        -> JiantTaskContainer:
-    task_dict = create_task_dict(
-        task_config_dict=task_config_path_dict,
-        verbose=verbose,
-    )
-    task_cache_dict = create_task_cache_dict(
-        task_cache_config_dict=task_cache_config_dict,
-    )
+def create_jiant_task_container(
+    task_config_path_dict: Dict,
+    task_cache_config_dict: Dict,
+    sampler_config: Dict,
+    global_train_config: Dict,
+    task_specific_configs_dict: Dict,
+    metric_aggregator_config: Dict,
+    taskmodels_config: Dict,
+    task_run_config: Dict,
+    verbose: bool = True,
+) -> JiantTaskContainer:
+    task_dict = create_task_dict(task_config_dict=task_config_path_dict, verbose=verbose)
+    task_cache_dict = create_task_cache_dict(task_cache_config_dict=task_cache_config_dict)
     global_train_config = GlobalTrainConfig.from_dict(global_train_config)
     task_specific_config = create_task_specific_configs(
         task_specific_configs_dict=task_specific_configs_dict,
@@ -139,14 +131,12 @@ def create_jiant_task_container(task_config_path_dict: Dict,
     task_run_config = TaskRunConfig.from_dict(task_run_config)
 
     num_train_examples_dict = get_num_train_examples(
-        task_cache_dict=task_cache_dict,
-        train_task_list=task_run_config.train_task_list,
+        task_cache_dict=task_cache_dict, train_task_list=task_run_config.train_task_list,
     )
     task_sampler = jiant_task_sampler.create_task_sampler(
         sampler_config=sampler_config,
         task_dict={
-            task_name: task_dict[task_name]
-            for task_name in task_run_config.train_task_list
+            task_name: task_dict[task_name] for task_name in task_run_config.train_task_list
         },
         task_to_num_examples_dict=num_train_examples_dict,
     )
@@ -165,9 +155,9 @@ def create_jiant_task_container(task_config_path_dict: Dict,
     )
 
 
-def create_jiant_task_container_from_dict(jiant_task_container_config_dict: Dict,
-                                          verbose: bool = True) \
-        -> JiantTaskContainer:
+def create_jiant_task_container_from_dict(
+    jiant_task_container_config_dict: Dict, verbose: bool = True
+) -> JiantTaskContainer:
     return create_jiant_task_container(
         task_config_path_dict=jiant_task_container_config_dict["task_config_path_dict"],
         task_cache_config_dict=jiant_task_container_config_dict["task_cache_config_dict"],
@@ -181,9 +171,9 @@ def create_jiant_task_container_from_dict(jiant_task_container_config_dict: Dict
     )
 
 
-def create_jiant_task_container_from_json(jiant_task_container_config_path: str,
-                                          verbose: bool = True) \
-        -> JiantTaskContainer:
+def create_jiant_task_container_from_json(
+    jiant_task_container_config_path: str, verbose: bool = True
+) -> JiantTaskContainer:
     return create_jiant_task_container_from_dict(
         jiant_task_container_config_dict=py_io.read_json(jiant_task_container_config_path),
         verbose=verbose,

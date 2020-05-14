@@ -29,8 +29,8 @@ class SelfAttentiveSpanExtractor(nn.Module):
         in which the attention distribution differs over different spans is in the set of words
         over which they are normalized.
     """
-    def __init__(self,
-                 input_dim: int) -> None:
+
+    def __init__(self, input_dim: int) -> None:
         super().__init__()
         self._input_dim = input_dim
         self._global_attention = TimeDistributed(torch.nn.Linear(input_dim, 1))
@@ -41,11 +41,13 @@ class SelfAttentiveSpanExtractor(nn.Module):
     def get_output_dim(self) -> int:
         return self._input_dim
 
-    def forward(self,
-                sequence_tensor: torch.FloatTensor,
-                span_indices: torch.LongTensor,
-                sequence_mask: torch.LongTensor = None,
-                span_indices_mask: torch.LongTensor = None) -> torch.FloatTensor:
+    def forward(
+        self,
+        sequence_tensor: torch.FloatTensor,
+        span_indices: torch.LongTensor,
+        sequence_mask: torch.LongTensor = None,
+        span_indices_mask: torch.LongTensor = None,
+    ) -> torch.FloatTensor:
         # both of shape (batch_size, num_spans, 1)
         span_starts, span_ends = span_indices.split(1, dim=-1)
 
@@ -64,8 +66,9 @@ class SelfAttentiveSpanExtractor(nn.Module):
         global_attention_logits = self._global_attention(sequence_tensor)
 
         # Shape: (1, 1, max_batch_span_width)
-        max_span_range_indices = get_range_vector(max_batch_span_width,
-                                                  get_device_of(sequence_tensor)).view(1, 1, -1)
+        max_span_range_indices = get_range_vector(
+            max_batch_span_width, get_device_of(sequence_tensor)
+        ).view(1, 1, -1)
         # Shape: (batch_size, num_spans, max_batch_span_width)
         # This is a broadcasted comparison - for each span we are considering,
         # we are creating a range vector of size max_span_width, but masking values
@@ -89,9 +92,9 @@ class SelfAttentiveSpanExtractor(nn.Module):
         span_embeddings = batched_index_select(sequence_tensor, span_indices, flat_span_indices)
 
         # Shape: (batch_size, num_spans, max_batch_span_width)
-        span_attention_logits = batched_index_select(global_attention_logits,
-                                                     span_indices,
-                                                     flat_span_indices).squeeze(-1)
+        span_attention_logits = batched_index_select(
+            global_attention_logits, span_indices, flat_span_indices
+        ).squeeze(-1)
         # Shape: (batch_size, num_spans, max_batch_span_width)
         span_attention_weights = masked_softmax(span_attention_logits, span_mask)
 
@@ -118,6 +121,7 @@ class TimeDistributed(torch.nn.Module):
     Note that while the above gives shapes with ``batch_size`` first, this ``Module`` also works if
     ``batch_size`` is second - we always just combine the first two dimensions, then split them.
     """
+
     def __init__(self, module):
         super(TimeDistributed, self).__init__()
         self._module = module
@@ -212,9 +216,11 @@ def masked_softmax(vector: torch.Tensor, mask: torch.Tensor, dim: int = -1) -> t
     return result
 
 
-def batched_index_select(target: torch.Tensor,
-                         indices: torch.LongTensor,
-                         flattened_indices: Optional[torch.LongTensor] = None) -> torch.Tensor:
+def batched_index_select(
+    target: torch.Tensor,
+    indices: torch.LongTensor,
+    flattened_indices: Optional[torch.LongTensor] = None,
+) -> torch.Tensor:
     """
     The given ``indices`` of size ``(batch_size, d_1, ..., d_n)`` indexes into the sequence
     dimension (dimension 2) of the target, which has size ``(batch_size, sequence_length,
@@ -266,8 +272,7 @@ def batched_index_select(target: torch.Tensor,
     return selected_targets
 
 
-def flatten_and_batch_shift_indices(indices: torch.Tensor,
-                                    sequence_length: int) -> torch.Tensor:
+def flatten_and_batch_shift_indices(indices: torch.Tensor, sequence_length: int) -> torch.Tensor:
     """
     This is a subroutine for :func:`~batched_index_select`. The given ``indices`` of size
     ``(batch_size, d_1, ..., d_n)`` indexes into dimension 2 of a target tensor, which has size

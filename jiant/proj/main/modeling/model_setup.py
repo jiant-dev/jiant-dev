@@ -16,21 +16,18 @@ from jiant.shared.model_setup import ModelArchitectures
 from jiant.tasks import Task, TaskTypes
 
 
-def setup_jiant_style_model(model_type: str,
-                            model_config_path: str,
-                            tokenizer_path: str,
-                            task_dict: Dict[str, Task],
-                            taskmodels_config: container_setup.TaskmodelsConfig,
-                            ):
+def setup_jiant_style_model(
+    model_type: str,
+    model_config_path: str,
+    tokenizer_path: str,
+    task_dict: Dict[str, Task],
+    taskmodels_config: container_setup.TaskmodelsConfig,
+):
     model_arch = ModelArchitectures.from_model_type(model_type)
     ptt_class_spec = PTT_CLASS_SPEC_DICT[model_arch]
-    tokenizer = model_setup.get_tokenizer(
-        model_type=model_type,
-        tokenizer_path=tokenizer_path,
-    )
+    tokenizer = model_setup.get_tokenizer(model_type=model_type, tokenizer_path=tokenizer_path)
     ancestor_model = get_ancestor_model(
-        ptt_class_spec=ptt_class_spec,
-        model_config_path=model_config_path,
+        ptt_class_spec=ptt_class_spec, model_config_path=model_config_path,
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
     taskmodels_dict = {
@@ -40,8 +37,9 @@ def setup_jiant_style_model(model_type: str,
             encoder=encoder,
             taskmodel_kwargs=taskmodels_config.get_taskmodel_kwargs(taskmodel_name),
         )
-        for taskmodel_name, task_name_list
-        in get_taskmodel_and_task_names(taskmodels_config.task_to_taskmodel_map).items()
+        for taskmodel_name, task_name_list in get_taskmodel_and_task_names(
+            taskmodels_config.task_to_taskmodel_map
+        ).items()
     }
     return primary.JiantModel(
         task_dict=task_dict,
@@ -54,43 +52,31 @@ def setup_jiant_style_model(model_type: str,
 
 def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, load_mode: str):
     weights_dict = torch.load(weights_path)
-    return delegate_load(
-        jiant_model=jiant_model,
-        weights_dict=weights_dict,
-        load_mode=load_mode,
-    )
+    return delegate_load(jiant_model=jiant_model, weights_dict=weights_dict, load_mode=load_mode)
 
 
 def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
     if load_mode == "from_ptt":
         return load_encoder_from_ptt_weights(
-            encoder=jiant_model.encoder,
-            weights_dict=weights_dict,
+            encoder=jiant_model.encoder, weights_dict=weights_dict,
         )
     elif load_mode == "from_ptt_with_mlm":
         remainder = load_encoder_from_ptt_weights(
-            encoder=jiant_model.encoder,
-            weights_dict=weights_dict,
-            return_remainder=True,
+            encoder=jiant_model.encoder, weights_dict=weights_dict, return_remainder=True,
         )
         load_lm_heads_from_ptt_weights(
-            jiant_model=jiant_model,
-            weights_dict=remainder,
+            jiant_model=jiant_model, weights_dict=remainder,
         )
         return
     elif load_mode == "all":
         jiant_model.load_state_dict(weights_dict)
     elif load_mode == "partial_weights":
         return load_partial_heads(
-            jiant_model=jiant_model,
-            weights_dict=weights_dict,
-            allow_missing_head_weights=True,
+            jiant_model=jiant_model, weights_dict=weights_dict, allow_missing_head_weights=True,
         )
     elif load_mode == "partial_heads":
         return load_partial_heads(
-            jiant_model=jiant_model,
-            weights_dict=weights_dict,
-            allow_missing_head_model=True,
+            jiant_model=jiant_model, weights_dict=weights_dict, allow_missing_head_model=True,
         )
     elif load_mode == "partial":
         return load_partial_heads(
@@ -103,9 +89,7 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
         raise KeyError(load_mode)
 
 
-def load_encoder_from_ptt_weights(encoder: nn.Module,
-                                  weights_dict: dict,
-                                  return_remainder=False):
+def load_encoder_from_ptt_weights(encoder: nn.Module, weights_dict: dict, return_remainder=False):
     remainder_weights_dict = {}
     load_weights_dict = {}
     model_arch = get_model_arch_from_encoder(encoder=encoder)
@@ -125,24 +109,22 @@ def load_lm_heads_from_ptt_weights(jiant_model, weights_dict):
     model_arch = get_model_arch_from_jiant_model(jiant_model=jiant_model)
     if model_arch == ModelArchitectures.BERT:
         mlm_weights_dict = {
-            'bias': "cls.predictions.bias",
-            'dense.weight': "cls.predictions.transform.dense.weight",
-            'dense.bias': "cls.predictions.transform.dense.bias",
-            'LayerNorm.weight': "cls.predictions.transform.LayerNorm.weight",
-            'LayerNorm.bias': "cls.predictions.transform.LayerNorm.bias",
-            'decoder.weight': "cls.predictions.decoder.weight",
+            "bias": "cls.predictions.bias",
+            "dense.weight": "cls.predictions.transform.dense.weight",
+            "dense.bias": "cls.predictions.transform.dense.bias",
+            "LayerNorm.weight": "cls.predictions.transform.LayerNorm.weight",
+            "LayerNorm.bias": "cls.predictions.transform.LayerNorm.bias",
+            "decoder.weight": "cls.predictions.decoder.weight",
             # 'decoder.bias' <-- linked directly to bias
         }
     elif model_arch in (ModelArchitectures.ROBERTA, ModelArchitectures.XLM_ROBERTA):
         mlm_weights_dict = {
-            strings.remove_prefix(k, "lm_head."): v
-            for k, v in weights_dict.items()
+            strings.remove_prefix(k, "lm_head."): v for k, v in weights_dict.items()
         }
         mlm_weights_dict["decoder.bias"] = mlm_weights_dict["bias"]
     elif model_arch == ModelArchitectures.ALBERT:
         mlm_weights_dict = {
-            strings.remove_prefix(k, "predictions."): v
-            for k, v in weights_dict.items()
+            strings.remove_prefix(k, "predictions."): v for k, v in weights_dict.items()
         }
     else:
         raise KeyError(model_arch)
@@ -157,9 +139,9 @@ def load_lm_heads_from_ptt_weights(jiant_model, weights_dict):
     return list(missed)
 
 
-def load_partial_heads(jiant_model, weights_dict,
-                       allow_missing_head_weights=False,
-                       allow_missing_head_model=False):
+def load_partial_heads(
+    jiant_model, weights_dict, allow_missing_head_weights=False, allow_missing_head_model=False
+):
     mismatch = jiant_model.load_state_dict(weights_dict, strict=False)
     result = {}
     if mismatch.missing_keys:
@@ -177,8 +159,9 @@ def load_partial_heads(jiant_model, weights_dict,
     return result
 
 
-def create_taskmodel(task, model_arch, encoder,
-                     taskmodel_kwargs: Optional[Dict] = None) -> taskmodels.Taskmodel:
+def create_taskmodel(
+    task, model_arch, encoder, taskmodel_kwargs: Optional[Dict] = None
+) -> taskmodels.Taskmodel:
     if task.TASK_TYPE == TaskTypes.CLASSIFICATION:
         assert taskmodel_kwargs is None
         classification_head = heads.ClassificationHead(
@@ -187,8 +170,7 @@ def create_taskmodel(task, model_arch, encoder,
             num_labels=len(task.LABELS),
         )
         taskmodel = taskmodels.ClassificationModel(
-            encoder=encoder,
-            classification_head=classification_head,
+            encoder=encoder, classification_head=classification_head,
         )
     elif task.TASK_TYPE == TaskTypes.REGRESSION:
         assert taskmodel_kwargs is None
@@ -196,10 +178,7 @@ def create_taskmodel(task, model_arch, encoder,
             hidden_size=encoder.config.hidden_size,
             hidden_dropout_prob=encoder.config.hidden_dropout_prob,
         )
-        taskmodel = taskmodels.RegressionModel(
-            encoder=encoder,
-            regression_head=regression_head,
-        )
+        taskmodel = taskmodels.RegressionModel(encoder=encoder, regression_head=regression_head)
     elif task.TASK_TYPE == TaskTypes.MULTIPLE_CHOICE:
         assert taskmodel_kwargs is None
         choice_scoring_head = heads.RegressionHead(
@@ -207,9 +186,7 @@ def create_taskmodel(task, model_arch, encoder,
             hidden_dropout_prob=encoder.config.hidden_dropout_prob,
         )
         taskmodel = taskmodels.MultipleChoiceModel(
-            encoder=encoder,
-            num_choices=task.NUM_CHOICES,
-            choice_scoring_head=choice_scoring_head,
+            encoder=encoder, num_choices=task.NUM_CHOICES, choice_scoring_head=choice_scoring_head,
         )
     elif task.TASK_TYPE == TaskTypes.SPAN_COMPARISON_CLASSIFICATION:
         assert taskmodel_kwargs is None
@@ -220,8 +197,7 @@ def create_taskmodel(task, model_arch, encoder,
             num_labels=len(task.LABELS),
         )
         taskmodel = taskmodels.SpanComparisonModel(
-            encoder=encoder,
-            span_comparison_head=span_comparison_head,
+            encoder=encoder, span_comparison_head=span_comparison_head,
         )
     elif task.TASK_TYPE == TaskTypes.TAGGING:
         assert taskmodel_kwargs is None
@@ -231,18 +207,12 @@ def create_taskmodel(task, model_arch, encoder,
             num_labels=len(task.LABELS),
         )
         taskmodel = taskmodels.TokenClassificationModel(
-            encoder=encoder,
-            token_classification_head=token_classification_head,
+            encoder=encoder, token_classification_head=token_classification_head,
         )
     elif task.TASK_TYPE == TaskTypes.SQUAD_STYLE_QA:
         assert taskmodel_kwargs is None
-        qa_head = heads.QAHead(
-            hidden_size=encoder.config.hidden_size,
-        )
-        taskmodel = taskmodels.QAModel(
-            encoder=encoder,
-            qa_head=qa_head,
-        )
+        qa_head = heads.QAHead(hidden_size=encoder.config.hidden_size)
+        taskmodel = taskmodels.QAModel(encoder=encoder, qa_head=qa_head)
     elif task.TASK_TYPE == TaskTypes.MASKED_LANGUAGE_MODELING:
         assert taskmodel_kwargs is None
         if model_arch == ModelArchitectures.BERT:
@@ -273,10 +243,7 @@ def create_taskmodel(task, model_arch, encoder,
             )
         else:
             raise KeyError(model_arch)
-        taskmodel = taskmodels.MLMModel(
-            encoder=encoder,
-            mlm_head=mlm_head,
-        )
+        taskmodel = taskmodels.MLMModel(encoder=encoder, mlm_head=mlm_head)
     elif task.TASK_TYPE == TaskTypes.EMBEDDING:
         if taskmodel_kwargs["pooler_type"] == "mean":
             pooler_head = heads.MeanPoolerHead()
@@ -285,9 +252,7 @@ def create_taskmodel(task, model_arch, encoder,
         else:
             raise KeyError(taskmodel_kwargs["pooler_type"])
         taskmodel = taskmodels.EmbeddingModel(
-            encoder=encoder,
-            pooler_head=pooler_head,
-            layer=taskmodel_kwargs["layer"],
+            encoder=encoder, pooler_head=pooler_head, layer=taskmodel_kwargs["layer"],
         )
     else:
         raise KeyError(task.TASK_TYPE)
