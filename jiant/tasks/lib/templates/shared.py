@@ -67,7 +67,7 @@ def double_sentence_featurize(
     feat_spec: FeaturizationSpec,
     data_row_class,
 ):
-    """Apply model- and tokenizer-specific transformations to create a DataRow.
+    """Featurize an example for a two-input/two-sentence task, and return the example as a DataRow.
 
     Args:
         guid (str): human-readable identifier for interpretability and debugging.
@@ -214,7 +214,7 @@ def create_generic_data_row_from_tokens_and_segments(
     feat_spec: FeaturizationSpec,
     data_row_class,
 ):
-    """Creates an input set and wraps input set into a DataRow class.
+    """Creates an InputSet and wraps the InputSet into a DataRow class.
 
     Args:
         guid (str): human-readable identifier (for interpretability and debugging).
