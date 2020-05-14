@@ -23,7 +23,6 @@ class RunConfiguration(zconf.RunConfig):
     phases = zconf.attr(default="train,val", type=str)
     max_seq_length = zconf.attr(default=128, type=int)
     chunk_size = zconf.attr(default=10000, type=int)
-    force_overwrite = zconf.attr(action="store_true")
     smart_truncate = zconf.attr(action="store_true")
     do_iter = zconf.attr(action="store_true")
     skip_write_output_paths = zconf.attr(action="store_true")
