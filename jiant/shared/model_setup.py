@@ -114,7 +114,7 @@ def create_optimizer_from_params(
             "params": [p for n, p in used_named_parameters if any(nd in n for nd in no_decay)],
             "weight_decay": 0.0,
         },
-        {"params": [p for n, p in weighted_sum_params], "weight_decay": 0.0, "lr": 0.01,},
+        {"params": [p for n, p in weighted_sum_params], "weight_decay": 0.0, "lr": 0.01},
     ]
 
     if optimizer_type == "adam":
