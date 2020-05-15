@@ -39,7 +39,7 @@ def chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration
         phase (str): string identifying the data subset (e.g., train, val or test).
         examples (list[Example]): list of task Examples.
         feat_spec: (FeaturizationSpec): Tokenization-related metadata.
-        tokenizer:
+        tokenizer: TODO
         args (RunConfiguration): run configuration object.
 
     """
@@ -60,7 +60,7 @@ def full_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfigur
         phase (str): string identifying the data subset (e.g., train, val or test).
         examples (list[Example]): list of task Examples.
         feat_spec: (FeaturizationSpec): Tokenization-related metadata.
-        tokenizer:
+        tokenizer: TODO
         args (RunConfiguration): run configuration object.
 
     """
@@ -91,7 +91,7 @@ def iter_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfigur
         phase (str): string identifying the data subset (e.g., train, val or test).
         examples (list[Example]): list of task Examples.
         feat_spec: (FeaturizationSpec): Tokenization-related metadata.
-        tokenizer:
+        tokenizer: TODO
         args (RunConfiguration): run configuration object.
 
     """

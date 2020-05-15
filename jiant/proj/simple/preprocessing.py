@@ -105,7 +105,7 @@ def convert_examples_to_dataset(
 
     Args:
         examples (list[Example]): list of task Examples.
-        tokenizer:
+        tokenizer: TODO
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
         phase (str): string identifying the data subset (e.g., train, val or test).
         verbose: If True, display progress bar.
@@ -148,7 +148,7 @@ def tokenize_and_featurize(
 
     Args:
         examples (list[Example]): list of task Examples.
-        tokenizer:
+        tokenizer: TODO
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
         phase (str): string identifying the data subset (e.g., train, val or test).
         verbose: If True, display progress bar.
@@ -174,7 +174,7 @@ def iter_chunk_tokenize_and_featurize(
 
     Args:
         examples (list[Example]): list of task Examples.
-        tokenizer:
+        tokenizer: TODO
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
         phase (str): string identifying the data subset (e.g., train, val or test).
         verbose: If True, display progress bar.
