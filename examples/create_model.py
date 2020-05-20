@@ -104,9 +104,10 @@ def main(args: RunConfiguration):
     for task_name, task in task_dict.items():
         batch, batch_metadata = next(iter(task_dataloader_dict[task_name]))
         batch = batch.to(device)
-        model_output = wrap_jiant_forward(
-            jiant_model=jiant_model, batch=batch, task=task, compute_loss=True,
-        )
+        with torch.no_grad():
+            model_output = wrap_jiant_forward(
+                jiant_model=jiant_model, batch=batch, task=task, compute_loss=True,
+            )
         print(task_name)
         print(model_output)
         print()

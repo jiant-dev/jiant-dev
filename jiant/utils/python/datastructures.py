@@ -1,6 +1,6 @@
 import math
 import itertools
-from dataclasses import, replace
+from dataclasses import replace
 from typing import Mapping, Any, Sequence, Iterable, Iterator, Union, Tuple, Dict, Set
 
 
