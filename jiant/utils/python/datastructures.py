@@ -1,5 +1,6 @@
 import math
 import itertools
+from dataclasses import asdict, replace
 from typing import Mapping, Any, Sequence, Iterable, Iterator, Union, Tuple, Dict, Set
 
 
@@ -174,7 +175,8 @@ class ExtendedDataClassMixin:
         return cls.__annotations__
 
     def to_dict(self):
-        return {k: getattr(self, k) for k in self.get_fields()}
+        # noinspection PyDataclass
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, kwargs):
@@ -182,11 +184,8 @@ class ExtendedDataClassMixin:
         return cls(**kwargs)
 
     def new(self, **new_kwargs):
-        kwargs = {k: v for k, v in self.to_dict().items()}
-        for k, v in new_kwargs.items():
-            kwargs[k] = v
-        # noinspection PyArgumentList
-        return self.__class__(**kwargs)
+        # noinspection PyDataclass
+        return replace(self, **new_kwargs)
 
 
 class BiMap:

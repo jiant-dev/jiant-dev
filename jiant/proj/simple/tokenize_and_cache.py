@@ -29,6 +29,19 @@ class RunConfiguration(zconf.RunConfig):
 
 
 def chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration):
+    """Convert Examples to DataRows, optionally truncate sequences if possible, and save to disk.
+
+    Note:
+        If args.do_iter is True, processes data without loading whole dataset into memory.
+
+    Args:
+        phase (str): string identifying the data subset (e.g., train, val or test).
+        examples (list[Example]): list of task Examples.
+        feat_spec: (FeaturizationSpec): Tokenization-related metadata.
+        tokenizer: TODO
+        args (RunConfiguration): run configuration object.
+
+    """
     if args.do_iter:
         iter_chunk_and_save(
             phase=phase, examples=examples, feat_spec=feat_spec, tokenizer=tokenizer, args=args
@@ -40,6 +53,16 @@ def chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration
 
 
 def full_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration):
+    """Convert Examples to ListDataset, optionally truncate sequences if possible, and save to disk.
+
+    Args:
+        phase (str): string identifying the data subset (e.g., train, val or test).
+        examples (list[Example]): list of task Examples.
+        feat_spec: (FeaturizationSpec): Tokenization-related metadata.
+        tokenizer: TODO
+        args (RunConfiguration): run configuration object.
+
+    """
     dataset = preprocessing.convert_examples_to_dataset(
         examples=examples, feat_spec=feat_spec, tokenizer=tokenizer, phase=phase, verbose=True,
     )
@@ -61,6 +84,16 @@ def full_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfigur
 
 
 def iter_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfiguration):
+    """Convert Examples to DataRows, optionally truncate sequences if possible, stream to disk.
+
+    Args:
+        phase (str): string identifying the data subset (e.g., train, val or test).
+        examples (list[Example]): list of task Examples.
+        feat_spec: (FeaturizationSpec): Tokenization-related metadata.
+        tokenizer: TODO
+        args (RunConfiguration): run configuration object.
+
+    """
     dataset_generator = preprocessing.iter_chunk_convert_examples_to_dataset(
         examples=examples, feat_spec=feat_spec, tokenizer=tokenizer, phase=phase, verbose=True,
     )
