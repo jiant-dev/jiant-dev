@@ -69,7 +69,7 @@ def setup_runner(
 ) -> jiant_runner.JiantRunner:
     with distributed.only_first_process(local_rank=args.local_rank):
         # load the model
-        jiant_model = jiant_model_setup.setup_jiant_style_model(
+        jiant_model = jiant_model_setup.setup_jiant_model(
             model_type=args.model_type,
             model_config_path=args.model_config_path,
             tokenizer_path=args.model_tokenizer_path,

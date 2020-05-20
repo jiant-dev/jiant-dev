@@ -33,8 +33,8 @@ class JiantModel(nn.Module):
         else:
             task_name = task.name
             task = task
-        taskmodel_key = self.task_to_submodel_map[task_name]
-        taskmodel = self.submodels_dict[taskmodel_key]
+        taskmodel_key = self.task_to_taskmodel_map[task_name]
+        taskmodel = self.taskmodels_dict[taskmodel_key]
         return taskmodel(
             batch=batch, task=task, tokenizer=self.tokenizer, compute_loss=compute_loss,
         ).to_dict()

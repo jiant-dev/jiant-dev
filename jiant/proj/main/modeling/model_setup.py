@@ -16,7 +16,7 @@ from jiant.shared.model_setup import ModelArchitectures
 from jiant.tasks import Task, TaskTypes
 
 
-def setup_jiant_style_model(
+def setup_jiant_model(
     model_type: str,
     model_config_path: str,
     tokenizer_path: str,
@@ -24,10 +24,10 @@ def setup_jiant_style_model(
     taskmodels_config: container_setup.TaskmodelsConfig,
 ):
     model_arch = ModelArchitectures.from_model_type(model_type)
-    ptt_class_spec = PTT_CLASS_SPEC_DICT[model_arch]
+    transformers_class_spec = TRANSFORMERS_CLASS_SPEC_DICT[model_arch]
     tokenizer = model_setup.get_tokenizer(model_type=model_type, tokenizer_path=tokenizer_path)
     ancestor_model = get_ancestor_model(
-        ptt_class_spec=ptt_class_spec, model_config_path=model_config_path,
+        transformers_class_spec=transformers_class_spec, model_config_path=model_config_path,
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
     taskmodels_dict = {
@@ -57,14 +57,14 @@ def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, 
 
 def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
     if load_mode == "from_ptt":
-        return load_encoder_from_ptt_weights(
+        return load_encoder_from_transformers_weights(
             encoder=jiant_model.encoder, weights_dict=weights_dict,
         )
     elif load_mode == "from_ptt_with_mlm":
-        remainder = load_encoder_from_ptt_weights(
+        remainder = load_encoder_from_transformers_weights(
             encoder=jiant_model.encoder, weights_dict=weights_dict, return_remainder=True,
         )
-        load_lm_heads_from_ptt_weights(
+        load_lm_heads_from_transformers_weights(
             jiant_model=jiant_model, weights_dict=remainder,
         )
         return
@@ -89,7 +89,7 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
         raise KeyError(load_mode)
 
 
-def load_encoder_from_ptt_weights(encoder: nn.Module, weights_dict: dict, return_remainder=False):
+def load_encoder_from_transformers_weights(encoder: nn.Module, weights_dict: dict, return_remainder=False):
     remainder_weights_dict = {}
     load_weights_dict = {}
     model_arch = get_model_arch_from_encoder(encoder=encoder)
@@ -105,7 +105,7 @@ def load_encoder_from_ptt_weights(encoder: nn.Module, weights_dict: dict, return
         return remainder_weights_dict
 
 
-def load_lm_heads_from_ptt_weights(jiant_model, weights_dict):
+def load_lm_heads_from_transformers_weights(jiant_model, weights_dict):
     model_arch = get_model_arch_from_jiant_model(jiant_model=jiant_model)
     if model_arch == ModelArchitectures.BERT:
         mlm_weights_dict = {
@@ -273,29 +273,29 @@ def get_encoder(model_arch, ancestor_model):
 
 
 @dataclass
-class PttClassSpec:
+class TransformersClassSpec:
     config_class: Any
     tokenizer_class: Any
     model_class: Any
 
 
-PTT_CLASS_SPEC_DICT = {
-    ModelArchitectures.BERT: PttClassSpec(
+TRANSFORMERS_CLASS_SPEC_DICT = {
+    ModelArchitectures.BERT: TransformersClassSpec(
         config_class=transformers.BertConfig,
         tokenizer_class=transformers.BertTokenizer,
         model_class=transformers.BertForPreTraining,
     ),
-    ModelArchitectures.ROBERTA: PttClassSpec(
+    ModelArchitectures.ROBERTA: TransformersClassSpec(
         config_class=transformers.RobertaConfig,
         tokenizer_class=transformers.RobertaTokenizer,
         model_class=transformers.RobertaForMaskedLM,
     ),
-    ModelArchitectures.ALBERT: PttClassSpec(
+    ModelArchitectures.ALBERT: TransformersClassSpec(
         config_class=transformers.AlbertConfig,
         tokenizer_class=transformers.AlbertTokenizer,
         model_class=transformers.AlbertForMaskedLM,
     ),
-    ModelArchitectures.XLM_ROBERTA: PttClassSpec(
+    ModelArchitectures.XLM_ROBERTA: TransformersClassSpec(
         config_class=transformers.XLMRobertaConfig,
         tokenizer_class=transformers.XLMRobertaTokenizer,
         model_class=transformers.XLMRobertaForMaskedLM,
@@ -337,7 +337,7 @@ MODEL_PREFIX = {
 }
 
 
-def get_ancestor_model(ptt_class_spec, model_config_path):
-    config = ptt_class_spec.config_class.from_json_file(model_config_path)
-    model = ptt_class_spec.model_class(config)
+def get_ancestor_model(transformers_class_spec, model_config_path):
+    config = transformers_class_spec.config_class.from_json_file(model_config_path)
+    model = transformers_class_spec.model_class(config)
     return model
