@@ -174,10 +174,7 @@ class ExtendedDataClassMixin:
         return cls.__annotations__
 
     def to_dict(self):
-        return {
-            k: getattr(self, k)
-            for k in self.get_fields()
-        }
+        return {k: getattr(self, k) for k in self.get_fields()}
 
     @classmethod
     def from_dict(cls, kwargs):
