@@ -120,7 +120,7 @@ class SpanComparisonModel(Taskmodel):
 
 
 class TokenClassificationModel(Taskmodel):
-    """ From RobertaForTokenClassification """
+    """From RobertaForTokenClassification"""
 
     def __init__(self, encoder, token_classification_head: heads.TokenClassificationHead):
         super().__init__(encoder=encoder)

@@ -18,7 +18,7 @@ class BaseHead(nn.Module, metaclass=abc.ABCMeta):
 
 class ClassificationHead(BaseHead):
     def __init__(self, hidden_size, hidden_dropout_prob, num_labels):
-        """From RobertaClassificationHead """
+        """From RobertaClassificationHead"""
         super().__init__()
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.dropout = nn.Dropout(hidden_dropout_prob)
@@ -36,7 +36,7 @@ class ClassificationHead(BaseHead):
 
 class RegressionHead(BaseHead):
     def __init__(self, hidden_size, hidden_dropout_prob):
-        """From RobertaClassificationHead """
+        """From RobertaClassificationHead"""
         super().__init__()
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.dropout = nn.Dropout(hidden_dropout_prob)
@@ -53,7 +53,7 @@ class RegressionHead(BaseHead):
 
 class SpanComparisonHead(BaseHead):
     def __init__(self, hidden_size, hidden_dropout_prob, num_spans, num_labels):
-        """From RobertaForSpanComparisonClassification """
+        """From RobertaForSpanComparisonClassification"""
         super().__init__()
         self.num_spans = num_spans
         self.num_labels = num_labels
@@ -72,7 +72,7 @@ class SpanComparisonHead(BaseHead):
 
 class TokenClassificationHead(BaseHead):
     def __init__(self, hidden_size, num_labels, hidden_dropout_prob):
-        """From RobertaForTokenClassification """
+        """From RobertaForTokenClassification"""
         super().__init__()
         self.num_labels = num_labels
         self.dropout = nn.Dropout(hidden_dropout_prob)
@@ -86,7 +86,7 @@ class TokenClassificationHead(BaseHead):
 
 class QAHead(BaseHead):
     def __init__(self, hidden_size):
-        """From RobertaForQuestionAnswering """
+        """From RobertaForQuestionAnswering"""
         super().__init__()
         self.qa_outputs = nn.Linear(hidden_size, 2)
 
@@ -114,7 +114,8 @@ class BertMLMHead(BaseMLMHead):
         self.decoder = nn.Linear(hidden_size, vocab_size, bias=False)
         self.bias = nn.Parameter(torch.zeros(vocab_size), requires_grad=True)
 
-        # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
+        # Need a link between the two variables so that the bias is correctly resized with
+        # `resize_token_embeddings`
         self.decoder.bias = self.bias
 
     def forward(self, unpooled):
@@ -136,7 +137,8 @@ class RobertaMLMHead(BaseMLMHead):
         self.decoder = nn.Linear(hidden_size, vocab_size, bias=False)
         self.bias = nn.Parameter(torch.zeros(vocab_size), requires_grad=True)
 
-        # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
+        # Need a link between the two variables so that the bias is correctly resized with
+        # `resize_token_embeddings`
         self.decoder.bias = self.bias
 
     def forward(self, unpooled):
@@ -161,7 +163,8 @@ class AlbertMLMHead(nn.Module):
         self.decoder = nn.Linear(embedding_size, vocab_size)
         self.activation = transformers.modeling_bert.ACT2FN[hidden_act]
 
-        # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
+        # Need a link between the two variables so that the bias is correctly resized with
+        # `resize_token_embeddings`
         self.decoder.bias = self.bias
 
     def forward(self, unpooled):

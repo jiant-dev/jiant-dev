@@ -34,7 +34,8 @@ def quick_init(args, verbose=True) -> QuickInitContainer:
 
 def init_server_logging(server_ip, server_port, verbose=True):
     if server_ip and server_port:
-        # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
+        # Distant debugging, see:
+        # https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
         # noinspection PyUnresolvedReferences,PyPackageRequirements
         import ptvsd
 

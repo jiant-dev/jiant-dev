@@ -46,7 +46,7 @@ def wrap_jiant_forward(
     task: tasks.Task,
     compute_loss: bool = False,
 ):
-    """ Handling multi-gpu ugliness """
+    """Handling multi-gpu ugliness"""
     assert isinstance(jiant_model, (JiantModel, nn.DataParallel))
     is_multi_gpu = isinstance(jiant_model, nn.DataParallel)
     model_output = construct_output_from_dict(
