@@ -89,7 +89,9 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
         raise KeyError(load_mode)
 
 
-def load_encoder_from_transformers_weights(encoder: nn.Module, weights_dict: dict, return_remainder=False):
+def load_encoder_from_transformers_weights(
+    encoder: nn.Module, weights_dict: dict, return_remainder=False
+):
     remainder_weights_dict = {}
     load_weights_dict = {}
     model_arch = get_model_arch_from_encoder(encoder=encoder)
