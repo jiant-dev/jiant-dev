@@ -208,7 +208,7 @@ TOKENIZER_CLASS_DICT = {
 
 
 def resolve_tokenizer_class(model_type):
-    """Get tokenizer for a given model architecture.
+    """Get tokenizer class for a given model architecture.
 
     Args:
         model_type (str): model shortcut name.

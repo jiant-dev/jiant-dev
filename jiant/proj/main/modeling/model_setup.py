@@ -262,7 +262,7 @@ def create_taskmodel(
 
 
 def get_encoder(model_arch, ancestor_model):
-    """From model architecture, get the bare model (outputting raw hidden-states without a head).
+    """From model architecture, get the encoder (encoder = embedding layer + self-attention layer).
 
     This function will return the "The bare Bert Model transformer outputting raw hidden-states
     without any specific head on top", when provided with ModelArchitectures and BertForPreTraining
@@ -358,6 +358,9 @@ MODEL_PREFIX = {
 
 def get_ancestor_model(transformers_class_spec, model_config_path):
     """Load the model config from a file, configure the model, and return the model.
+
+    This function returns the model class with all the pretrained weights. E.g., for BERT this is
+    BertForPreTraining which includes masked language modeling and next sentence prediction heads.
 
     Args:
         transformers_class_spec (TransformersClassSpec): has refs to model, tokenizer, and config.
