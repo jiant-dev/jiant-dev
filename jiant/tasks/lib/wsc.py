@@ -11,7 +11,11 @@ from jiant.tasks.core import (
     Task,
     TaskTypes,
 )
-from jiant.tasks.lib.templates.shared import labels_to_bimap, add_cls_token, create_input_set_from_tokens_and_segments
+from jiant.tasks.lib.templates.shared import (
+    labels_to_bimap,
+    add_cls_token,
+    create_input_set_from_tokens_and_segments,
+)
 from jiant.tasks.utils import truncate_sequences, ExclusiveSpan
 from jiant.utils.python.io import read_json_lines
 import jiant.tasks.lib.templates.hacky_tokenization_matching as tokenization_utils
@@ -46,14 +50,10 @@ class Example(BaseExample):
             assert text[slice(*char_span2)].lower() == span2_text.lower()
 
         tokens1, span1_span = tokenization_utils.get_token_span(
-            sentence=text,
-            span=char_span1,
-            tokenizer=tokenizer,
+            sentence=text, span=char_span1, tokenizer=tokenizer,
         )
         tokens2, span2_span = tokenization_utils.get_token_span(
-            sentence=text,
-            span=char_span2,
-            tokenizer=tokenizer,
+            sentence=text, span=char_span2, tokenizer=tokenizer,
         )
         assert tokens1 == tokens2
         return TokenizedExample(
@@ -80,15 +80,12 @@ class TokenizedExample(BaseTokenizedExample):
     def featurize(self, tokenizer, feat_spec):
         special_tokens_count = 2  # CLS, SEP
 
-        tokens, = truncate_sequences(
-            tokens_ls=[self.tokens],
-            max_length=feat_spec.max_seq_length - special_tokens_count,
+        (tokens,) = truncate_sequences(
+            tokens_ls=[self.tokens], max_length=feat_spec.max_seq_length - special_tokens_count,
         )
 
         unpadded_tokens = tokens + [tokenizer.sep_token]
-        unpadded_segment_ids = (
-            [feat_spec.sequence_a_segment_id] * (len(self.tokens) + 1)
-        )
+        unpadded_segment_ids = [feat_spec.sequence_a_segment_id] * (len(self.tokens) + 1)
 
         unpadded_inputs = add_cls_token(
             unpadded_tokens=unpadded_tokens,
@@ -117,10 +114,7 @@ class TokenizedExample(BaseTokenizedExample):
             input_ids=np.array(input_set.input_ids),
             input_mask=np.array(input_set.input_mask),
             segment_ids=np.array(input_set.segment_ids),
-            spans=np.array([
-                span1_span,
-                span2_span,
-            ]),
+            spans=np.array([span1_span, span2_span,]),
             label_id=self.label_id,
             tokens=unpadded_inputs.unpadded_tokens,
             span1_text=self.span1_text,
@@ -183,15 +177,17 @@ class WSCTask(Task):
     def _create_examples(cls, lines, set_type):
         examples = []
         for line in lines:
-            examples.append(Example(
-                guid="%s-%s" % (set_type, line["idx"]),
-                text=line["text"],
-                span1_idx=line["target"]["span1_index"],
-                span2_idx=line["target"]["span2_index"],
-                span1_text=line["target"]["span1_text"],
-                span2_text=line["target"]["span2_text"],
-                label=line["label"] if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, line["idx"]),
+                    text=line["text"],
+                    span1_idx=line["target"]["span1_index"],
+                    span2_idx=line["target"]["span2_index"],
+                    span1_text=line["target"]["span1_text"],
+                    span2_text=line["target"]["span2_text"],
+                    label=line["label"] if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples
 
 

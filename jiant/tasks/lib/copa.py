@@ -7,7 +7,6 @@ from jiant.utils.python.io import read_json_lines
 
 @dataclass
 class Example(mc_template.Example):
-
     @property
     def task(self):
         return CopaTask
@@ -57,13 +56,12 @@ class CopaTask(mc_template.AbstractMultipleChoiceTask):
         examples = []
         for line in lines:
             question = cls._QUESTION_DICT[line["question"]]
-            examples.append(Example(
-                guid="%s-%s" % (set_type, line["idx"]),
-                prompt=line["premise"] + " " + question,
-                choice_list=[
-                     line["choice1"],
-                     line["choice2"],
-                ],
-                label=line["label"] if set_type != "test" else cls.CHOICE_KEYS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, line["idx"]),
+                    prompt=line["premise"] + " " + question,
+                    choice_list=[line["choice1"], line["choice2"],],
+                    label=line["label"] if set_type != "test" else cls.CHOICE_KEYS[-1],
+                )
+            )
         return examples

@@ -21,6 +21,7 @@ from jiant.utils.python.datastructures import ExtendedDataClassMixin
 from jiant.utils.display import maybe_tqdm
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,17 +65,25 @@ class Example(BaseExample):
         # Start end end positions only has a value during evaluation.
         if self.start_position_character is not None and not self.is_impossible:
             self.start_position = char_to_word_offset[self.start_position_character]
-            self.end_position = char_to_word_offset[min(
-                self.start_position_character + len(self.answer_text) - 1,
-                len(char_to_word_offset) - 1
-            )]
+            self.end_position = char_to_word_offset[
+                min(
+                    self.start_position_character + len(self.answer_text) - 1,
+                    len(char_to_word_offset) - 1,
+                )
+            ]
 
     def tokenize(self, tokenizer):
         raise NotImplementedError("SQuaD is weird")
 
-    def to_feature_list(self, tokenizer, feat_spec: FeaturizationSpec,
-                        max_seq_length, doc_stride, max_query_length,
-                        set_type):
+    def to_feature_list(
+        self,
+        tokenizer,
+        feat_spec: FeaturizationSpec,
+        max_seq_length,
+        doc_stride,
+        max_query_length,
+        set_type,
+    ):
         is_training = set_type == PHASE.TRAIN
         features = []
         if is_training and not self.is_impossible:
@@ -83,10 +92,12 @@ class Example(BaseExample):
             end_position = self.end_position
 
             # If the answer cannot be found in the text, then skip this example.
-            actual_text = " ".join(self.doc_tokens[start_position: (end_position + 1)])
+            actual_text = " ".join(self.doc_tokens[start_position : (end_position + 1)])
             cleaned_answer_text = " ".join(whitespace_tokenize(self.answer_text))
             if actual_text.find(cleaned_answer_text) == -1:
-                logger.warning("Could not find answer: '%s' vs. '%s'", actual_text, cleaned_answer_text)
+                logger.warning(
+                    "Could not find answer: '%s' vs. '%s'", actual_text, cleaned_answer_text
+                )
                 return []
 
         tok_to_orig_index = []
@@ -112,7 +123,9 @@ class Example(BaseExample):
 
         spans = []
 
-        truncated_query = tokenizer.encode(self.question_text, add_special_tokens=False, max_length=max_query_length)
+        truncated_query = tokenizer.encode(
+            self.question_text, add_special_tokens=False, max_length=max_query_length
+        )
         sequence_added_tokens = (
             tokenizer.max_len - tokenizer.max_len_single_sentence + 1
             if "roberta" in str(type(tokenizer))
@@ -129,8 +142,13 @@ class Example(BaseExample):
                 max_length=max_seq_length,
                 return_overflowing_tokens=True,
                 pad_to_max_length=True,
-                stride=max_seq_length - doc_stride - len(truncated_query) - sequence_pair_added_tokens,
-                truncation_strategy="only_second" if tokenizer.padding_side == "right" else "only_first",
+                stride=max_seq_length
+                - doc_stride
+                - len(truncated_query)
+                - sequence_pair_added_tokens,
+                truncation_strategy="only_second"
+                if tokenizer.padding_side == "right"
+                else "only_first",
                 return_token_type_ids=True,
             )
 
@@ -140,7 +158,9 @@ class Example(BaseExample):
             )
 
             if tokenizer.pad_token_id in encoded_dict["input_ids"]:
-                non_padded_ids = encoded_dict["input_ids"][: encoded_dict["input_ids"].index(tokenizer.pad_token_id)]
+                non_padded_ids = encoded_dict["input_ids"][
+                    : encoded_dict["input_ids"].index(tokenizer.pad_token_id)
+                ]
             else:
                 non_padded_ids = encoded_dict["input_ids"]
 
@@ -148,13 +168,19 @@ class Example(BaseExample):
 
             token_to_orig_map = {}
             for i in range(paragraph_len):
-                index = len(truncated_query) + sequence_added_tokens + i if tokenizer.padding_side == "right" else i
+                index = (
+                    len(truncated_query) + sequence_added_tokens + i
+                    if tokenizer.padding_side == "right"
+                    else i
+                )
                 token_to_orig_map[index] = tok_to_orig_index[len(spans) * doc_stride + i]
 
             encoded_dict["paragraph_len"] = paragraph_len
             encoded_dict["tokens"] = tokens
             encoded_dict["token_to_orig_map"] = token_to_orig_map
-            encoded_dict["truncated_query_with_special_tokens_length"] = len(truncated_query) + sequence_added_tokens
+            encoded_dict["truncated_query_with_special_tokens_length"] = (
+                len(truncated_query) + sequence_added_tokens
+            )
             encoded_dict["token_is_max_context"] = {}
             encoded_dict["start"] = len(spans) * doc_stride
             encoded_dict["length"] = paragraph_len
@@ -167,7 +193,9 @@ class Example(BaseExample):
 
         for doc_span_index in range(len(spans)):
             for j in range(spans[doc_span_index]["paragraph_len"]):
-                is_max_context = _new_check_is_max_context(spans, doc_span_index, doc_span_index * doc_stride + j)
+                is_max_context = _new_check_is_max_context(
+                    spans, doc_span_index, doc_span_index * doc_stride + j
+                )
                 index = (
                     j
                     if tokenizer.padding_side == "left"
@@ -236,7 +264,7 @@ class Example(BaseExample):
                     start_position=start_position,
                     end_position=end_position,
                     answers=self.answers,
-                    doc_tokens=self.doc_tokens
+                    doc_tokens=self.doc_tokens,
                 )
             )
         return features
@@ -280,11 +308,15 @@ class BaseSquadStyleTask(Task):
 
     TASK_TYPE = TaskTypes.SQUAD_STYLE_QA
 
-    def __init__(self, name, path_dict,
-                 version_2_with_negative=False,
-                 n_best_size=20,
-                 max_answer_length=30,
-                 null_score_diff_threshold=0.0):
+    def __init__(
+        self,
+        name,
+        path_dict,
+        version_2_with_negative=False,
+        n_best_size=20,
+        max_answer_length=30,
+        null_score_diff_threshold=0.0,
+    ):
         super().__init__(name=name, path_dict=path_dict)
         self.version_2_with_negative = version_2_with_negative
         self.n_best_size = n_best_size
@@ -302,7 +334,7 @@ class BaseSquadStyleTask(Task):
 
     @classmethod
     def read_squad_examples(cls, path, set_type):
-        with open(path, "r", encoding='utf-8') as reader:
+        with open(path, "r", encoding="utf-8") as reader:
             input_data = json.load(reader)["data"]
 
         is_training = set_type == PHASE.TRAIN
@@ -361,8 +393,9 @@ class PartialDataRow(ExtendedDataClassMixin):
         return PartialDataRow(**{k: data_row_dict[k] for k in cls.get_fields()})
 
 
-def data_rows_to_partial_examples(data_rows: List[PartialDataRow]) \
-                -> List[squad_utils.PartialExample]:
+def data_rows_to_partial_examples(
+    data_rows: List[PartialDataRow],
+) -> List[squad_utils.PartialExample]:
     qas_id_to_data_rows = {}
     for i, data_row in enumerate(data_rows):
         data_row.unique_id = 1000000000 + i
@@ -372,20 +405,22 @@ def data_rows_to_partial_examples(data_rows: List[PartialDataRow]) \
     partial_examples = []
     for qas_id in sorted(list(qas_id_to_data_rows.keys())):
         first_data_row = qas_id_to_data_rows[qas_id][0]
-        partial_examples.append(squad_utils.PartialExample(
-            doc_tokens=first_data_row.doc_tokens,
-            qas_id=first_data_row.qas_id,
-            partial_features=[
-                squad_utils.PartialFeatures(
-                    unique_id=data_row.unique_id,
-                    tokens=data_row.tokens,
-                    token_to_orig_map=data_row.token_to_orig_map,
-                    token_is_max_context=data_row.token_is_max_context,
-                )
-                for data_row in qas_id_to_data_rows[qas_id]
-            ],
-            answers=first_data_row.answers,
-        ))
+        partial_examples.append(
+            squad_utils.PartialExample(
+                doc_tokens=first_data_row.doc_tokens,
+                qas_id=first_data_row.qas_id,
+                partial_features=[
+                    squad_utils.PartialFeatures(
+                        unique_id=data_row.unique_id,
+                        tokens=data_row.tokens,
+                        token_to_orig_map=data_row.token_to_orig_map,
+                        token_is_max_context=data_row.token_is_max_context,
+                    )
+                    for data_row in qas_id_to_data_rows[qas_id]
+                ],
+                answers=first_data_row.answers,
+            )
+        )
     return partial_examples
 
 
@@ -437,9 +472,7 @@ def logits_to_pred_results_list(logits):
     """
     return [
         squad_utils.SquadResult(
-            unique_id=1000000000 + i,
-            start_logits=logits[i, 0],
-            end_logits=logits[i, 1],
+            unique_id=1000000000 + i, start_logits=logits[i, 0], end_logits=logits[i, 1],
         )
         for i in range(logits.shape[0])
     ]

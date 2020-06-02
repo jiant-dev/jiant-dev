@@ -6,8 +6,12 @@ from typing import List
 from jiant.utils.python.datastructures import ReusableGenerator
 
 from jiant.tasks.core import (
-    Task, TaskTypes,
-    BaseExample, BaseTokenizedExample, BaseDataRow, BatchMixin
+    Task,
+    TaskTypes,
+    BaseExample,
+    BaseTokenizedExample,
+    BaseDataRow,
+    BatchMixin,
 )
 from jiant.tasks.lib.templates.shared import (
     construct_single_input_tokens_and_segment_ids,
@@ -21,10 +25,7 @@ class Example(BaseExample):
     text: str
 
     def tokenize(self, tokenizer):
-        return TokenizedExample(
-            guid=self.guid,
-            input_tokens=tokenizer.tokenize(self.text),
-        )
+        return TokenizedExample(guid=self.guid, input_tokens=tokenizer.tokenize(self.text),)
 
 
 @dataclass
@@ -34,9 +35,7 @@ class TokenizedExample(BaseTokenizedExample):
 
     def featurize(self, tokenizer, feat_spec):
         unpadded_inputs = construct_single_input_tokens_and_segment_ids(
-            input_tokens=self.input_tokens,
-            tokenizer=tokenizer,
-            feat_spec=feat_spec,
+            input_tokens=self.input_tokens, tokenizer=tokenizer, feat_spec=feat_spec,
         )
         input_set = create_input_set_from_tokens_and_segments(
             unpadded_tokens=unpadded_inputs.unpadded_tokens,
@@ -81,9 +80,7 @@ class Batch(BatchMixin):
     def get_masked(self, mlm_probability, tokenizer, do_mask):
         if do_mask:
             masked_input_ids, masked_lm_labels = mlm_mask_tokens(
-                inputs=self.input_ids,
-                tokenizer=tokenizer,
-                mlm_probability=mlm_probability,
+                inputs=self.input_ids, tokenizer=tokenizer, mlm_probability=mlm_probability,
             )
             return MaskedBatch(
                 masked_input_ids=masked_input_ids,
@@ -120,8 +117,7 @@ class MLMTask(Task):
 
     TASK_TYPE = TaskTypes.MASKED_LANGUAGE_MODELING
 
-    def __init__(self, name, path_dict,
-                 mlm_probability=0.15, do_mask=True):
+    def __init__(self, name, path_dict, mlm_probability=0.15, do_mask=True):
         super().__init__(name=name, path_dict=path_dict)
         self.mlm_probability = mlm_probability
         self.do_mask = do_mask
@@ -140,8 +136,7 @@ class MLMTask(Task):
         with open(path, "r") as f:
             for (i, line) in enumerate(f):
                 yield Example(
-                    guid="%s-%s" % (set_type, i),
-                    text=line.strip(),
+                    guid="%s-%s" % (set_type, i), text=line.strip(),
                 )
 
     @classmethod
@@ -162,7 +157,8 @@ def mlm_mask_tokens(inputs: torch.LongTensor, tokenizer, mlm_probability):
     # (with probability args.mlm_probability defaults to 0.15 in Bert/RoBERTa)
     probability_matrix = torch.full(labels.shape, mlm_probability)
     special_tokens_mask = [
-        tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
+        tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True)
+        for val in labels.tolist()
     ]
     probability_matrix.masked_fill_(torch.tensor(special_tokens_mask, dtype=torch.bool), value=0.0)
     if tokenizer._pad_token is not None:
@@ -176,7 +172,9 @@ def mlm_mask_tokens(inputs: torch.LongTensor, tokenizer, mlm_probability):
     inputs[indices_replaced] = tokenizer.convert_tokens_to_ids(tokenizer.mask_token)
 
     # 10% of the time, we replace masked input tokens with random word
-    indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
+    indices_random = (
+        torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
+    )
     random_words = torch.randint(len(tokenizer), labels.shape, dtype=torch.long)
     inputs[indices_random] = random_words[indices_random]
 

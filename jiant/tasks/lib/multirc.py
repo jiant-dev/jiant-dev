@@ -13,7 +13,11 @@ from jiant.tasks.core import (
     Task,
     TaskTypes,
 )
-from jiant.tasks.lib.templates.shared import labels_to_bimap, add_cls_token, create_input_set_from_tokens_and_segments
+from jiant.tasks.lib.templates.shared import (
+    labels_to_bimap,
+    add_cls_token,
+    create_input_set_from_tokens_and_segments,
+)
 from jiant.tasks.utils import truncate_sequences
 from jiant.utils.python.io import read_json_lines
 
@@ -63,14 +67,18 @@ class TokenizedExample(BaseTokenizedExample):
             max_length=(
                 feat_spec.max_seq_length
                 - special_tokens_count
-                - len(self.question) - len(self.answer))
-            ,
+                - len(self.question)
+                - len(self.answer)
+            ),
         )[0]
         unpadded_inputs = add_cls_token(
             unpadded_tokens=(
                 paragraph
-                + self.question + [tokenizer.sep_token] + maybe_extra_sep
-                + self.answer + [tokenizer.sep_token]
+                + self.question
+                + [tokenizer.sep_token]
+                + maybe_extra_sep
+                + self.answer
+                + [tokenizer.sep_token]
             ),
             unpadded_segment_ids=(
                 [feat_spec.sequence_a_segment_id] * len(paragraph)
@@ -79,7 +87,7 @@ class TokenizedExample(BaseTokenizedExample):
                 + [feat_spec.sequence_b_segment_id] * (len(self.answer) + 1)
             ),
             tokenizer=tokenizer,
-            feat_spec=feat_spec
+            feat_spec=feat_spec,
         )
         input_set = create_input_set_from_tokens_and_segments(
             unpadded_tokens=unpadded_inputs.unpadded_tokens,
@@ -165,13 +173,15 @@ class MultiRCTask(Task):
                     paragraph = " ".join(sentence_ls)
                 for answer_dict in question_dict["answers"]:
                     answer = answer_dict["text"]
-                    examples.append(Example(
-                        guid="%s-%s" % (set_type, line["idx"]),
-                        paragraph=paragraph,
-                        question=question,
-                        answer=answer,
-                        label=answer_dict["label"] if set_type != "test" else self.LABELS[-1],
-                        question_id=question_id,
-                    ))
+                    examples.append(
+                        Example(
+                            guid="%s-%s" % (set_type, line["idx"]),
+                            paragraph=paragraph,
+                            question=question,
+                            answer=answer,
+                            label=answer_dict["label"] if set_type != "test" else self.LABELS[-1],
+                            question_id=question_id,
+                        )
+                    )
                 question_id += 1
         return examples

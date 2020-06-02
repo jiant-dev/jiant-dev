@@ -6,11 +6,16 @@ from dataclasses import dataclass
 from typing import List
 
 from jiant.tasks.core import (
-    Task, TaskTypes,
-    BaseExample, BaseTokenizedExample, BaseDataRow, BatchMixin
+    Task,
+    TaskTypes,
+    BaseExample,
+    BaseTokenizedExample,
+    BaseDataRow,
+    BatchMixin,
 )
 from jiant.tasks.lib.templates.shared import (
-    create_input_set_from_tokens_and_segments, add_cls_token,
+    create_input_set_from_tokens_and_segments,
+    add_cls_token,
 )
 from jiant.tasks.utils import truncate_sequences
 
@@ -31,10 +36,7 @@ class Example(BaseExample):
         return TokenizedExample(
             guid=self.guid,
             prompt=tokenizer.tokenize(self.prompt),
-            choice_list=[
-                tokenizer.tokenize(choice)
-                for choice in self.choice_list
-            ],
+            choice_list=[tokenizer.tokenize(choice) for choice in self.choice_list],
             label_id=self.task.CHOICE_BIMAP.a[self.label],
         )
 
@@ -67,9 +69,12 @@ class TokenizedExample(BaseTokenizedExample):
             unpadded_inputs = add_cls_token(
                 unpadded_tokens=(
                     # prompt
-                    prompt + [tokenizer.sep_token] + maybe_extra_sep
+                    prompt
+                    + [tokenizer.sep_token]
+                    + maybe_extra_sep
                     # choice
-                    + choice + [tokenizer.sep_token]
+                    + choice
+                    + [tokenizer.sep_token]
                 ),
                 unpadded_segment_ids=(
                     # prompt
@@ -85,7 +90,7 @@ class TokenizedExample(BaseTokenizedExample):
                 unpadded_tokens=unpadded_inputs.unpadded_tokens,
                 unpadded_segment_ids=unpadded_inputs.unpadded_segment_ids,
                 tokenizer=tokenizer,
-                feat_spec=feat_spec
+                feat_spec=feat_spec,
             )
             input_set_ls.append(input_set)
             unpadded_inputs_ls.append(unpadded_inputs)

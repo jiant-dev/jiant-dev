@@ -91,18 +91,15 @@ class SciTailTask(Task):
 
     @classmethod
     def _create_examples(cls, path, set_type):
-        df = pd.read_csv(
-            path,
-            sep="\t",
-            header=None,
-            names=["premise", "hypothesis", "label"],
-        )
+        df = pd.read_csv(path, sep="\t", header=None, names=["premise", "hypothesis", "label"],)
         examples = []
         for i, row in enumerate(df.itertuples()):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                input_premise=row.premise,
-                input_hypothesis=row.hypothesis,
-                label=row.label if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    input_premise=row.premise,
+                    input_hypothesis=row.hypothesis,
+                    label=row.label if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples

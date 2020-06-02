@@ -7,7 +7,6 @@ from jiant.utils.python.io import read_json_lines, read_file_lines
 
 @dataclass
 class Example(mc_template.Example):
-
     @property
     def task(self):
         return SocialIQATask
@@ -60,12 +59,14 @@ class SocialIQATask(mc_template.AbstractMultipleChoiceTask):
         examples = []
         answer_key_ls = ["answerA", "answerB", "answerC"]
         for i, (line, label) in enumerate(zip(lines, labels)):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                prompt=line["context"] + " " + line["question"],
-                choice_list=[line[answer_key] for answer_key in answer_key_ls],
-                label=label,
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    prompt=line["context"] + " " + line["question"],
+                    choice_list=[line[answer_key] for answer_key in answer_key_ls],
+                    label=label,
+                )
+            )
         return examples
 
     @classmethod

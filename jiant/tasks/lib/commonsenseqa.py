@@ -7,7 +7,6 @@ from jiant.utils.python.io import read_json_lines
 
 @dataclass
 class Example(mc_template.Example):
-
     @property
     def task(self):
         return CommonsenseQATask
@@ -51,14 +50,13 @@ class CommonsenseQATask(mc_template.AbstractMultipleChoiceTask):
     def _create_examples(cls, lines, set_type):
         examples = []
         for i, line in enumerate(lines):
-            choice_dict = {
-                elem["label"]: elem["text"]
-                for elem in line["question"]["choices"]
-            }
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                prompt=line["question"]["stem"],
-                choice_list=[choice_dict[key] for key in cls.CHOICE_KEYS],
-                label=line["answerKey"] if set_type != "test" else cls.CHOICE_KEYS[-1],
-            ))
+            choice_dict = {elem["label"]: elem["text"] for elem in line["question"]["choices"]}
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    prompt=line["question"]["stem"],
+                    choice_list=[choice_dict[key] for key in cls.CHOICE_KEYS],
+                    label=line["answerKey"] if set_type != "test" else cls.CHOICE_KEYS[-1],
+                )
+            )
         return examples

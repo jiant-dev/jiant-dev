@@ -7,7 +7,6 @@ from jiant.tasks.lib.templates import multiple_choice as mc_template
 
 @dataclass
 class Example(mc_template.Example):
-
     @property
     def task(self):
         return SWAGTask
@@ -52,15 +51,17 @@ class SWAGTask(mc_template.AbstractMultipleChoiceTask):
         df = pd.read_csv(path)
         examples = []
         for i, row in enumerate(df.itertuples()):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                prompt=row.sent1,
-                choice_list=[
-                    row.sent2 + " " + row.ending0,
-                    row.sent2 + " " + row.ending1,
-                    row.sent2 + " " + row.ending2,
-                    row.sent2 + " " + row.ending3,
-                ],
-                label=row.label if set_type != "test" else cls.CHOICE_KEYS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    prompt=row.sent1,
+                    choice_list=[
+                        row.sent2 + " " + row.ending0,
+                        row.sent2 + " " + row.ending1,
+                        row.sent2 + " " + row.ending2,
+                        row.sent2 + " " + row.ending3,
+                    ],
+                    label=row.label if set_type != "test" else cls.CHOICE_KEYS[-1],
+                )
+            )
         return examples

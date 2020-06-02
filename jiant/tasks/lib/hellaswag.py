@@ -7,7 +7,6 @@ from jiant.utils.python.io import read_json_lines
 
 @dataclass
 class Example(mc_template.Example):
-
     @property
     def task(self):
         return HellaSwagTask
@@ -51,13 +50,12 @@ class HellaSwagTask(mc_template.AbstractMultipleChoiceTask):
     def _create_examples(cls, lines, set_type):
         examples = []
         for i, line in enumerate(lines):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                prompt=line["ctx_a"],
-                choice_list=[
-                    line["ctx_b"] + " " + ending
-                    for ending in line["endings"]
-                ],
-                label=line["label"] if set_type != "test" else cls.CHOICE_KEYS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    prompt=line["ctx_a"],
+                    choice_list=[line["ctx_b"] + " " + ending for ending in line["endings"]],
+                    label=line["label"] if set_type != "test" else cls.CHOICE_KEYS[-1],
+                )
+            )
         return examples

@@ -14,7 +14,7 @@ class InclusiveSpan(NamedTuple):
         return self
 
     def to_exclusive(self):
-        return ExclusiveSpan(start=self.start, end=self.end+1)
+        return ExclusiveSpan(start=self.start, end=self.end + 1)
 
 
 class ExclusiveSpan(NamedTuple):
@@ -25,11 +25,10 @@ class ExclusiveSpan(NamedTuple):
         return slice(self.start, self.end)
 
     def to_inclusive(self):
-        return ExclusiveSpan(start=self.start, end=self.end-1)
+        return ExclusiveSpan(start=self.start, end=self.end - 1)
 
     def to_exclusive(self):
         return self
-
 
 
 def truncate_sequences(tokens_ls, max_length, truncate_end=True):

@@ -5,7 +5,6 @@ import jiant.tasks.lib.templates.squad_style.core as squad_style_template
 
 @dataclass
 class Example(squad_style_template.Example):
-
     def tokenize(self, tokenizer):
         raise NotImplementedError("SQuaD is weird")
 

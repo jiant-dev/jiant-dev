@@ -7,7 +7,6 @@ from jiant.tasks.lib.templates import multiple_choice as mc_template
 
 @dataclass
 class Example(mc_template.Example):
-
     @property
     def task(self):
         return CosmosQATask
@@ -52,10 +51,12 @@ class CosmosQATask(mc_template.AbstractMultipleChoiceTask):
         df = pd.read_csv(path)
         examples = []
         for i, row in enumerate(df.itertuples()):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                prompt=row.context + " " + row.question,
-                choice_list=[row.answer0, row.answer1, row.answer2, row.answer3],
-                label=row.label if set_type != "test" else cls.CHOICE_KEYS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    prompt=row.context + " " + row.question,
+                    choice_list=[row.answer0, row.answer1, row.answer2, row.answer3],
+                    label=row.label if set_type != "test" else cls.CHOICE_KEYS[-1],
+                )
+            )
         return examples

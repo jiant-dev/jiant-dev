@@ -103,27 +103,30 @@ class ReCoRDTask(Task):
             passage_text = line["passage"]["text"]
             for qas in line["qas"]:
                 answers_dict = {
-                    (answer["start"], answer["end"]): answer["text"]
-                    for answer in qas["answers"]
+                    (answer["start"], answer["end"]): answer["text"] for answer in qas["answers"]
                 }
                 for entity in line["passage"]["entities"]:
                     entity_span = (entity["start"], entity["end"])
                     if entity_span in answers_dict:
-                        assert passage_text[entity_span[0]:entity_span[1] + 1] \
+                        assert (
+                            passage_text[entity_span[0] : entity_span[1] + 1]
                             == answers_dict[entity_span]
+                        )
                         label = True
                     else:
                         label = False
-                    examples.append(Example(
-                        guid="%s-%s" % (set_type, len(examples)),
-                        passage_text=passage_text,
-                        query_text=qas["query"],
-                        entity_start_char_idx=entity_span[0],
-                        entity_end_char_idx=entity_span[1] + 1,  # make exclusive
-                        entity_str=passage_text[entity_span[0]:entity_span[1] + 1],
-                        passage_idx=line["idx"],
-                        question_idx=qas["idx"],
-                        answers_dict=answers_dict,
-                        label=label,
-                    ))
+                    examples.append(
+                        Example(
+                            guid="%s-%s" % (set_type, len(examples)),
+                            passage_text=passage_text,
+                            query_text=qas["query"],
+                            entity_start_char_idx=entity_span[0],
+                            entity_end_char_idx=entity_span[1] + 1,  # make exclusive
+                            entity_str=passage_text[entity_span[0] : entity_span[1] + 1],
+                            passage_idx=line["idx"],
+                            question_idx=qas["idx"],
+                            answers_dict=answers_dict,
+                            label=label,
+                        )
+                    )
         return examples

@@ -11,7 +11,11 @@ from jiant.tasks.core import (
     Task,
     TaskTypes,
 )
-from jiant.tasks.lib.templates.shared import labels_to_bimap, add_cls_token, create_input_set_from_tokens_and_segments
+from jiant.tasks.lib.templates.shared import (
+    labels_to_bimap,
+    add_cls_token,
+    create_input_set_from_tokens_and_segments,
+)
 from jiant.tasks.utils import truncate_sequences, ExclusiveSpan
 from jiant.utils.python.io import read_json_lines
 import jiant.tasks.lib.templates.hacky_tokenization_matching as tokenization_utils
@@ -29,14 +33,10 @@ class Example(BaseExample):
 
     def tokenize(self, tokenizer):
         sentence1_tokens, sentence1_span = tokenization_utils.get_token_span(
-            sentence=self.sentence1,
-            span=self.span1,
-            tokenizer=tokenizer,
+            sentence=self.sentence1, span=self.span1, tokenizer=tokenizer,
         )
         sentence2_tokens, sentence2_span = tokenization_utils.get_token_span(
-            sentence=self.sentence2,
-            span=self.span2,
-            tokenizer=tokenizer,
+            sentence=self.sentence2, span=self.span2, tokenizer=tokenizer,
         )
 
         return TokenizedExample(
@@ -76,9 +76,14 @@ class TokenizedExample(BaseTokenizedExample):
         )
 
         unpadded_tokens = (
-            self.word + [tokenizer.sep_token] + maybe_extra_sep
-            + sentence1_tokens + [tokenizer.sep_token] + maybe_extra_sep
-            + sentence2_tokens + [tokenizer.sep_token]
+            self.word
+            + [tokenizer.sep_token]
+            + maybe_extra_sep
+            + sentence1_tokens
+            + [tokenizer.sep_token]
+            + maybe_extra_sep
+            + sentence2_tokens
+            + [tokenizer.sep_token]
         )
         # Don't have a choice here -- just leave words as part of sent1
         unpadded_segment_ids = (
@@ -108,16 +113,28 @@ class TokenizedExample(BaseTokenizedExample):
 
         # Both should be inclusive spans at the end
         sentence1_span = ExclusiveSpan(
-            start=self.sentence1_span[0] + unpadded_inputs.cls_offset + word_sep_offset
+            start=self.sentence1_span[0]
+            + unpadded_inputs.cls_offset
+            + word_sep_offset
             + len(self.word),
-            end=self.sentence1_span[1] + unpadded_inputs.cls_offset + word_sep_offset
+            end=self.sentence1_span[1]
+            + unpadded_inputs.cls_offset
+            + word_sep_offset
             + len(self.word),
         ).to_inclusive()
         sentence2_span = ExclusiveSpan(
-            start=self.sentence2_span[0] + unpadded_inputs.cls_offset + word_sep_offset + sent1_sep_offset
-            + len(self.word) + len(sentence1_tokens),
-            end=self.sentence2_span[1] + unpadded_inputs.cls_offset + word_sep_offset + sent1_sep_offset
-            + len(self.word) + len(sentence1_tokens),
+            start=self.sentence2_span[0]
+            + unpadded_inputs.cls_offset
+            + word_sep_offset
+            + sent1_sep_offset
+            + len(self.word)
+            + len(sentence1_tokens),
+            end=self.sentence2_span[1]
+            + unpadded_inputs.cls_offset
+            + word_sep_offset
+            + sent1_sep_offset
+            + len(self.word)
+            + len(sentence1_tokens),
         ).to_inclusive()
 
         return DataRow(
@@ -125,10 +142,7 @@ class TokenizedExample(BaseTokenizedExample):
             input_ids=np.array(input_set.input_ids),
             input_mask=np.array(input_set.input_mask),
             segment_ids=np.array(input_set.segment_ids),
-            spans=np.array([
-                sentence1_span,
-                sentence2_span,
-            ]),
+            spans=np.array([sentence1_span, sentence2_span,]),
             label_id=self.label_id,
             tokens=unpadded_inputs.unpadded_tokens,
             word=self.word,
@@ -189,13 +203,15 @@ class WiCTask(Task):
             span2 = ExclusiveSpan(int(line["start2"]), int(line["end2"]))
             # Note, the chosen word may be different (e.g. different tenses) in sent1 and sent2,
             #   hence we don't do an assert here.
-            examples.append(Example(
-                guid="%s-%s" % (set_type, line["idx"]),
-                sentence1=line["sentence1"],
-                sentence2=line["sentence2"],
-                word=line["word"],
-                span1=span1,
-                span2=span2,
-                label=line["label"] if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, line["idx"]),
+                    sentence1=line["sentence1"],
+                    sentence2=line["sentence2"],
+                    word=line["word"],
+                    span1=span1,
+                    span2=span2,
+                    label=line["label"] if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples

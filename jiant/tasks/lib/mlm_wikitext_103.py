@@ -35,8 +35,7 @@ class MLMWikitext103Task(mlm_template.MLMTask):
     DataRow = DataRow
     Batch = Batch
 
-    def __init__(self, name, path_dict,
-                 mlm_probability=0.15, do_mask=True):
+    def __init__(self, name, path_dict, mlm_probability=0.15, do_mask=True):
         super().__init__(name=name, path_dict=path_dict)
         self.mlm_probability = mlm_probability
         self.do_mask = do_mask
@@ -55,8 +54,7 @@ class MLMWikitext103Task(mlm_template.MLMTask):
         with open(path, "r") as f:
             for (i, line) in enumerate(f):
                 yield Example(
-                    guid="%s-%s" % (set_type, i),
-                    text=line.strip(),
+                    guid="%s-%s" % (set_type, i), text=line.strip(),
                 )
 
     @classmethod
@@ -66,4 +64,3 @@ class MLMWikitext103Task(mlm_template.MLMTask):
             return generator
         else:
             return list(generator)
-

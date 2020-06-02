@@ -39,12 +39,14 @@ def get_partial_examples(examples, features):
         example_index_to_features[feature.example_index].append(feature)
     partial_examples = []
     for example_index, example in enumerate(examples):
-        partial_examples.append(PartialExample(
-            doc_tokens=example.doc_tokens,
-            qas_id=example.qas_id,
-            partial_features=example_index_to_features[example_index],
-            answers=example.answers,
-        ))
+        partial_examples.append(
+            PartialExample(
+                doc_tokens=example.doc_tokens,
+                qas_id=example.qas_id,
+                partial_features=example_index_to_features[example_index],
+                answers=example.answers,
+            )
+        )
     return partial_examples
 
 
@@ -67,7 +69,8 @@ def compute_predictions_logits_v2(
         unique_id_to_result[result.unique_id] = result
 
     _PrelimPrediction = collections.namedtuple(  # pylint: disable=invalid-name
-        "PrelimPrediction", ["feature_index", "start_index", "end_index", "start_logit", "end_logit"]
+        "PrelimPrediction",
+        ["feature_index", "start_index", "end_index", "start_logit", "end_logit"],
     )
 
     all_predictions = collections.OrderedDict()
@@ -134,7 +137,9 @@ def compute_predictions_logits_v2(
                     end_logit=null_end_logit,
                 )
             )
-        prelim_predictions = sorted(prelim_predictions, key=lambda x: (x.start_logit + x.end_logit), reverse=True)
+        prelim_predictions = sorted(
+            prelim_predictions, key=lambda x: (x.start_logit + x.end_logit), reverse=True
+        )
 
         _NbestPrediction = collections.namedtuple(  # pylint: disable=invalid-name
             "NbestPrediction", ["text", "start_logit", "end_logit"]
@@ -147,10 +152,10 @@ def compute_predictions_logits_v2(
                 break
             feature = features[pred.feature_index]
             if pred.start_index > 0:  # this is a non-null prediction
-                tok_tokens = feature.tokens[pred.start_index: (pred.end_index + 1)]
+                tok_tokens = feature.tokens[pred.start_index : (pred.end_index + 1)]
                 orig_doc_start = feature.token_to_orig_map[pred.start_index]
                 orig_doc_end = feature.token_to_orig_map[pred.end_index]
-                orig_tokens = example.doc_tokens[orig_doc_start: (orig_doc_end + 1)]
+                orig_tokens = example.doc_tokens[orig_doc_start : (orig_doc_end + 1)]
 
                 tok_text = tokenizer.convert_tokens_to_string(tok_tokens)
 
@@ -177,11 +182,19 @@ def compute_predictions_logits_v2(
                 final_text = ""
                 seen_predictions[final_text] = True
 
-            nbest.append(_NbestPrediction(text=final_text, start_logit=pred.start_logit, end_logit=pred.end_logit))
+            nbest.append(
+                _NbestPrediction(
+                    text=final_text, start_logit=pred.start_logit, end_logit=pred.end_logit
+                )
+            )
         # if we didn't include the empty option in the n-best, include it
         if version_2_with_negative:
             if "" not in seen_predictions:
-                nbest.append(_NbestPrediction(text="", start_logit=null_start_logit, end_logit=null_end_logit))
+                nbest.append(
+                    _NbestPrediction(
+                        text="", start_logit=null_start_logit, end_logit=null_end_logit
+                    )
+                )
 
             # In very rare edge cases we could only have single null prediction.
             # So we just create a nonce prediction in this case to avoid failure.
@@ -220,7 +233,9 @@ def compute_predictions_logits_v2(
             all_predictions[example.qas_id] = nbest_json[0]["text"]
         else:
             # predict "" iff the null score - the score of best non-null > threshold
-            score_diff = score_null - best_non_null_entry.start_logit - best_non_null_entry.end_logit
+            score_diff = (
+                score_null - best_non_null_entry.start_logit - best_non_null_entry.end_logit
+            )
             scores_diff_json[example.qas_id] = score_diff
             if score_diff > null_score_diff_threshold:
                 all_predictions[example.qas_id] = ""
@@ -254,7 +269,8 @@ def compute_predictions_logits(
         unique_id_to_result[result.unique_id] = result
 
     _PrelimPrediction = collections.namedtuple(  # pylint: disable=invalid-name
-        "PrelimPrediction", ["feature_index", "start_index", "end_index", "start_logit", "end_logit"]
+        "PrelimPrediction",
+        ["feature_index", "start_index", "end_index", "start_logit", "end_logit"],
     )
 
     all_predictions = collections.OrderedDict()
@@ -321,7 +337,9 @@ def compute_predictions_logits(
                     end_logit=null_end_logit,
                 )
             )
-        prelim_predictions = sorted(prelim_predictions, key=lambda x: (x.start_logit + x.end_logit), reverse=True)
+        prelim_predictions = sorted(
+            prelim_predictions, key=lambda x: (x.start_logit + x.end_logit), reverse=True
+        )
 
         _NbestPrediction = collections.namedtuple(  # pylint: disable=invalid-name
             "NbestPrediction", ["text", "start_logit", "end_logit"]
@@ -334,10 +352,10 @@ def compute_predictions_logits(
                 break
             feature = features[pred.feature_index]
             if pred.start_index > 0:  # this is a non-null prediction
-                tok_tokens = feature.tokens[pred.start_index: (pred.end_index + 1)]
+                tok_tokens = feature.tokens[pred.start_index : (pred.end_index + 1)]
                 orig_doc_start = feature.token_to_orig_map[pred.start_index]
                 orig_doc_end = feature.token_to_orig_map[pred.end_index]
-                orig_tokens = example.doc_tokens[orig_doc_start: (orig_doc_end + 1)]
+                orig_tokens = example.doc_tokens[orig_doc_start : (orig_doc_end + 1)]
 
                 tok_text = tokenizer.convert_tokens_to_string(tok_tokens)
 
@@ -364,11 +382,19 @@ def compute_predictions_logits(
                 final_text = ""
                 seen_predictions[final_text] = True
 
-            nbest.append(_NbestPrediction(text=final_text, start_logit=pred.start_logit, end_logit=pred.end_logit))
+            nbest.append(
+                _NbestPrediction(
+                    text=final_text, start_logit=pred.start_logit, end_logit=pred.end_logit
+                )
+            )
         # if we didn't include the empty option in the n-best, include it
         if version_2_with_negative:
             if "" not in seen_predictions:
-                nbest.append(_NbestPrediction(text="", start_logit=null_start_logit, end_logit=null_end_logit))
+                nbest.append(
+                    _NbestPrediction(
+                        text="", start_logit=null_start_logit, end_logit=null_end_logit
+                    )
+                )
 
             # In very rare edge cases we could only have single null prediction.
             # So we just create a nonce prediction in this case to avoid failure.
@@ -407,7 +433,9 @@ def compute_predictions_logits(
             all_predictions[example.qas_id] = nbest_json[0]["text"]
         else:
             # predict "" iff the null score - the score of best non-null > threshold
-            score_diff = score_null - best_non_null_entry.start_logit - best_non_null_entry.end_logit
+            score_diff = (
+                score_null - best_non_null_entry.start_logit - best_non_null_entry.end_logit
+            )
             scores_diff_json[example.qas_id] = score_diff
             if score_diff > null_score_diff_threshold:
                 all_predictions[example.qas_id] = ""
@@ -500,7 +528,7 @@ def get_final_text(pred_text, orig_text, do_lower_case):
     if orig_end_position is None:
         return orig_text
 
-    output_text = orig_text[orig_start_position: (orig_end_position + 1)]
+    output_text = orig_text[orig_start_position : (orig_end_position + 1)]
     return output_text
 
 
@@ -541,10 +569,13 @@ def _compute_softmax(scores):
 
 # === #
 
+
 def squad_evaluate(examples, preds, no_answer_probs=None, no_answer_probability_threshold=1.0):
     qas_id_to_has_answer = {example.qas_id: bool(example.answers) for example in examples}
     has_answer_qids = [qas_id for qas_id, has_answer in qas_id_to_has_answer.items() if has_answer]
-    no_answer_qids = [qas_id for qas_id, has_answer in qas_id_to_has_answer.items() if not has_answer]
+    no_answer_qids = [
+        qas_id for qas_id, has_answer in qas_id_to_has_answer.items() if not has_answer
+    ]
 
     if no_answer_probs is None:
         no_answer_probs = {k: 0.0 for k in preds}
@@ -554,7 +585,9 @@ def squad_evaluate(examples, preds, no_answer_probs=None, no_answer_probability_
     exact_threshold = apply_no_ans_threshold(
         exact, no_answer_probs, qas_id_to_has_answer, no_answer_probability_threshold
     )
-    f1_threshold = apply_no_ans_threshold(f1, no_answer_probs, qas_id_to_has_answer, no_answer_probability_threshold)
+    f1_threshold = apply_no_ans_threshold(
+        f1, no_answer_probs, qas_id_to_has_answer, no_answer_probability_threshold
+    )
 
     evaluation = make_eval_dict(exact_threshold, f1_threshold)
 
@@ -651,7 +684,9 @@ def get_raw_scores(examples, preds):
 
     for example in examples:
         qas_id = example.qas_id
-        gold_answers = [answer["text"] for answer in example.answers if normalize_answer(answer["text"])]
+        gold_answers = [
+            answer["text"] for answer in example.answers if normalize_answer(answer["text"])
+        ]
 
         if not gold_answers:
             # For unanswerable questions, only correct answer is empty string

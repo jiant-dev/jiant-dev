@@ -92,10 +92,12 @@ class AdversarialNliTask(Task):
     def _create_examples(cls, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
-            examples.append(Example(
-                guid="%s-%s" % (set_type, i),
-                input_premise=line["context"],
-                input_hypothesis=line["hypothesis"],
-                label=line["label"] if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, i),
+                    input_premise=line["context"],
+                    input_hypothesis=line["hypothesis"],
+                    label=line["label"] if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples

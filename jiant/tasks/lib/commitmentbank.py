@@ -92,10 +92,12 @@ class CommitmentBankTask(Task):
     def _create_examples(cls, lines, set_type):
         examples = []
         for line in lines:
-            examples.append(Example(
-                guid="%s-%s" % (set_type, line["idx"]),
-                input_premise=line["premise"],
-                input_hypothesis=line["hypothesis"],
-                label=line["label"] if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, line["idx"]),
+                    input_premise=line["premise"],
+                    input_hypothesis=line["hypothesis"],
+                    label=line["label"] if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples
