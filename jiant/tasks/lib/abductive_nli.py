@@ -164,7 +164,7 @@ class Batch(BatchMixin):
     tokens2: list
 
 
-class AnliTask(Task):
+class AbductiveNliTask(Task):
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow
