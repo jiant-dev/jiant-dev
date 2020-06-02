@@ -186,7 +186,6 @@ class MultipleChoiceAccuracyEvaluationScheme(BaseLogitsEvaluationScheme):
 
 
 class CommitmentBankEvaluationScheme(BaseLogitsEvaluationScheme):
-
     def get_preds_from_accumulator(self, task, accumulator):
         logits = accumulator.get_accumulated()
         return np.argmax(logits, axis=1)
@@ -202,8 +201,7 @@ class CommitmentBankEvaluationScheme(BaseLogitsEvaluationScheme):
         avg_f1 = mean(f11, f12, f13)
         return Metrics(
             major=mean(acc, avg_f1),
-            minor={"acc": acc, "avg_f1": avg_f1,
-                   "f11": f11, "f12": f12, "f13": f13}
+            minor={"acc": acc, "avg_f1": avg_f1, "f11": f11, "f12": f12, "f13": f13},
         )
 
 
@@ -242,16 +240,11 @@ class MultiRCEvaluationScheme(BaseEvaluationScheme):
     def get_preds_from_accumulator(self, task, accumulator):
         raise NotImplementedError()
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: ConcatenateLogitsAccumulator,
-                                         tokenizer,
-                                         labels: list) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
+    ) -> Metrics:
         preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
-        return self.compute_metrics_from_preds_and_labels(
-            preds=preds,
-            labels=labels,
-        )
+        return self.compute_metrics_from_preds_and_labels(preds=preds, labels=labels,)
 
     @classmethod
     def compute_metrics_from_preds_and_labels(cls, preds, labels):
@@ -260,16 +253,14 @@ class MultiRCEvaluationScheme(BaseEvaluationScheme):
         assert "question_ids" in df.columns
         df["preds"] = preds
         # noinspection PyUnresolvedReferences
-        exact_match = df \
-            .groupby("question_ids") \
-            .apply(lambda _: (_["preds"] == _["label_values"]).all()) \
+        exact_match = (
+            df.groupby("question_ids")
+            .apply(lambda _: (_["preds"] == _["label_values"]).all())
             .mean()
+        )
         exact_match = float(exact_match)
         f1 = f1_score(y_true=df["label_values"], y_pred=df["preds"])
-        return Metrics(
-            major=mean(exact_match, f1),
-            minor={"em": exact_match, "f1": f1},
-        )
+        return Metrics(major=mean(exact_match, f1), minor={"em": exact_match, "f1": f1},)
 
 
 @dataclass
@@ -304,21 +295,19 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
         # TODO: Revisit ReCord scoring
         raise NotImplementedError("Currently need labels ('examples') to compute preds. Refactor.")
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: ConcatenateLogitsAccumulator,
-                                         tokenizer,
-                                         labels: list) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
+    ) -> Metrics:
         logits = accumulator.get_accumulated()
         predictions_dict, metrics = self.compute_preds_and_metrics_from_logits_and_record_labels(
-            logits=logits,
-            examples=labels,
+            logits=logits, examples=labels,
         )
         return metrics
 
     @classmethod
     def compute_preds_and_metrics_from_logits_and_record_labels(
-            cls, logits, examples: List[RecordLabelData]):
+        cls, logits, examples: List[RecordLabelData]
+    ):
         psg_qns_idx_dict = {}
         for i, example in examples:
             psq_qns_idx = example.passage_idx, example.question_idx
@@ -354,10 +343,7 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
             "f1": f1,
             "f1_em": (f1 + em) / 2,
         }
-        metrics = Metrics(
-            major=minor["f1_em"],
-            minor=minor,
-        )
+        metrics = Metrics(major=minor["f1_em"], minor=minor,)
         return predictions_dict, metrics
 
     @classmethod
@@ -419,10 +405,7 @@ class CCGEvaluationScheme(BaseEvaluationScheme):
     @classmethod
     def get_label_ids_from_cache(cls, cache):
         return [
-            {
-                "label_ids": datum["data_row"].label_ids,
-                "label_mask": datum["data_row"].label_mask,
-            }
+            {"label_ids": datum["data_row"].label_ids, "label_mask": datum["data_row"].label_mask,}
             for datum in cache.iter_all()
         ]
 
@@ -434,16 +417,11 @@ class CCGEvaluationScheme(BaseEvaluationScheme):
         logits = accumulator.get_accumulated()
         return np.argmax(logits, axis=-1)
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: ConcatenateLogitsAccumulator,
-                                         tokenizer,
-                                         labels: list) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
+    ) -> Metrics:
         preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
-        return self.compute_metrics_from_preds_and_labels(
-            preds=preds,
-            labels=labels,
-        )
+        return self.compute_metrics_from_preds_and_labels(preds=preds, labels=labels,)
 
     @classmethod
     def compute_metrics_from_preds_and_labels(cls, preds, labels):
@@ -451,9 +429,9 @@ class CCGEvaluationScheme(BaseEvaluationScheme):
         label_mask = np.stack([row["label_mask"] for row in labels])
 
         # Account for smart-truncate
-        assert (label_mask[:, preds.shape[-1]:] == 0).all()
-        label_ids = label_ids[:, :preds.shape[-1]]
-        label_mask = label_mask[:, :preds.shape[-1]]
+        assert (label_mask[:, preds.shape[-1] :] == 0).all()
+        label_ids = label_ids[:, : preds.shape[-1]]
+        label_mask = label_mask[:, : preds.shape[-1]]
 
         bool_mask = label_mask.reshape(-1).astype(bool)
         flat_preds = preds.reshape(-1)[bool_mask]
@@ -470,7 +448,6 @@ class CCGEvaluationScheme(BaseEvaluationScheme):
 
 
 class SQuADEvaluationScheme(BaseEvaluationScheme):
-
     @classmethod
     def get_accumulator(cls) -> BaseAccumulator:
         return ConcatenateLogitsAccumulator()
@@ -486,11 +463,9 @@ class SQuADEvaluationScheme(BaseEvaluationScheme):
     def get_preds_from_accumulator(self, task, accumulator):
         raise NotImplementedError("Currently can't be done without access to dataset")
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: BaseAccumulator,
-                                         tokenizer,
-                                         labels) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: BaseAccumulator, tokenizer, labels
+    ) -> Metrics:
         logits = accumulator.get_accumulated()
         results, predictions = squad_style.compute_predictions_logits_v3(
             data_rows=labels,
@@ -502,10 +477,7 @@ class SQuADEvaluationScheme(BaseEvaluationScheme):
             null_score_diff_threshold=task.null_score_diff_threshold,
             tokenizer=tokenizer,
         )
-        return Metrics(
-            major=(results["f1"] + results["exact"]) / 2,
-            minor=results,
-        )
+        return Metrics(major=(results["f1"] + results["exact"]) / 2, minor=results,)
 
     @classmethod
     def get_label_from_data_row(cls, data_row):
@@ -524,39 +496,38 @@ class MLMEvaluationScheme(BaseEvaluationScheme):
     def get_preds_from_accumulator(self, task, accumulator):
         raise NotImplementedError("Not possible")
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: BaseAccumulator,
-                                         tokenizer,
-                                         labels) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: BaseAccumulator, tokenizer, labels
+    ) -> Metrics:
         loss_list = accumulator.get_accumulated()
         average_loss = mean(loss_list)
         perplexity = np.exp(average_loss)
         return Metrics(
             # Major = negative perplexity
             major=-perplexity,
-            minor={
-                "perplexity": perplexity,
-            }
+            minor={"perplexity": perplexity,},
         )
 
 
 def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
     # Todo: move logic to task?
-    if isinstance(task, (
-                tasks.AdversarialNliTask,
-                tasks.AbductiveNliTask,
-                tasks.BoolQTask,
-                tasks.CopaTask,
-                tasks.MnliTask,
-                tasks.QnliTask,
-                tasks.RteTask,
-                tasks.SciTailTask,
-                tasks.SnliTask,
-                tasks.SstTask,
-                tasks.WiCTask,
-                tasks.WSCTask,
-             )):
+    if isinstance(
+        task,
+        (
+            tasks.AdversarialNliTask,
+            tasks.AbductiveNliTask,
+            tasks.BoolQTask,
+            tasks.CopaTask,
+            tasks.MnliTask,
+            tasks.QnliTask,
+            tasks.RteTask,
+            tasks.SciTailTask,
+            tasks.SnliTask,
+            tasks.SstTask,
+            tasks.WiCTask,
+            tasks.WSCTask,
+        ),
+    ):
         return SimpleAccuracyEvaluationScheme()
     elif isinstance(task, tasks.CCGTask):
         return CCGEvaluationScheme()
@@ -564,22 +535,20 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
         return CommitmentBankEvaluationScheme()
     elif isinstance(task, tasks.ColaTask):
         return MCCEvaluationScheme()
-    elif isinstance(task, (
-                tasks.CommonsenseQATask,
-                tasks.CosmosQATask,
-                tasks.SWAGTask,
-                tasks.HellaSwagTask,
-                tasks.SocialIQATask,
-            )):
+    elif isinstance(
+        task,
+        (
+            tasks.CommonsenseQATask,
+            tasks.CosmosQATask,
+            tasks.SWAGTask,
+            tasks.HellaSwagTask,
+            tasks.SocialIQATask,
+        ),
+    ):
         return MultipleChoiceAccuracyEvaluationScheme()
-    elif isinstance(task, (
-                tasks.MrpcTask,
-                tasks.QqpTask,
-            )):
+    elif isinstance(task, (tasks.MrpcTask, tasks.QqpTask,)):
         return AccAndF1EvaluationScheme()
-    elif isinstance(task, (
-                tasks.SquadTask,
-            )):
+    elif isinstance(task, (tasks.SquadTask,)):
         return SQuADEvaluationScheme()
     elif isinstance(task, tasks.MultiRCTask):
         return MultiRCEvaluationScheme()
@@ -624,10 +593,12 @@ def get_multiple_choice_label_id_from_data_row(data_row):
 
 
 def get_multiple_choice_labels_from_cache(cache):
-    return np.array([
-        get_multiple_choice_label_id_from_data_row(data_row=datum["data_row"])
-        for datum in cache.iter_all()
-    ])
+    return np.array(
+        [
+            get_multiple_choice_label_id_from_data_row(data_row=datum["data_row"])
+            for datum in cache.iter_all()
+        ]
+    )
 
 
 def mean(*args) -> float:
