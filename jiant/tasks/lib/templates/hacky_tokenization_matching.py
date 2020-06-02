@@ -1,7 +1,7 @@
 """
 TODO: Remove when Tokenizers gets better
 """
-import transformers as ptt
+import transformers
 from jiant.tasks.utils import ExclusiveSpan
 
 
@@ -34,13 +34,13 @@ def input_flat_strip(tokens):
 
 
 def delegate_flat_strip(tokens, tokenizer, return_indices=False):
-    if isinstance(tokenizer, ptt.BertTokenizer):
+    if isinstance(tokenizer, transformers.BertTokenizer):
         return bert_flat_strip(tokens=tokens, return_indices=return_indices)
-    elif isinstance(tokenizer, ptt.RobertaTokenizer):
+    elif isinstance(tokenizer, transformers.RobertaTokenizer):
         return roberta_flat_strip(tokens=tokens, return_indices=return_indices)
-    elif isinstance(tokenizer, ptt.AlbertTokenizer):
+    elif isinstance(tokenizer, transformers.AlbertTokenizer):
         return albert_flat_strip(tokens=tokens, return_indices=return_indices)
-    elif isinstance(tokenizer, ptt.XLMRobertaTokenizer):
+    elif isinstance(tokenizer, transformers.XLMRobertaTokenizer):
         return xlm_roberta_flat_strip(tokens=tokens, return_indices=return_indices)
     else:
         raise KeyError(type(tokenizer))
