@@ -4,7 +4,6 @@ from collections import Counter
 import numpy as np
 
 from jiant.tasks import create_task_from_config_path
-from jiant.tasks.lib.sst import TokenizedExample
 from jiant.utils.testing.tokenizer import SimpleSpaceTokenizer
 
 
@@ -81,51 +80,6 @@ TOKENIZED_TRAIN_EXAMPLES = [
     },
 ]
 
-# set of tokens found in "test_convert_examples_to_tokenized_examples" for use in other tests.
-TOKEN_VOCAB = [
-    "hide",
-    "new",
-    "secretions",
-    "from",
-    "the",
-    "parental",
-    "units",
-    "contains",
-    "no",
-    "wit",
-    ",",
-    "only",
-    "labored",
-    "gags",
-    "that",
-    "loves",
-    "its",
-    "characters",
-    "and",
-    "communicates",
-    "something",
-    "rather",
-    "beautiful",
-    "about",
-    "human",
-    "nature",
-    "remains",
-    "utterly",
-    "satisfied",
-    "to",
-    "remain",
-    "same",
-    "throughout",
-    "on",
-    "worst",
-    "revenge-of-the-nerds",
-    "clichés",
-    "filmmakers",
-    "could",
-    "dredge",
-    "up",
-]
-
 FEATURIZED_TRAIN_EXAMPLE_0 = {
     "guid": "train-0",
     "input_ids": np.array([1, 4, 5, 6, 7, 8, 9, 10, 2, 0]),
@@ -136,7 +90,8 @@ FEATURIZED_TRAIN_EXAMPLE_0 = {
 }
 
 
-def test_read_from_file_and_create_examples():
+def test_featurization_of_task_data():
+    # Test reading the task-specific toy dataset into examples.
     task = create_task_from_config_path(
         os.path.join(os.path.dirname(__file__), "resources/sst.json"), verbose=True
     )
@@ -144,18 +99,12 @@ def test_read_from_file_and_create_examples():
     for example_dataclass, raw_example_dict in zip(examples, TRAIN_EXAMPLES):
         assert example_dataclass.to_dict() == raw_example_dict
 
-
-def test_convert_examples_to_tokenized_examples():
-    task = create_task_from_config_path(
-        os.path.join(os.path.dirname(__file__), "resources/sst.json"), verbose=True
-    )
-    # create examples from hard-coded TRAIN_EXAMPLES to make this test independent of the file read.
-    examples = task._create_examples(TRAIN_EXAMPLES, "train")
+    # Testing conversion of examples into tokenized examples
     # the dummy tokenizer requires a vocab — using a Counter here to find that vocab from the data:
     token_counter = Counter()
     for example in examples:
         token_counter.update(example.text.split())
-    token_vocab = list(token_counter.keys())  # result hard-coded into TOKEN_VOCAB for other tests.
+    token_vocab = list(token_counter.keys())
     tokenizer = SimpleSpaceTokenizer(vocabulary=token_vocab)
     tokenized_examples = [example.tokenize(tokenizer) for example in examples]
     for tokenized_example, expected_tokenized_example in zip(
@@ -163,11 +112,7 @@ def test_convert_examples_to_tokenized_examples():
     ):
         assert tokenized_example.to_dict() == expected_tokenized_example
 
-
-def test_convert_tokenized_example_to_featurized_example():
-    # create example from TOKENIZED_TRAIN_EXAMPLES for test isolation from reading/tokenizing steps.
-    tokenized_examples = [TokenizedExample.from_dict(ex) for ex in TOKENIZED_TRAIN_EXAMPLES]
-    tokenizer = SimpleSpaceTokenizer(vocabulary=TOKEN_VOCAB)
+    # Testing conversion of a tokenized example to a featurized example
     feat_spec = tokenizer.get_feat_spec(max_seq_length=10)
     featurized_examples = [
         tokenized_example.featurize(tokenizer=tokenizer, feat_spec=feat_spec)
