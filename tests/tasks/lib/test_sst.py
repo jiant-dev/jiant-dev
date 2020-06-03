@@ -1,3 +1,4 @@
+import os
 from collections import Counter
 
 import numpy as np
@@ -91,14 +92,18 @@ FEATURIZED_TRAIN_EXAMPLE_0 = {
 
 
 def test_sst_create_examples():
-    task = create_task_from_config_path("./resources/sst.json", verbose=False)
+    task = create_task_from_config_path(
+        os.path.join(os.path.dirname(__file__), "resources/sst.json"), verbose=False
+    )
     examples = task.get_train_examples()
     for example_dataclass, raw_example_dict in zip(examples, TRAIN_EXAMPLES):
         assert example_dataclass.to_dict() == raw_example_dict
 
 
 def test_sst_create_tokenized_examples():
-    task = create_task_from_config_path("./resources/sst.json", verbose=False)
+    task = create_task_from_config_path(
+        os.path.join(os.path.dirname(__file__), "resources/sst.json"), verbose=False
+    )
     examples = task.get_train_examples()
     # the dummy tokenizer requires a vocab — using a Counter here to find that vocab from the data:
     token_counter = Counter()
@@ -114,7 +119,9 @@ def test_sst_create_tokenized_examples():
 
 
 def test_sst_create_featurized_example():
-    task = create_task_from_config_path("./resources/sst.json", verbose=False)
+    task = create_task_from_config_path(
+        os.path.join(os.path.dirname(__file__), "resources/sst.json"), verbose=False
+    )
     examples = task.get_train_examples()
     # the dummy tokenizer requires a vocab — using a Counter here to find that vocab from the data:
     token_counter = Counter()
