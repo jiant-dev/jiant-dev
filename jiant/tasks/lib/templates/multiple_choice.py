@@ -37,7 +37,7 @@ class Example(BaseExample):
             guid=self.guid,
             prompt=tokenizer.tokenize(self.prompt),
             choice_list=[tokenizer.tokenize(choice) for choice in self.choice_list],
-            label_id=self.task.CHOICE_BIMAP.a[self.label],
+            label_id=self.task.CHOICE_TO_ID[self.label],
         )
 
 

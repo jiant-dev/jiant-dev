@@ -34,7 +34,7 @@ class CopaTask(mc_template.AbstractMultipleChoiceTask):
     Batch = Batch
 
     CHOICE_KEYS = [0, 1]
-    CHOICE_BIMAP = labels_to_bimap(CHOICE_KEYS)
+    CHOICE_TO_ID, ID_TO_CHOICE = labels_to_bimap(CHOICE_KEYS)
     NUM_CHOICES = len(CHOICE_KEYS)
 
     _QUESTION_DICT = {

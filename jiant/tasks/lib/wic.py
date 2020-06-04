@@ -46,7 +46,7 @@ class Example(BaseExample):
             word=tokenizer.tokenize(self.word),  # might be more than one token
             sentence1_span=sentence1_span,
             sentence2_span=sentence2_span,
-            label_id=WiCTask.LABEL_BIMAP.a[self.label],
+            label_id=WiCTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -180,7 +180,7 @@ class WiCTask(Task):
 
     TASK_TYPE = TaskTypes.SPAN_COMPARISON_CLASSIFICATION
     LABELS = [False, True]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     @property
     def num_spans(self):

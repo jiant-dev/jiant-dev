@@ -27,7 +27,7 @@ class Example(BaseExample):
             guid=self.guid,
             input_premise=tokenizer.tokenize(self.input_premise),
             input_hypothesis=tokenizer.tokenize(self.input_hypothesis),
-            label_id=SciTailTask.LABEL_BIMAP.a[self.label],
+            label_id=SciTailTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -78,7 +78,7 @@ class SciTailTask(Task):
     TASK_TYPE = TaskTypes.CLASSIFICATION
     LABELS = ["entails", "neutral"]
 
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def get_train_examples(self):
         return self._create_examples(self.train_path, set_type="train")

@@ -27,7 +27,7 @@ class Example(BaseExample):
             guid=self.guid,
             input_premise=tokenizer.tokenize(self.input_premise),
             input_hypothesis=tokenizer.tokenize(self.input_hypothesis),
-            label_id=CommitmentBankTask.LABEL_BIMAP.a[self.label],
+            label_id=CommitmentBankTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -77,7 +77,7 @@ class CommitmentBankTask(Task):
 
     TASK_TYPE = TaskTypes.CLASSIFICATION
     LABELS = ["neutral", "entailment", "contradiction"]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def get_train_examples(self):
         return self._create_examples(lines=read_json_lines(self.train_path), set_type="train")

@@ -34,7 +34,7 @@ class CommonsenseQATask(mc_template.AbstractMultipleChoiceTask):
     Batch = Batch
 
     CHOICE_KEYS = ["A", "B", "C", "D", "E"]
-    CHOICE_BIMAP = labels_to_bimap(CHOICE_KEYS)
+    CHOICE_TO_ID, ID_TO_CHOICE = labels_to_bimap(CHOICE_KEYS)
     NUM_CHOICES = len(CHOICE_KEYS)
 
     def get_train_examples(self):

@@ -63,7 +63,7 @@ class Example(BaseExample):
             span2_span=span2_span,
             span1_text=self.span1_text,
             span2_text=self.span2_text,
-            label_id=WSCTask.LABEL_BIMAP.a[self.label],
+            label_id=WSCTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -158,7 +158,7 @@ class WSCTask(Task):
 
     TASK_TYPE = TaskTypes.SPAN_COMPARISON_CLASSIFICATION
     LABELS = [False, True]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     @property
     def num_spans(self):

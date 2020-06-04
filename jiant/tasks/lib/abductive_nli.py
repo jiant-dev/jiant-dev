@@ -36,7 +36,7 @@ class Example(BaseExample):
             input_hyp1=tokenizer.tokenize(self.input_hyp1),
             input_hyp2=tokenizer.tokenize(self.input_hyp2),
             input_obs2=tokenizer.tokenize(self.input_obs2),
-            label_id=AnliTask.LABEL_BIMAP.a[self.label],
+            label_id=AbductiveNliTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -173,7 +173,7 @@ class AbductiveNliTask(Task):
     TASK_TYPE = TaskTypes.MULTIPLE_CHOICE
     NUM_CHOICES = 2
     LABELS = [1, 2]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def get_train_examples(self):
         return self._create_examples(

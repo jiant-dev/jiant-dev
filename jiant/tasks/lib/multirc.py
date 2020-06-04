@@ -37,7 +37,7 @@ class Example(BaseExample):
             paragraph=tokenizer.tokenize(self.paragraph),
             question=tokenizer.tokenize(self.question),
             answer=tokenizer.tokenize(self.answer),
-            label_id=MultiRCTask.LABEL_BIMAP.a[self.label],
+            label_id=MultiRCTask.LABEL_TO_ID[self.label],
             question_id=self.question_id,
         )
 
@@ -134,7 +134,7 @@ class MultiRCTask(Task):
 
     TASK_TYPE = TaskTypes.CLASSIFICATION
     LABELS = [0, 1]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def __init__(self, name, path_dict, filter_sentences=True):
         super().__init__(name=name, path_dict=path_dict)

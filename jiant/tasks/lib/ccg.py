@@ -132,7 +132,7 @@ class CCGTask(Task):
 
     TASK_TYPE = TaskTypes.TAGGING
     LABELS = range(1363)
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     @property
     def num_labels(self):

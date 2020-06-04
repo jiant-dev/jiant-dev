@@ -35,7 +35,7 @@ class Example(BaseExample):
             guid=self.guid,
             passage_tokens=tokenizer.tokenize(self.passage_text),
             query_tokens=tokenizer.tokenize(filled_query_text),
-            label_id=ReCoRDTask.LABEL_BIMAP.a[self.label],
+            label_id=ReCoRDTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -85,7 +85,7 @@ class ReCoRDTask(Task):
 
     TASK_TYPE = TaskTypes.CLASSIFICATION
     LABELS = [False, True]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def get_train_examples(self):
         return self._create_examples(lines=read_json_lines(self.train_path), set_type="train")
