@@ -405,7 +405,7 @@ class CCGEvaluationScheme(BaseEvaluationScheme):
     @classmethod
     def get_label_ids_from_cache(cls, cache):
         return [
-            {"label_ids": datum["data_row"].label_ids, "label_mask": datum["data_row"].label_mask,}
+            {"label_ids": datum["data_row"].label_ids, "label_mask": datum["data_row"].label_mask}
             for datum in cache.iter_all()
         ]
 
@@ -505,7 +505,7 @@ class MLMEvaluationScheme(BaseEvaluationScheme):
         return Metrics(
             # Major = negative perplexity
             major=-perplexity,
-            minor={"perplexity": perplexity,},
+            minor={"perplexity": perplexity},
         )
 
 
