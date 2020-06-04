@@ -149,7 +149,7 @@ class MLMTask(Task):
 
 
 def mlm_mask_tokens(inputs: torch.LongTensor, tokenizer, mlm_probability):
-    """ From HuggingFace """
+    """From HuggingFace"""
     device = inputs.device
     inputs = inputs.cpu().clone()
     labels = inputs.clone()

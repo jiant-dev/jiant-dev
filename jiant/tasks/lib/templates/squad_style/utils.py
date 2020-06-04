@@ -63,7 +63,6 @@ def compute_predictions_logits_v2(
     verbose=True,
 ):
     """Write final predictions to the json file and log-odds of null if needed."""
-
     unique_id_to_result = {}
     for result in all_results:
         unique_id_to_result[result.unique_id] = result
@@ -259,7 +258,6 @@ def compute_predictions_logits(
     skip_get_final_text=False,
 ):
     """Write final predictions to the json file and log-odds of null if needed."""
-
     example_index_to_features = collections.defaultdict(list)
     for feature in all_features:
         example_index_to_features[feature.example_index].append(feature)
@@ -448,7 +446,6 @@ def compute_predictions_logits(
 
 def get_final_text(pred_text, orig_text, do_lower_case):
     """Project the tokenized prediction back to the original text."""
-
     # When we created the data, we kept track of the alignment between original
     # (whitespace tokenized) tokens and our WordPiece tokenized tokens. So
     # now `orig_text` contains the span of our original text corresponding to the
@@ -676,9 +673,7 @@ def find_best_thresh(preds, scores, na_probs, qid_to_has_ans):
 
 
 def get_raw_scores(examples, preds):
-    """
-    Computes the exact and f1 scores from the examples and the model predictions
-    """
+    """Computes the exact and f1 scores from the examples and the model predictions"""
     exact_scores = {}
     f1_scores = {}
 

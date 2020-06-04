@@ -60,7 +60,7 @@ class CopaTask(mc_template.AbstractMultipleChoiceTask):
                 Example(
                     guid="%s-%s" % (set_type, line["idx"]),
                     prompt=line["premise"] + " " + question,
-                    choice_list=[line["choice1"], line["choice2"],],
+                    choice_list=[line["choice1"], line["choice2"]],
                     label=line["label"] if set_type != "test" else cls.CHOICE_KEYS[-1],
                 )
             )

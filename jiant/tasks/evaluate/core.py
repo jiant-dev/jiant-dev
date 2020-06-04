@@ -349,7 +349,8 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
     @classmethod
     def normalize_answer(cls, s):
         """Lower text and remove punctuation, articles and extra whitespace.
-        From official ReCoRD eval script """
+        From official ReCoRD eval script
+        """
 
         def remove_articles(text):
             return re.sub(r"\b(a|an|the)\b", " ", text)
@@ -368,8 +369,9 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
 
     @classmethod
     def f1_score(cls, prediction, ground_truth):
-        """ Compute normalized token level F1
-        From official ReCoRD eval script """
+        """Compute normalized token level F1
+        From official ReCoRD eval script
+        """
         prediction_tokens = cls.normalize_answer(prediction).split()
         ground_truth_tokens = cls.normalize_answer(ground_truth).split()
         common = collections.Counter(prediction_tokens) & collections.Counter(ground_truth_tokens)
@@ -383,14 +385,16 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
 
     @classmethod
     def exact_match_score(cls, prediction, ground_truth):
-        """ Compute normalized exact match
-        From official ReCoRD eval script """
+        """Compute normalized exact match
+        From official ReCoRD eval script
+        """
         return cls.normalize_answer(prediction) == cls.normalize_answer(ground_truth)
 
     @classmethod
     def metric_max_over_ground_truths(cls, metric_fn, prediction, ground_truths):
-        """ Compute max metric between prediction and each ground truth.
-        From official ReCoRD eval script """
+        """Compute max metric between prediction and each ground truth.
+        From official ReCoRD eval script
+        """
         scores_for_ground_truths = []
         for ground_truth in ground_truths:
             score = metric_fn(prediction, ground_truth)

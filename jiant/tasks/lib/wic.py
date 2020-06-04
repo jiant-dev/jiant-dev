@@ -142,7 +142,7 @@ class TokenizedExample(BaseTokenizedExample):
             input_ids=np.array(input_set.input_ids),
             input_mask=np.array(input_set.input_mask),
             segment_ids=np.array(input_set.segment_ids),
-            spans=np.array([sentence1_span, sentence2_span,]),
+            spans=np.array([sentence1_span, sentence2_span]),
             label_id=self.label_id,
             tokens=unpadded_inputs.unpadded_tokens,
             word=self.word,

@@ -207,7 +207,8 @@ class Example(BaseExample):
             # Identify the position of the CLS token
             cls_index = span["input_ids"].index(tokenizer.cls_token_id)
 
-            # p_mask: mask with 1 for token than cannot be in the answer (0 for token which can be in an answer)
+            # p_mask: mask with 1 for token than cannot be in the answer
+            #         (0 for token which can be in an answer)
             # Original TF implem also keep the classification token (set to 0) (not sure why...)
             p_mask = np.array(span["token_type_ids"])
 
@@ -466,7 +467,7 @@ def _improve_answer_span(doc_tokens, input_start, input_end, tokenizer, orig_ans
 
 
 def logits_to_pred_results_list(logits):
-    """
+    """Convert logits to preds
     :param logits: np.ndarray (batch_size, 2, seq_len)
     :return: List[squad_utils.SquadResult]
     """

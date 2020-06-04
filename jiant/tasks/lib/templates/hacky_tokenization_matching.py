@@ -1,6 +1,4 @@
-"""
-TODO: Remove when Tokenizers gets better
-"""
+"""TODO: Remove when Tokenizers gets better"""
 import transformers
 from jiant.tasks.utils import ExclusiveSpan
 
