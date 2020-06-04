@@ -15,7 +15,6 @@ from jiant.tasks.core import (
     BatchMixin,
     Task,
     TaskTypes,
-    FeaturizationSpec,
 )
 from jiant.utils.python.datastructures import ExtendedDataClassMixin
 from jiant.utils.display import maybe_tqdm
@@ -76,13 +75,7 @@ class Example(BaseExample):
         raise NotImplementedError("SQuaD is weird")
 
     def to_feature_list(
-        self,
-        tokenizer,
-        feat_spec: FeaturizationSpec,
-        max_seq_length,
-        doc_stride,
-        max_query_length,
-        set_type,
+        self, tokenizer, max_seq_length, doc_stride, max_query_length, set_type,
     ):
         is_training = set_type == PHASE.TRAIN
         features = []
