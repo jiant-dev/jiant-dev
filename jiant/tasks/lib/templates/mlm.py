@@ -141,8 +141,9 @@ class MLMTask(Task):
             return list(generator)
 
 
-def mlm_mask_tokens(inputs: torch.LongTensor, tokenizer, mlm_probability) \
-        -> Tuple[torch.LongTensor, torch.LongTensor]:
+def mlm_mask_tokens(
+    inputs: torch.LongTensor, tokenizer, mlm_probability
+) -> Tuple[torch.LongTensor, torch.LongTensor]:
     """From HuggingFace"""
     device = inputs.device
     inputs = inputs.cpu().clone()
