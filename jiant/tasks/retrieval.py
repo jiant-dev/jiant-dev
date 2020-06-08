@@ -29,7 +29,7 @@ TASK_DICT = {
 }
 
 
-def get_task_class(task_name: str):
+def create_task_class(task_name: str):
     task_class = TASK_DICT[task_name]
     assert issubclass(task_class, Task)
     return task_class
@@ -47,7 +47,7 @@ def create_task_from_config(config: dict, base_path: Optional[str] = None, verbo
         Task instance.
 
     """
-    task_class = get_task_class(config["task"])
+    task_class = create_task_class(config["task"])
     for k in config["paths"].keys():
         path = config["paths"][k]
         # Todo: Refactor paths

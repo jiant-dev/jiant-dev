@@ -28,6 +28,8 @@ class Example(BaseExample):
             label_id=SstTask.LABEL_TO_ID[self.label],
         )
 
+    def get_input_a(self):
+        return self.text
 
 @dataclass
 class TokenizedExample(BaseTokenizedExample):
@@ -45,6 +47,8 @@ class TokenizedExample(BaseTokenizedExample):
             data_row_class=DataRow,
         )
 
+    def get_input_a(self):
+        return self.text
 
 @dataclass
 class DataRow(BaseDataRow):

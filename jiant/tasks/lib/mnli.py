@@ -30,6 +30,11 @@ class Example(BaseExample):
             label_id=MnliTask.LABEL_TO_ID[self.label],
         )
 
+    def get_input_a(self):
+        return self.premise
+
+    def get_input_b(self):
+        return self.hypothesis
 
 @dataclass
 class TokenizedExample(BaseTokenizedExample):
@@ -49,6 +54,11 @@ class TokenizedExample(BaseTokenizedExample):
             data_row_class=DataRow,
         )
 
+    def get_input_a(self):
+        return self.premise
+
+    def get_input_b(self):
+        return self.hypothesis
 
 @dataclass
 class DataRow(BaseDataRow):
