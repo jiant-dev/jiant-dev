@@ -39,7 +39,8 @@ def smart_truncate(dataset: torch_utils.ListDataset, max_seq_length: int, verbos
     valid_length_ls = []
     range_idx = np.arange(max_seq_length)
     for datum in dataset.data:
-        # TODO: document why reshape and max happen here (for cola this isn't necessary).   (Issue #47)
+        # TODO: document why reshape and max happen here (for cola this isn't necessary).
+        #       (Issue #47)
         indexer = datum["data_row"].input_mask.reshape(-1, max_seq_length).max(-2)
         valid_length_ls.append(range_idx[indexer.astype(bool)].max() + 1)
     max_valid_length = max(valid_length_ls)
