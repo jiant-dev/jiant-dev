@@ -28,6 +28,9 @@ class Example(BaseExample):
             label_id=ColaTask.LABEL_TO_ID[self.label],
         )
 
+    def get_input_a(self):
+        return self.text
+
 
 @dataclass
 class TokenizedExample(BaseTokenizedExample):
@@ -44,6 +47,9 @@ class TokenizedExample(BaseTokenizedExample):
             feat_spec=feat_spec,
             data_row_class=DataRow,
         )
+
+    def get_input_a(self):
+        return self.text
 
 
 @dataclass

@@ -1,0 +1,1 @@
+{"task": "cola", "name": "cola", "paths": {"train": "data/cola/train.jsonl", "val": "data/cola/val.jsonl", "test": "data/cola/test.jsonl"}}

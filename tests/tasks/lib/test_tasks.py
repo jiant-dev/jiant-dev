@@ -9,7 +9,7 @@ from jiant.shared import model_resolution
 from jiant.tasks import create_task_from_config_path
 from jiant.utils.testing.tokenizer import SimpleSpaceTokenizer
 
-CLASSIFICATION_TASKS = ['mnli', 'sst']
+CLASSIFICATION_TASKS = ['mnli', 'cola']
 
 
 @pytest.mark.parametrize("task_name", CLASSIFICATION_TASKS)
