@@ -132,7 +132,7 @@ def load_encoder_from_transformers_weights(
     TODO: clarify how we know the encoder weights will be prefixed by transformer name.
 
     Args:
-        encoder: Transformer without any specific head (embedding layer + self-attention layer).
+        encoder (PreTrainedModel): Transformer w/o heads (embedding layer + self-attention layer).
         weights_dict (Dict): model weights.
         return_remainder (bool): If True, return any leftover weights.
 
@@ -229,7 +229,7 @@ def create_taskmodel(
     Args:
         task (Task): Task object associated with the taskmodel being created.
         model_arch (ModelArchitectures.Any): Model architecture (e.g., ModelArchitectures.BERT).
-        encoder: Transformer without any specific head (embedding layer + self-attention layer).
+        encoder (PreTrainedModel): Transformer w/o heads (embedding layer + self-attention layer).
         taskmodel_kwargs (Optional[Dict]): map containing any kwargs needed for taskmodel setup.
 
     Raises:
