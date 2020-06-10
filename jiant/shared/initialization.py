@@ -43,7 +43,8 @@ def quick_init(args, verbose=True) -> QuickInitContainer:
 
 
 def init_server_logging(server_ip, server_port, verbose=True):
-    """Adapted from Hugging Face template: run_xxx.py @L572-L578"""
+    """Adapted from Hugging Face template: https://github.com/huggingface/transformers/blob/ac99217
+    e92c43066af7ec96554054d75532565d7/templates/adding_a_new_example_script/run_xxx.py#L569-L576"""
     if server_ip and server_port:
         # Distant debugging, see:
         # https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
@@ -59,7 +60,8 @@ def init_server_logging(server_ip, server_port, verbose=True):
 def init_cuda_from_args(no_cuda, local_rank, fp16, verbose=True):
     """Perform initial CUDA setup for DistributedDataParallel, DataParallel or w/o CUDA configs.
 
-    Adapted from Hugging Face template adding_a_new_example_script/run_xxx.py @L580-L588.
+    Adapted from Hugging Face template: https://github.com/huggingface/transformers/blob/ac99217e92
+    c43066af7ec96554054d75532565d7/templates/adding_a_new_example_script/run_xxx.py#L578-L586
 
     Args:
         no_cuda (bool): True to ignore CUDA devices (i.e., use CPU instead).
