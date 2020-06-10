@@ -43,8 +43,12 @@ def quick_init(args, verbose=True) -> QuickInitContainer:
 
 
 def init_server_logging(server_ip, server_port, verbose=True):
-    """Adapted from Hugging Face template: https://github.com/huggingface/transformers/blob/ac99217
-    e92c43066af7ec96554054d75532565d7/templates/adding_a_new_example_script/run_xxx.py#L569-L576"""
+    """Sets ups Python Tools for Visual Studio debug (ptvsd) server.
+
+    Adapted from Hugging Face template: https://github.com/huggingface/transformers/blob/ac99217
+    e92c43066af7ec96554054d75532565d7/templates/adding_a_new_example_script/run_xxx.py#L569-L576
+
+    """
     if server_ip and server_port:
         # Distant debugging, see:
         # https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
