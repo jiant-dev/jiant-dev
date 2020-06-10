@@ -4,6 +4,7 @@ import torch
 import jiant.shared.caching as shared_caching
 import jiant.utils.torch_utils as torch_utils
 from jiant.tasks.core import FeaturizationSpec
+import jiant.tasks.lib.templates.squad_style.core as squad_style
 from jiant.utils.display import maybe_tqdm, maybe_trange
 
 
@@ -39,6 +40,7 @@ def smart_truncate(dataset: torch_utils.ListDataset, max_seq_length: int, verbos
     range_idx = np.arange(max_seq_length)
     for datum in dataset.data:
         # TODO: document why reshape and max happen here (for cola this isn't necessary).
+        #       (Issue #47)
         indexer = datum["data_row"].input_mask.reshape(-1, max_seq_length).max(-2)
         valid_length_ls.append(range_idx[indexer.astype(bool)].max() + 1)
     max_valid_length = max(valid_length_ls)
@@ -105,7 +107,7 @@ def convert_examples_to_dataset(
 
     Args:
         examples (list[Example]): list of task Examples.
-        tokenizer: TODO
+        tokenizer: TODO  (Issue #44)
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
         phase (str): string identifying the data subset (e.g., train, val or test).
         verbose: If True, display progress bar.
@@ -148,7 +150,7 @@ def tokenize_and_featurize(
 
     Args:
         examples (list[Example]): list of task Examples.
-        tokenizer: TODO
+        tokenizer: TODO  (Issue #44)
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
         phase (str): string identifying the data subset (e.g., train, val or test).
         verbose: If True, display progress bar.
@@ -157,13 +159,24 @@ def tokenize_and_featurize(
         List DataRows containing tokenized and featurized examples.
 
     """
-    # TODO: In future, will potentially yield multiple featurized examples
-    #  per example (e.g. SQuAD)
-    # We'll need the 'phase' argument for then
-    data_rows = [
-        example.tokenize(tokenizer).featurize(tokenizer, feat_spec)
-        for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose)
-    ]
+    # TODO: Better solution  (Issue #48)
+    if isinstance(examples[0], squad_style.Example):
+        data_rows = []
+        for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose):
+            # TODO: Expose parameters  (Issue #49)
+            data_rows += example.to_feature_list(
+                tokenizer=tokenizer,
+                feat_spec=feat_spec,
+                max_seq_length=feat_spec.max_seq_length,
+                doc_stride=128,
+                max_query_length=64,
+                set_type=phase,
+            )
+    else:
+        data_rows = [
+            example.tokenize(tokenizer).featurize(tokenizer, feat_spec)
+            for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose)
+        ]
     return data_rows
 
 
@@ -174,7 +187,7 @@ def iter_chunk_tokenize_and_featurize(
 
     Args:
         examples (list[Example]): list of task Examples.
-        tokenizer: TODO
+        tokenizer: TODO  (Issue #44)
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
         phase (str): string identifying the data subset (e.g., train, val or test).
         verbose: If True, display progress bar.
@@ -184,7 +197,15 @@ def iter_chunk_tokenize_and_featurize(
 
     """
     for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose):
-        # TODO: In future, will potentially yield multiple featurized examples
-        #  per example (e.g. SQuAD)
-        # We'll need the 'phase' argument for then
-        yield example.tokenize(tokenizer).featurize(tokenizer, feat_spec)
+        # TODO: Better solution  (Issue #48)
+        if isinstance(example, squad_style.Example):
+            # TODO: Expose parameters  (Issue #49)
+            yield from example.to_feature_list(
+                tokenizer=tokenizer,
+                max_seq_length=feat_spec.max_seq_length,
+                doc_stride=128,
+                max_query_length=64,
+                set_type=phase,
+            )
+        else:
+            yield example.tokenize(tokenizer).featurize(tokenizer, feat_spec)
