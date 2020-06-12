@@ -169,6 +169,7 @@ def load_state_dict_for_jiant_model_with_adapters(jiant_model: JiantModel, state
 
 
 def delegate_load_for_shared_adapters(jiant_model: JiantModel, state_dict: Dict, load_mode: str):
+    """Different loading methods for shared-adapters"""
     if load_mode == "full":
         load_state_dict_for_jiant_model_with_adapters(
             jiant_model=jiant_model,
