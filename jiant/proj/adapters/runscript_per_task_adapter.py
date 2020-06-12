@@ -100,18 +100,18 @@ def setup_runner(
     else:
         adapter_config = adapters_modeling.AdapterConfig()
     adapters_modeling.add_adapters_to_jiant_model_for_each_taskmodel(
-        jiant_model=jiant_model,
-        adapter_config=adapter_config,
+        jiant_model=jiant_model, adapter_config=adapter_config,
     )
     if args.adapter_path:
         adapters_modeling.load_state_dict_for_jiant_model_with_adapters(
-            jiant_model=jiant_model,
-            state_dict=torch.load(args.adapter_path),
+            jiant_model=jiant_model, state_dict=torch.load(args.adapter_path),
         )
-    optimized_named_parameters, _ = \
-        adapters_modeling.get_optimized_named_parameters_for_jiant_model_with_adapters(
-            jiant_model=jiant_model,
-        )
+    (
+        optimized_named_parameters,
+        _,
+    ) = adapters_modeling.get_optimized_named_parameters_for_jiant_model_with_adapters(
+        jiant_model=jiant_model,
+    )
     jiant_model.to(quick_init_out.device)
 
     optimizer_scheduler = model_setup.create_optimizer_from_params(
