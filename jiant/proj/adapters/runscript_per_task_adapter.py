@@ -27,7 +27,7 @@ class RunConfiguration(zconf.RunConfig):
     model_config_path = zconf.attr(default=None, type=str)
     model_tokenizer_path = zconf.attr(default=None, type=str)
     adapter_config_path = zconf.attr(default=None, type=str)
-    adapter_path = zconf.attr(default=None, type=str)
+    adapter_load_path = zconf.attr(default=None, type=str)
 
     # === Running Setup === #
     do_train = zconf.attr(action="store_true")

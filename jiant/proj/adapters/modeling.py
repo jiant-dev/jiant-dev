@@ -168,6 +168,26 @@ def load_state_dict_for_jiant_model_with_adapters(jiant_model: JiantModel, state
     assert not mismatched.unexpected_keys
 
 
+def delegate_load_for_shared_adapters(jiant_model: JiantModel, state_dict: Dict, load_mode: str):
+    if load_mode == "full":
+        load_state_dict_for_jiant_model_with_adapters(
+            jiant_model=jiant_model,
+            state_dict=state_dict,
+        )
+    elif load_mode == "adapters_only":
+        partial_state_dict = {
+            k: v
+            for k, v in state_dict.items()
+            if not k.startswith("taskmodels_dict")
+        }
+        load_state_dict_for_jiant_model_with_adapters(
+            jiant_model=jiant_model,
+            state_dict=partial_state_dict,
+        )
+    else:
+        raise KeyError(load_mode)
+
+
 def add_adapters_to_jiant_model_for_each_taskmodel(jiant_model: JiantModel, adapter_config: AdapterConfig):
     """Adds adapters to each taskmodel"""
     adapter_modules_dict = {}
@@ -179,6 +199,19 @@ def add_adapters_to_jiant_model_for_each_taskmodel(jiant_model: JiantModel, adap
         taskmodel.encoder = encoder_with_adapters
         adapter_modules_dict[taskmodel_name] = adapter_modules
     return adapter_modules_dict
+
+
+def add_shared_adapters_to_jiant_model(jiant_model: JiantModel, adapter_config: AdapterConfig):
+    """Adds shared adapters to jiant_model"""
+    model_architecture = model_resolution.ModelArchitectures.from_encoder(jiant_model.encoder)
+    if model_architecture in [model_resolution.ModelArchitectures.BERT,
+                              model_resolution.ModelArchitectures.ROBERTA]:
+        add_adapters_to_bert_encoder(
+            bert_encoder=jiant_model.encoder,
+            adapter_config=adapter_config,
+        )
+    else:
+        raise KeyError(model_architecture)
 
 
 def get_copy_of_encoder_with_adapters(encoder: nn.Module,
