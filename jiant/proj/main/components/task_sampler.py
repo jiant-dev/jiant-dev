@@ -172,14 +172,14 @@ def create_task_sampler(
             examples_cap=sampler_config["examples_cap"],
         )
     elif sampler_type == "TimeDependentProbMultiTaskSampler":
-        assert len(sampler_config) in (3, 4)
+        assert len(sampler_config) in 4
         return TimeDependentProbMultiTaskSampler(
             task_dict=task_dict,
             rng=rng,
             task_to_unnormalized_prob_funcs_dict=sampler_config[
                 "task_to_unnormalized_prob_funcs_dict"
             ],
-            max_steps=sampler_config.get("max_steps", None),
+            max_steps=sampler_config["max_steps"],
         )
     else:
         raise KeyError(sampler_type)
