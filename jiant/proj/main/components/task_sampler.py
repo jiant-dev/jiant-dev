@@ -1,4 +1,5 @@
 import abc
+import numexpr
 import numpy as np
 
 from typing import Union, Optional, Dict
@@ -86,6 +87,47 @@ class TemperatureMultiTaskSampler(BaseMultiTaskSampler):
         return task_name, self.task_dict[task_name]
 
 
+class TimeDependentProbMultiTaskSampler(BaseMultiTaskSampler):
+    def __init__(
+        self,
+        task_dict: dict,
+        rng: Union[int, np.random.RandomState],
+        task_to_unnormalized_prob_funcs_dict: dict,
+        max_steps: Optional[int] = None,
+    ):
+        super().__init__(task_dict=task_dict, rng=rng)
+        assert task_dict.keys() == task_to_unnormalized_prob_funcs_dict.keys()
+        self.task_to_unnormalized_prob_funcs_dict = task_to_unnormalized_prob_funcs_dict
+        self.max_steps = max_steps
+
+        self.task_names = list(task_to_unnormalized_prob_funcs_dict.keys())
+        self.steps = 0
+
+    def pop(self):
+        if self.max_steps is not None and self.steps >= self.max_steps:
+            raise IndexError(f"steps ({self.steps}) > max_steps ({self.max_steps})")
+        task_name = self.rng.choice(self.task_names, p=self.get_task_p(self.steps))
+        self.steps += 1
+        return task_name, self.task_dict[task_name]
+
+    def get_task_p(self, steps=None) -> np.ndarray:
+        p_ls = np.empty(len(self.task_names))
+
+        # t is the variable in the numexpr expression
+        t = steps if steps is not None else self.steps
+
+        for i, task_name in enumerate(self.task_names):
+            p_ls[i] = numexpr.evaluate(
+                self.task_to_unnormalized_prob_funcs_dict[task_name],
+                local_dict={"t": t},
+            )
+        p_ls /= p_ls.sum()
+        return p_ls
+
+    def reset_counter(self):
+        self.steps = 0
+
+
 def create_task_sampler(
     sampler_config: dict, task_dict: dict, task_to_num_examples_dict: dict, rng=None
 ) -> BaseMultiTaskSampler:
@@ -128,6 +170,16 @@ def create_task_sampler(
             task_to_num_examples_dict=task_to_num_examples_dict,
             temperature=sampler_config["temperature"],
             examples_cap=sampler_config["examples_cap"],
+        )
+    elif sampler_type == "TimeDependentProbMultiTaskSampler":
+        assert len(sampler_config) in (3, 4)
+        return TimeDependentProbMultiTaskSampler(
+            task_dict=task_dict,
+            rng=rng,
+            task_to_unnormalized_prob_funcs_dict=sampler_config[
+                "task_to_unnormalized_prob_funcs_dict"
+            ],
+            max_steps=sampler_config.get("max_steps", None),
         )
     else:
         raise KeyError(sampler_type)
