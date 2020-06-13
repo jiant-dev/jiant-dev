@@ -5,7 +5,7 @@ import torch
 import jiant.proj.main.modeling.model_setup as jiant_model_setup
 import jiant.proj.main.runner as jiant_runner
 import jiant.proj.main.components.container_setup as container_setup
-import jiant.proj.main.metarunner as jiant_metarunner
+import jiant.proj.adapters.metarunner as adapters_metarunner
 import jiant.proj.main.components.evaluate as jiant_evaluate
 import jiant.shared.initialization as initialization
 import jiant.proj.adapters.modeling as adapters_modeling
@@ -173,7 +173,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
             save_path=os.path.join(args.output_dir, "checkpoint.p"),
         )
         if args.do_train:
-            metarunner = jiant_metarunner.JiantMetarunner(
+            metarunner = adapters_metarunner.AdaptersMetarunner(
                 runner=runner,
                 save_every_steps=args.save_every_steps,
                 eval_every_steps=args.eval_every_steps,
@@ -193,7 +193,9 @@ def run_loop(args: RunConfiguration, checkpoint=None):
 
         if args.do_save:
             torch.save(
-                torch_utils.get_model_for_saving(runner.jiant_model).state_dict(),
+                adapters_modeling.get_optimized_state_dict_for_jiant_model_with_adapters(
+                    torch_utils.get_model_for_saving(runner.jiant_model),
+                ),
                 os.path.join(args.output_dir, "model.p"),
             )
 
