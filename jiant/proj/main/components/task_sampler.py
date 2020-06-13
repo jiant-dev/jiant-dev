@@ -118,8 +118,7 @@ class TimeDependentProbMultiTaskSampler(BaseMultiTaskSampler):
 
         for i, task_name in enumerate(self.task_names):
             p_ls[i] = numexpr.evaluate(
-                self.task_to_unnormalized_prob_funcs_dict[task_name],
-                local_dict={"t": t},
+                self.task_to_unnormalized_prob_funcs_dict[task_name], local_dict={"t": t},
             )
         p_ls /= p_ls.sum()
         return p_ls
