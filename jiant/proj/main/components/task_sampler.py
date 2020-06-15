@@ -106,6 +106,7 @@ class TimeDependentProbMultiTaskSampler(BaseMultiTaskSampler):
         max_steps: Maximum number of steps allows (in the case where some functions
                    are not valid after a given t.
     """
+
     def __init__(
         self,
         task_dict: dict,
