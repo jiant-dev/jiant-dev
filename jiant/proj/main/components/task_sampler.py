@@ -88,6 +88,24 @@ class TemperatureMultiTaskSampler(BaseMultiTaskSampler):
 
 
 class TimeDependentProbMultiTaskSampler(BaseMultiTaskSampler):
+    """Multi-task Sampler with different task sampling probabilities over time
+
+    We describe the individual unnormalized probabilities using numexpr expressions,
+    using t as the variable, e.g.:
+    * 1             (constant)
+    * 2 * t         (linear)
+    * 1/sqrt(t)     (inverse square-root)
+
+    These are computed for all tasks for each time step, and then normalized to sum to 1.
+
+    Attributes:
+        task_dict: Dictionary of tasks
+        rng: Random seed, or NumPy RandomState for sampling
+        task_to_unnormalized_prob_funcs_dict: map from task names to strings, which are
+                                              numexpr expressions
+        max_steps: Maximum number of steps allows (in the case where some functions
+                   are not valid after a given t.
+    """
     def __init__(
         self,
         task_dict: dict,
@@ -171,7 +189,7 @@ def create_task_sampler(
             examples_cap=sampler_config["examples_cap"],
         )
     elif sampler_type == "TimeDependentProbMultiTaskSampler":
-        assert len(sampler_config) in 4
+        assert len(sampler_config) == 3
         return TimeDependentProbMultiTaskSampler(
             task_dict=task_dict,
             rng=rng,
