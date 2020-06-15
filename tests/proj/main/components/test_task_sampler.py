@@ -61,3 +61,5 @@ def test_time_dependent_prob_multitask_sampler_handles_max_steps():
     sampler_1.pop()
     with pytest.raises(IndexError):
         sampler_2.pop()
+    sampler_2.reset_counter()
+    sampler_2.pop()
