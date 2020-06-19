@@ -22,34 +22,57 @@ class DataRow(BaseDataRow):
     tokens: list
 
 
+def head(file_path, n):
+    with open(file_path) as file:
+        head = [next(file) for x in range(n)]
+    return head
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Add a task test")
     parser.add_argument("task", help="name of task")
-    parser.add_argument("path", help="filepath for raw task data to be added")
-    parser.add_argument("number", type=int, help="number of examples to use in task test")
-    parser.add_argument("--input_a", type=str, help="name of input_a")
+    parser.add_argument("raw_data_dir_path", help="directory of raw task data to be added")
+    parser.add_argument("input_a", type=str, help="name of input_a")
     parser.add_argument("--input_b", type=str, default=None, help="name of input_a")
+    parser.add_argument("--train_filename", default="train.jsonl", help="filename of train data")
+    parser.add_argument("--val_filename", default="val.jsonl", help="filename of validation data")
+    parser.add_argument("--test_filename", default="test.jsonl", help="filename of test data")
+    parser.add_argument(
+        "--train_labels_filename", default=None, help="filename of train labels if separate"
+    )
+    parser.add_argument(
+        "--val_labels_filename", default=None, help="filename of val labels if separate"
+    )
+    parser.add_argument(
+        "--number", type=int, default=5, help="number of examples to use in task test"
+    )
     parser.add_argument("--overwrite", help="overwrite existing files", action="store_true")
-    parser.add_argument("--task_raw_test_data_out_path", default="data")
+    parser.add_argument(
+        "--task_raw_test_data_out_path",
+        default=os.path.join("..", "lib", "resources", "data"),
+        help="raw test task data directory",
+    )
     args = parser.parse_args()
 
     # create task test config
-    task_config_path = os.path.join(os.path.dirname(__file__), "..", "tasks", "lib", "resources", args.task + ".json")
+    task_config_path = os.path.join(
+        os.path.dirname(__file__), "..", "tasks", "lib", "resources", args.task + ".json"
+    )
     if os.path.exists(task_config_path) or args.overwrite:
         with open(task_config_path, "w") as f:
             test_config = {}
-            test_config['task'] = args.task
-            test_config['name'] = args.task
+            test_config["task"] = args.task
+            test_config["name"] = args.task
             set_path_list = {}
             for set_name in SET_NAMES:
-                set_path_list[set_name] = os.path.join(args.task_raw_test_data_out_path, args.task, set_name + ".jsonl")
-            test_config['paths'] = set_path_list
+                set_path_list[set_name] = os.path.join(
+                    args.task_raw_test_data_out_path, args.task, set_name + ".jsonl"
+                )
+            test_config["paths"] = set_path_list
             f.write(json.dumps(test_config))
 
     # create task test data (raw) directory if it does not exist
-    task_data_dir = os.path.join(
-        os.path.dirname(__file__), "..", "tasks", "lib", "resources", "data", args.task
-    )
+    task_data_dir = os.path.join(args.task_raw_test_data_out_path, args.task)
     if not os.path.exists(task_data_dir):
         os.makedirs(task_data_dir)
 
@@ -64,6 +87,8 @@ if __name__ == "__main__":
         "task_examples",
         args.task,
     )
+    if not os.path.exists(task_fixture_dir):
+        os.makedirs(task_fixture_dir)
 
     # create fixture examples file with necessary headers
     task_fixture_path = os.path.join(task_fixture_dir, args.task + "_examples.py")
@@ -76,20 +101,41 @@ if __name__ == "__main__":
 
     # iterate through set types and write raw data/fixture examples for each set
     for set_name in SET_NAMES:
+        label_head = None
+        if set_name == "train":
+            set_filename = args.train_filename
+            if args.train_labels_filename:
+                label_head = head(
+                    os.path.join(args.raw_data_dir_path, args.train_labels_filename), args.number
+                )
+        elif set_name == "val":
+            set_filename = args.val_filename
+            if args.val_labels_filename:
+                label_head = head(
+                    os.path.join(args.raw_data_dir_path, args.val_labels_filename), args.number
+                )
+        elif set_name == "test":
+            set_filename = args.test_filename
+        else:
+            raise RuntimeError(str(set_name) + " not found in SET_NAMES: " + str(SET_NAMES))
+
         # read head of file
-        with open(os.path.join(args.path, set_name + ".jsonl")) as task_file:
-            head = [next(task_file) for x in range(args.number)]
+        head = head(os.path.join(args.raw_data_dir_path, set_filename), args.number)
+        json_head = json.loads(head)
+
+        if label_head is not None:
+            for data_row, label_row in zip(json_head, label_head):
+                data_row['label'] = label_row
 
         # write head to test task data directory
         task_data_file = os.path.join(task_data_dir, set_name + ".jsonl")
         with open(task_data_file, "w") as f:
-            for elem in head:
+            for elem in json_head:
                 f.write(elem)
 
-        # read data in JSON format
-        task_test_data = [json.loads(example) for example in head]
+        # Add guid
         for idx, example in enumerate(task_test_data):
-            example['guid'] = set_name + "-" + str(idx)
+            example["guid"] = set_name + "-" + str(idx)
 
         # write fixture examples to file
         with open(os.path.join(task_fixture_dir, args.task + "_examples.py"), "a") as fixture_file:
@@ -109,8 +155,9 @@ if __name__ == "__main__":
                 if args.input_b:
                     example[input_b] = tokenizer.tokenize(example[args.input_b])
                 if set_name != "test":
-                    if example["label"].isnumeric():
-                        example["label_id"] = int(example["label"])
+                    assert example["label"].isnumeric()
+                    example["label_id"] = int(example["label"])
+
                 example.pop("label", None)
 
             fixture_file.write(
