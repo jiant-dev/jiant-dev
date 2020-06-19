@@ -14,6 +14,7 @@ from jiant.tasks.lib.hellaswag import HellaSwagTask
 from jiant.tasks.lib.mlm_crosslingual_wiki import MLMCrosslingualWikiTask
 from jiant.tasks.lib.mlm_wikitext_103 import MLMWikitext103Task
 from jiant.tasks.lib.mnli import MnliTask
+from jiant.tasks.lib.autonli import AutoNliTask
 from jiant.tasks.lib.mrpc import MrpcTask
 from jiant.tasks.lib.multirc import MultiRCTask
 from jiant.tasks.lib.qqp import QqpTask
@@ -49,6 +50,7 @@ TASK_DICT = {
     "mlm_crosslingual_wiki": MLMCrosslingualWikiTask,
     "mlm": MLMWikitext103Task,
     "mnli": MnliTask,
+    "autonli": AutoNliTask,
     "mrc": MultiRCTask,
     "mrpc": MrpcTask,
     "qnli": QnliTask,
