@@ -95,7 +95,9 @@ def create_and_write_task_configs(task_name_list, data_dir, task_config_base_pat
 
 def run_simple(args: RunConfiguration):
 
-    model_cache_path = replace_none(args.model_cache_path, default=os.path.join(args.exp_dir, "models"))
+    model_cache_path = replace_none(
+        args.model_cache_path, default=os.path.join(args.exp_dir, "models")
+    )
 
     with distributed.only_first_process(local_rank=args.local_rank):
         # === Step 1: Write task configs based on templates === #
@@ -224,7 +226,9 @@ def run_simple(args: RunConfiguration):
 
 def dry_run(args: RunConfiguration):
 
-    model_cache_path = replace_none(args.model_cache_path, default=os.path.join(args.exp_dir, "models"))
+    model_cache_path = replace_none(
+        args.model_cache_path, default=os.path.join(args.exp_dir, "models")
+    )
 
     print("\n# === Step 1: Write task configs based on templates === #")
     full_task_name_list = sorted(list(set(args.train_tasks + args.val_tasks + args.test_tasks)))
