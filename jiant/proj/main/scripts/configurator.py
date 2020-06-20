@@ -206,9 +206,8 @@ class SimpleAPIMultiTaskConfigurator(zconf.RunConfig):
             )
             num_examples_dict[task_name] = num_examples
             capped_num_examples_dict[task_name] = capped_num_examples
-            print(num_examples, self.epochs, effective_batch_size)
             if max_steps_not_given:
-                max_steps += self.epochs * math.ceil(num_examples / effective_batch_size)
+                max_steps += self.epochs * math.ceil(capped_num_examples / effective_batch_size)
 
         # === Compute eval_batch_size === #
         # Eval batch size is often a multiple of train batch size,
