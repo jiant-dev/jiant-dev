@@ -1,0 +1,9 @@
+{
+    "task": "autonli",
+    "name": "autonli",
+    "paths": {
+        "train": "data/autonli/train.jsonl",
+        "val": "data/autonli/val.jsonl",
+        "test": "data/autonli/test.jsonl"
+    }
+}

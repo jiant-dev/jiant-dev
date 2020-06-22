@@ -1,0 +1,5 @@
+{"premise": "The award of the title was followed by the award of the Golden Medal.", "hypothesis": "The award of the title preceded the award of the Golden Medal.", "label": "e"}
+{"premise": "The award of the title was followed by the award of the Golden Medal.", "hypothesis": "The award of the title happened concurrently with the award of the Golden Medal.", "label": "c"}
+{"premise": "The award of the title was followed by the award of the Golden Medal.", "hypothesis": "The award of the title was more prestigious than the award of the Golden Medal.", "label": "n"}
+{"premise": "Muisak - the avenger spirit, it surfaces when a person protected by Arutam is murdered.", "hypothesis": "Muisak comes out when an Arutam protected person is murdered.", "label": "e"}
+{"premise": "Leander and the Catholic bishops immediately introduced a law imposing the conversion of Jews and declared the remains of Aryanism as \"hereticism. \"", "hypothesis": "The Catholic bishops endorsed Aryanism.", "label": "c"}

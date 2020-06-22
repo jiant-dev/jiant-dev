@@ -30,6 +30,11 @@ class Example(BaseExample):
             label_id=AutoNliTask.LABEL_TO_ID[self.label],
         )
 
+    def get_input_a(self):
+        return self.premise
+
+    def get_input_b(self):
+        return self.hypothesis
 
 @dataclass
 class TokenizedExample(BaseTokenizedExample):
@@ -48,6 +53,12 @@ class TokenizedExample(BaseTokenizedExample):
             feat_spec=feat_spec,
             data_row_class=DataRow,
         )
+
+    def get_input_a(self):
+        return self.premise
+
+    def get_input_b(self):
+        return self.hypothesis
 
 
 @dataclass
@@ -80,7 +91,9 @@ class AutoNliTask(Task):
     LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def get_train_examples(self):
-        return self._create_examples(lines=read_jsonl(self.train_path), set_type="train")
+        return self._create_examples(
+            lines=read_jsonl(self.train_path), set_type="train"
+        )
 
     def get_val_examples(self):
         return self._create_examples(lines=read_jsonl(self.val_path), set_type="val")

@@ -9,11 +9,11 @@ from jiant.shared import model_resolution
 from jiant.tasks import create_task_from_config_path
 from jiant.utils.testing.tokenizer import SimpleSpaceTokenizer
 
-CLASSIFICATION_TASKS = ['mnli', 'cola']
+CLASSIFICATION_TASKS = ['mnli', 'cola', 'autonli']
 
 
 @pytest.mark.parametrize("task_name", CLASSIFICATION_TASKS)
-def test_featurization_of_double_input_classification_task(task_name: str):
+def test_featurization_of_classification_task(task_name: str):
     fixture_test_examples = importlib.import_module(
         "tests.tasks.lib.resources.fixtures.task_examples." + task_name + "." + task_name + "_examples")
 
