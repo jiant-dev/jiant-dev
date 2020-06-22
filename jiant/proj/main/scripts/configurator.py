@@ -119,7 +119,9 @@ class SimpleAPIMultiTaskConfigurator(zconf.RunConfig):
             task_name_list_dict["train_val"] = self.parse_task_name_list(
                 self.train_val_task_name_list
             )
-        full_task_name_list = py_datastructures.get_unique_list_in_order(task_name_list_dict.values())
+        full_task_name_list = py_datastructures.get_unique_list_in_order(
+            task_name_list_dict.values()
+        )
 
         # === Gather task configs === #
         # Build task_config_path_dict, either via
