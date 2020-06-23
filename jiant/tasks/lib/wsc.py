@@ -85,7 +85,7 @@ class TokenizedExample(BaseTokenizedExample):
         )
 
         unpadded_tokens = tokens + [tokenizer.sep_token]
-        unpadded_segment_ids = [feat_spec.sequence_a_segment_id] * (len(self.tokens) + 1)
+        unpadded_segment_ids = [feat_spec.sequence_a_segment_id] * (len(tokens) + 1)
 
         unpadded_inputs = add_cls_token(
             unpadded_tokens=unpadded_tokens,
