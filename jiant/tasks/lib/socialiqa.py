@@ -38,22 +38,13 @@ class SocialIQATask(mc_template.AbstractMultipleChoiceTask):
     NUM_CHOICES = len(CHOICE_KEYS)
 
     def get_train_examples(self):
-        return self._create_examples(
-            lines=read_json_lines(self.train_path),
-            set_type="train"
-        )
+        return self._create_examples(lines=read_json_lines(self.train_path), set_type="train")
 
     def get_val_examples(self):
-        return self._create_examples(
-            lines=read_json_lines(self.val_path),
-            set_type="val"
-        )
+        return self._create_examples(lines=read_json_lines(self.val_path), set_type="val")
 
     def get_test_examples(self):
-        return self._create_examples(
-            lines=read_json_lines(self.test_path),
-            set_type="test" 
-        )
+        return self._create_examples(lines=read_json_lines(self.test_path), set_type="test")
 
     @classmethod
     def _create_examples(cls, lines, set_type):
