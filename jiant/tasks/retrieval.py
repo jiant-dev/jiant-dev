@@ -9,7 +9,6 @@ from jiant.tasks.lib.cola import ColaTask
 from jiant.tasks.lib.commitmentbank import CommitmentBankTask
 from jiant.tasks.lib.commonsenseqa import CommonsenseQATask
 from jiant.tasks.lib.copa import CopaTask
-from jiant.tasks.lib.coref import CorefTask
 from jiant.tasks.lib.cosmosqa import CosmosQATask
 from jiant.tasks.lib.hellaswag import HellaSwagTask
 from jiant.tasks.lib.mlm_crosslingual_wiki import MLMCrosslingualWikiTask
@@ -45,7 +44,6 @@ TASK_DICT = {
     "cola": ColaTask,
     "commonsenseqa": CommonsenseQATask,
     "copa": CopaTask,
-    "coref": CorefTask,
     "cosmosqa": CosmosQATask,
     "hellaswag": HellaSwagTask,
     "mlm_wikitext103": MLMWikitext103Task,
