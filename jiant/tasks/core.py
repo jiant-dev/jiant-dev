@@ -91,6 +91,7 @@ class TaskTypes(Enum):
     TAGGING = 7
     MASKED_LANGUAGE_MODELING = 8
     EMBEDDING = 9
+    SPAN_PREDICTION = 10
     UNDEFINED = -1
 
 

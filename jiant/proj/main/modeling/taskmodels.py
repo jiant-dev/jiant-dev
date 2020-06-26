@@ -120,6 +120,28 @@ class SpanComparisonModel(Taskmodel):
             return LogitsOutput(logits=logits, other=encoder_output.other)
 
 
+class SpanPredictionModel(Taskmodel):
+    def __init__(self, encoder, span_prediction_head: heads.TokenClassificationHead):
+        super().__init__(encoder=encoder)
+        self.offset_margin = 100
+        self.span_prediction_head = span_prediction_head
+
+    def forward(self, batch, task, tokenizer, compute_loss: bool = False):
+        encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
+        logits = self.span_prediction_head(unpooled=encoder_output.unpooled, spans=batch.spans)
+        # ensure logits in valid range is at lease self.offset_margin higher than others
+        logits_offset = logits.max() - logits.min() + self.offset_margin
+        logits = logits - logits_offset * (1 - batch.span_range_mask)
+        if compute_loss:
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(
+                logits.transpose(dim0=1, dim1=2).flatten(end_dim=1), batch.gold_span.flatten(),
+            )
+            return LogitsAndLossOutput(logits=logits, loss=loss, other=encoder_output.other)
+        else:
+            return LogitsOutput(logits=logits, other=encoder_output.other)
+
+
 class TokenClassificationModel(Taskmodel):
     """From RobertaForTokenClassification"""
 
