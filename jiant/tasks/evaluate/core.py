@@ -127,9 +127,6 @@ class MultiLabelAccAndF1EvaluationScheme(BaseLogitsEvaluationScheme):
         minor = {
             "acc": acc,
             "f1_micro": f1_score(y_true=labels, y_pred=preds, average="micro"),
-            "f1_macro": f1_score(y_true=labels, y_pred=preds, average="macro"),
-            "f1_weighted": f1_score(y_true=labels, y_pred=preds, average="weighted"),
-            "f1_average": np.average(f1_score(y_true=labels, y_pred=preds, average=None)),
             "acc_and_f1_micro": (acc + f1_score(y_true=labels, y_pred=preds, average="micro")) / 2,
         }
         return Metrics(major=minor["acc_and_f1_micro"], minor=minor)
