@@ -222,3 +222,60 @@ def test_normalize_empty_tokenizations():
     target_tokenized = tokenizer.tokenize(text)
     with pytest.raises(ValueError):
         tn.normalize_tokenizations(space_tokenized, target_tokenized, tokenizer)
+
+
+@pytest.mark.slow
+def test_space_tokenization_and_unusual_roberta_tokenization_normalization():
+    text = (
+        "As a practitioner of ethnic humor from the old days on the Borscht Belt , live "
+        "television and the nightclub circuit , Mr. Mason instinctively reached for the "
+        "vernacular ."
+    )
+    space_tokenized = text.split(" ")
+    tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+    target_tokenized = tokenizer.tokenize(text)
+    # note 1: exposing the target tokenization to highlight an unusual tokenization:
+    # " vernacular" -> 'Ġ', 'vern', 'acular' (the usual pattern suggests 'Ġvern', 'acular')
+    assert target_tokenized == [
+        "As",
+        "Ġa",
+        "Ġpractitioner",
+        "Ġof",
+        "Ġethnic",
+        "Ġhumor",
+        "Ġfrom",
+        "Ġthe",
+        "Ġold",
+        "Ġdays",
+        "Ġon",
+        "Ġthe",
+        "ĠB",
+        "ors",
+        "cht",
+        "ĠBelt",
+        "Ġ,",
+        "Ġlive",
+        "Ġtelevision",
+        "Ġand",
+        "Ġthe",
+        "Ġnightclub",
+        "Ġcircuit",
+        "Ġ,",
+        "ĠMr",
+        ".",
+        "ĠMason",
+        "Ġinstinctively",
+        "Ġreached",
+        "Ġfor",
+        "Ġthe",
+        "Ġ",
+        "vern",
+        "acular",
+        "Ġ.",
+    ]
+    normed_space_tokenized, normed_target_tokenized = tn.normalize_tokenizations(
+        space_tokenized, target_tokenized, tokenizer
+    )
+    # note: 2: the assert below shows that even with the unusual tokenization (see note 1 above),
+    # after normalization the space tokenization and the target tokenization match.
+    assert "".join(normed_space_tokenized) == "".join(normed_target_tokenized)
