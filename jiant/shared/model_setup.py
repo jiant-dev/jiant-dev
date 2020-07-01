@@ -40,12 +40,69 @@ def get_tokenizer(model_type, tokenizer_path):
 
 
 class OptimizerScheduler:
-    def __init__(self, optimizer, scheduler):
+    def __init__(self, optimizer, scheduler, args):
         super().__init__()
         self.optimizer = optimizer
         self.scheduler = scheduler
+        self.main_grad = [
+            [torch.zeros_like(p.data) for p in p_group["params"]] if p_group["shared"] else []
+            for p_group in optimizer.param_groups
+        ]
+        self.global_sim = args.global_sim
+        self.main_grad_momentum = args.main_grad_momentum
+        self.source_task = args.source_task
+        self.target_task = args.target_task
 
-    def step(self):
+    def step(self, task=""):
+        if task == self.target_task:
+            for p_group_idx, _ in enumerate(self.main_grad):
+                for p_idx, _ in enumerate(self.main_grad[p_group_idx]):
+                    self.main_grad[p_group_idx][p_idx].mul_(self.main_grad_momentum).add_(
+                        self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.data,
+                        alpha=1.0 - self.main_grad_momentum,
+                    )
+        elif task == self.source_task:
+            grad_sim = []
+            main_grad_norm = []
+            grad_norm = []
+            for p_group_idx, _ in enumerate(self.main_grad):
+                grad_sim.append([])
+                for p_idx, _ in enumerate(self.main_grad[p_group_idx]):
+                    grad_sim[-1].append(
+                        (
+                            self.main_grad[p_group_idx][p_idx]
+                            * self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.data
+                        ).sum()
+                    )
+                    if self.global_sim:
+                        main_grad_norm.append((self.main_grad[p_group_idx][p_idx] ** 2).sum())
+                        grad_norm.append(
+                            (
+                                self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.data
+                                ** 2
+                            ).sum()
+                        )
+            if self.global_sim:
+                global_weight = torch.relu(
+                    sum([prod for ls in grad_sim for prod in ls])
+                    / (sum(main_grad_norm).sqrt() * sum(grad_norm).sqrt() + 1e-8)
+                ).sqrt()
+            for p_group_idx, _ in enumerate(self.main_grad):
+                for p_idx, _ in enumerate(self.main_grad[p_group_idx]):
+                    if self.global_sim:
+                        weight = global_weight
+                    else:
+                        weight = torch.relu(
+                            grad_sim[p_group_idx][p_idx]
+                            / (
+                                self.optimizer.param_groups[p_group_idx]["params"][
+                                    p_idx
+                                ].grad.data.norm()
+                                * self.main_grad[p_group_idx][p_idx].norm()
+                                + 1e-8
+                            )
+                        )
+                    self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.mul_(weight)
         # Scheduler updates first
         self.scheduler.step()
         self.optimizer.step()
@@ -70,6 +127,7 @@ def create_optimizer(
     optimizer_epsilon=1e-8,
     optimizer_type="adam",
     verbose=False,
+    args=None,
 ):
     return create_optimizer_from_params(
         named_parameters=list(model.named_parameters()),
@@ -80,6 +138,7 @@ def create_optimizer(
         optimizer_epsilon=optimizer_epsilon,
         optimizer_type=optimizer_type,
         verbose=verbose,
+        args=args,
     )
 
 
@@ -92,6 +151,7 @@ def create_optimizer_from_params(
     optimizer_epsilon=1e-8,
     optimizer_type="adam",
     verbose=False,
+    args=None,
 ):
     # Prepare optimizer
     no_decay = [
@@ -111,20 +171,44 @@ def create_optimizer_from_params(
     used_named_parameters = [
         (n, p) for n, p in named_parameters if p.requires_grad and "weighted_sum.weights" not in n
     ]
-    weighted_sum_params = [
-        (n, p) for n, p in named_parameters if p.requires_grad and "weighted_sum.weights" in n
-    ]
 
     optimizer_grouped_parameters = [
         {
-            "params": [p for n, p in used_named_parameters if not any(nd in n for nd in no_decay)],
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if n.startswith("encoder.e") and (not any(nd in n for nd in no_decay))
+            ],
             "weight_decay": 0.01,
+            "shared": True,
         },
         {
-            "params": [p for n, p in used_named_parameters if any(nd in n for nd in no_decay)],
-            "weight_decay": 0.0,
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if (not n.startswith("encoder.e")) and (not any(nd in n for nd in no_decay))
+            ],
+            "weight_decay": 0.01,
+            "shared": False,
         },
-        {"params": [p for n, p in weighted_sum_params], "weight_decay": 0.0, "lr": 0.01},
+        {
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if n.startswith("encoder.e") and any(nd in n for nd in no_decay)
+            ],
+            "weight_decay": 0.0,
+            "shared": True,
+        },
+        {
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if (not n.startswith("encoder.e")) and any(nd in n for nd in no_decay)
+            ],
+            "weight_decay": 0.0,
+            "shared": False,
+        },
     ]
 
     if optimizer_type == "adam":
@@ -146,7 +230,7 @@ def create_optimizer_from_params(
     scheduler = transformers.get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
     )
-    optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
+    optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler, args=args)
     return optimizer_scheduler
 
 

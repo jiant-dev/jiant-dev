@@ -56,6 +56,12 @@ class RunConfiguration(zconf.RunConfig):
     server_ip = zconf.attr(default="", type=str)
     server_port = zconf.attr(default="", type=str)
 
+    # Experimental
+    global_sim = zconf.attr(action="store_true")
+    main_grad_momentum = zconf.attr(default=0.99, type=float)
+    source_task = zconf.attr(type=str)
+    target_task = zconf.attr(type=str)
+
 
 @zconf.run_config
 class ResumeConfiguration(zconf.RunConfig):
@@ -103,6 +109,7 @@ def setup_runner(
         warmup_proportion=None,
         optimizer_type=args.optimizer_type,
         verbose=verbose,
+        args=args,
     )
     jiant_model, optimizer = model_setup.raw_special_model_setup(
         model=jiant_model,

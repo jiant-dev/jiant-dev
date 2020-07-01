@@ -1,0 +1,71 @@
+{
+  "task_config_path_dict": {
+    "mnli": "/scratch/hl3236/j2_files/data/configs/mnli_config.json",
+    "rte": "/scratch/hl3236/j2_files/data/configs/rte_config.json"
+  },
+  "task_cache_config_dict": {
+    "mnli": {
+      "train": "/scratch/hl3236/j2_files/cache/roberta-base/mnli/train",
+      "val": "/scratch/hl3236/j2_files/cache/roberta-base/mnli/val",
+      "val_labels": "/scratch/hl3236/j2_files/cache/roberta-base/mnli/val_labels"
+    },
+    "rte": {
+      "train": "/scratch/hl3236/j2_files/cache/roberta-base/rte/train",
+      "val": "/scratch/hl3236/j2_files/cache/roberta-base/rte/val",
+      "val_labels": "/scratch/hl3236/j2_files/cache/roberta-base/rte/val_labels",
+      "test": "/scratch/hl3236/j2_files/cache/roberta-base/rte/test"
+    }
+  },
+  "sampler_config": {
+    "sampler_type": "SpecifiedProbMultiTaskSampler",
+    "task_to_unweighted_probs": {
+      "mnli": 5000,
+      "rte": 2490
+    }
+  },
+  "global_train_config": {
+    "max_steps": 9380,
+    "warmup_steps": 938
+  },
+  "task_specific_configs_dict": {
+    "mnli": {
+      "train_batch_size": 16,
+      "eval_batch_size": 32,
+      "gradient_accumulation_steps": 1,
+      "eval_subset_num": 500
+    },
+    "rte": {
+      "train_batch_size": 16,
+      "eval_batch_size": 32,
+      "gradient_accumulation_steps": 1,
+      "eval_subset_num": 500
+    }
+  },
+  "taskmodels_config": {
+    "task_to_taskmodel_map": {
+      "mnli": "mnli",
+      "rte": "rte"
+    },
+    "taskmodel_config_map": {
+      "mnli": null,
+      "rte": null
+    }
+  },
+  "task_run_config": {
+    "train_task_list": [
+      "mnli",
+      "rte"
+    ],
+    "train_val_task_list": [
+      "mnli",
+      "rte"
+    ],
+    "val_task_list": [
+      "rte"
+    ],
+    "test_task_list": []
+  },
+  "metric_aggregator_config": {
+    "metric_aggregator_type": "EqualMetricAggregator"
+  }
+}

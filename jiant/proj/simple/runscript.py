@@ -16,36 +16,35 @@ from jiant.utils.python.logic import replace_none
 @zconf.run_config
 class RunConfiguration(zconf.RunConfig):
     # === Required parameters === #
-    run_name = zconf.attr(type=str, required=True)
-    exp_dir = zconf.attr(type=str, required=True)
-    data_dir = zconf.attr(type=str, required=True)
+    run_name = zconf.attr(type=str, default="RUN_NAME")
+    exp_dir = zconf.attr(type=str, default="EXP_DIR")
+    data_dir = zconf.attr(type=str, default="DATA_DIR")
 
     # === Model parameters === #
-    model_type = zconf.attr(type=str, required=True)
+    model_type = zconf.attr(type=str, default="MODEL_TYPE")
     model_weights_path = zconf.attr(type=str, default=None)
     model_cache_path = zconf.attr(type=str, default=None)
 
     # === Task parameters === #
     tasks = zconf.attr(type=str, default=None)
-    train_tasks = zconf.attr(type=str, default=None)
-    val_tasks = zconf.attr(type=str, default=None)
-    test_tasks = zconf.attr(type=str, default=None)
+    train_tasks = zconf.attr(type=str, default="mnli,rte")
+    val_tasks = zconf.attr(type=str, default="rte")
+    test_tasks = zconf.attr(type=str, default="rte")
 
     # === Misc parameters === #
-    train_batch_size = zconf.attr(type=int, default=32)
+    train_batch_size = zconf.attr(type=int, default=16)
     max_seq_length = zconf.attr(type=int, default=256)
-    num_train_epochs = zconf.attr(type=int, default=3)
-    train_examples_cap = zconf.attr(type=int, default=None)
-    dry_run = zconf.attr(action="store_true")
+    num_train_epochs = zconf.attr(type=int, default=20)
+    train_examples_cap = zconf.attr(type=int, default=5000)
 
     # === Running Setup === #
     do_save = zconf.attr(action="store_true")
     write_val_preds = zconf.attr(action="store_true")
     write_test_preds = zconf.attr(action="store_true")
-    eval_every_steps = zconf.attr(type=int, default=0)
+    eval_every_steps = zconf.attr(type=int, default=2000)
     save_every_steps = zconf.attr(type=int, default=0)
-    save_checkpoint_every_steps = zconf.attr(type=int, default=0)
-    no_improvements_for_n_evals = zconf.attr(type=int, default=0)
+    save_checkpoint_every_steps = zconf.attr(type=int, default=10000)
+    no_improvements_for_n_evals = zconf.attr(type=int, default=30)
     delete_checkpoint_if_done = zconf.attr(action="store_true")
     force_overwrite = zconf.attr(action="store_true")
     seed = zconf.attr(type=int, default=-1)
@@ -356,14 +355,14 @@ python jiant/proj/main/runscript.py \\
 
 
 def main():
-    mode, cl_args = zconf.get_mode_and_cl_args()
+    _, cl_args = zconf.get_mode_and_cl_args()
     args = RunConfiguration.default_run_cli(cl_args=cl_args)
-    if mode == "run":
-        run_simple(args)
-    elif mode == "dry_run":
-        dry_run(args)
-    else:
-        raise zconf.ModeLookupError(mode)
+    # if mode == "run":
+    #     run_simple(args)
+    # elif mode == "dry_run":
+    dry_run(args)
+    # else:
+    #     raise zconf.ModeLookupError(mode)
 
 
 if __name__ == "__main__":

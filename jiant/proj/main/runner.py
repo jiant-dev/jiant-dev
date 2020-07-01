@@ -110,7 +110,7 @@ class JiantRunner:
             )
             loss_val += loss.item()
 
-        self.optimizer_scheduler.step()
+        self.optimizer_scheduler.step(task_name)
         self.optimizer_scheduler.optimizer.zero_grad()
 
         train_state.step(task_name=task_name)
