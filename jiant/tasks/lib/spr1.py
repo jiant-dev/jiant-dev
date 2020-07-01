@@ -1,33 +1,33 @@
 from dataclasses import dataclass
 
 from jiant.tasks.lib.templates.shared import labels_to_bimap
-from jiant.tasks.lib.templates import edge_probing
+from jiant.tasks.lib.templates import edge_probing_two_span
 from jiant.utils.python.io import read_json_lines
 
 
 @dataclass
-class Example(edge_probing.Example):
+class Example(edge_probing_two_span.Example):
     @property
     def task(self):
         return Spr1Task
 
 
 @dataclass
-class TokenizedExample(edge_probing.TokenizedExample):
+class TokenizedExample(edge_probing_two_span.TokenizedExample):
     pass
 
 
 @dataclass
-class DataRow(edge_probing.DataRow):
+class DataRow(edge_probing_two_span.DataRow):
     pass
 
 
 @dataclass
-class Batch(edge_probing.Batch):
+class Batch(edge_probing_two_span.Batch):
     pass
 
 
-class Spr1Task(edge_probing.AbstractProbingTask):
+class Spr1Task(edge_probing_two_span.AbstractProbingTask):
     Example = Example
     TokenizedExample = TokenizedExample
     DataRow = DataRow
