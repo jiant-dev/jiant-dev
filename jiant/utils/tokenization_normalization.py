@@ -13,6 +13,8 @@ from typing import Sequence
 
 import transformers
 
+from jiant.utils.testing.tokenizer import SimpleSpaceTokenizer as TestTokenizer
+
 
 def normalize_tokenizations(
     space_tokenization: Sequence[str],
@@ -66,6 +68,10 @@ def normalize_tokenizations(
         space_tokenization = [token.lower() for token in space_tokenization]
         modifed_space_tokenization = bow_tag_tokens(space_tokenization)
         modifed_target_tokenization = _process_sentencepiece_tokens(target_tokenization)
+    # no-op for test cases that use a dummy tokenizer
+    elif isinstance(tokenizer, TestTokenizer):
+        modifed_space_tokenization = space_tokenization
+        modifed_target_tokenization = target_tokenization
     else:
         raise ValueError("Tokenizer not supported.")
 
