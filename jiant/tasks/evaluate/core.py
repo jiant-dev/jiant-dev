@@ -571,7 +571,17 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
         return MultipleChoiceAccuracyEvaluationScheme()
     elif isinstance(task, (tasks.MrpcTask, tasks.QqpTask,)):
         return AccAndF1EvaluationScheme()
-    elif isinstance(task, tasks.Spr1Task):
+    elif isinstance(
+        task,
+        (
+            tasks.Spr1Task,
+            tasks.Spr2Task,
+            tasks.SemevalTask,
+            tasks.SrlTask,
+            tasks.NerTask,
+            tasks.CorefTask,
+        ),
+    ):
         return MultiLabelAccAndF1EvaluationScheme()
     elif isinstance(task, (tasks.SquadTask,)):
         return SQuADEvaluationScheme()
