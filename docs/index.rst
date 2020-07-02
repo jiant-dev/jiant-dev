@@ -14,6 +14,7 @@ Documentation |release|
    :maxdepth: 2
 
    getting-started
+   tutorials/index
    examples/index
    modules/index
 
