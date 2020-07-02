@@ -1,4 +1,3 @@
-import json
 import string
 import re
 import sys
@@ -12,7 +11,6 @@ from jiant.tasks.lib.templates.squad_style import core as squad_style_template
 
 @dataclass
 class Example(squad_style_template.Example):
-
     def tokenize(self, tokenizer):
         raise NotImplementedError("SQuaD is weird")
 
@@ -32,12 +30,17 @@ class MlqaTask(squad_style_template.BaseSquadStyleTask):
     DataRow = DataRow
     Batch = Batch
 
-    def __init__(self, name, path_dict,
-                 context_language, question_language,
-                 version_2_with_negative=False,
-                 n_best_size=20,
-                 max_answer_length=30,
-                 null_score_diff_threshold=0.0):
+    def __init__(
+        self,
+        name,
+        path_dict,
+        context_language,
+        question_language,
+        version_2_with_negative=False,
+        n_best_size=20,
+        max_answer_length=30,
+        null_score_diff_threshold=0.0,
+    ):
         super().__init__(
             name=name,
             path_dict=path_dict,
@@ -55,9 +58,7 @@ class MlqaTask(squad_style_template.BaseSquadStyleTask):
     @classmethod
     def read_squad_examples(cls, path, set_type):
         squad_style_template.generic_read_squad_examples(
-            path=path,
-            set_type=set_type,
-            example_class=cls.Example,
+            path=path, set_type=set_type, example_class=cls.Example,
         )
 
 
@@ -65,10 +66,11 @@ class MlqaTask(squad_style_template.BaseSquadStyleTask):
 # MLQA has a slightly different evaluation / detokenization for different languages.
 # Can de-dup this later if necessary.
 
-PUNCT = {chr(i) for i in range(sys.maxunicode) if unicodedata.category(
-    chr(i)).startswith('P')}.union(string.punctuation)
-WHITESPACE_LANGS = ['en', 'es', 'hi', 'vi', 'de', 'ar']
-MIXED_SEGMENTATION_LANGS = ['zh']
+PUNCT = {
+    chr(i) for i in range(sys.maxunicode) if unicodedata.category(chr(i)).startswith("P")
+}.union(string.punctuation)
+WHITESPACE_LANGS = ["en", "es", "hi", "vi", "de", "ar"]
+MIXED_SEGMENTATION_LANGS = ["zh"]
 
 
 def whitespace_tokenize(text):
@@ -79,7 +81,7 @@ def mixed_segmentation(text):
     segs_out = []
     temp_str = ""
     for char in text:
-        if re.search(r'[\u4e00-\u9fa5]', char) or char in PUNCT:
+        if re.search(r"[\u4e00-\u9fa5]", char) or char in PUNCT:
             if temp_str != "":
                 ss = whitespace_tokenize(temp_str)
                 segs_out.extend(ss)
@@ -99,22 +101,24 @@ def normalize_answer(s, lang):
     """Lower text and remove punctuation, articles and extra whitespace."""
 
     def remove_articles(text, inner_lang):
-        if inner_lang == 'en':
-            return re.sub(r'\b(a|an|the)\b', ' ', text)
-        elif inner_lang == 'es':
-            return re.sub(r'\b(un|una|unos|unas|el|la|los|las)\b', ' ', text)
-        elif inner_lang == 'hi':
+        if inner_lang == "en":
+            return re.sub(r"\b(a|an|the)\b", " ", text)
+        elif inner_lang == "es":
+            return re.sub(r"\b(un|una|unos|unas|el|la|los|las)\b", " ", text)
+        elif inner_lang == "hi":
             return text  # Hindi does not have formal articles
-        elif inner_lang == 'vi':
-            return re.sub(r'\b(của|là|cái|chiếc|những)\b', ' ', text)
-        elif inner_lang == 'de':
-            return re.sub(r'\b(ein|eine|einen|einem|eines|einer|der|die|das|den|dem|des)\b', ' ', text)
-        elif inner_lang == 'ar':
-            return re.sub('\sال^|ال', ' ', text)
-        elif inner_lang == 'zh':
+        elif inner_lang == "vi":
+            return re.sub(r"\b(của|là|cái|chiếc|những)\b", " ", text)
+        elif inner_lang == "de":
+            return re.sub(
+                r"\b(ein|eine|einen|einem|eines|einer|der|die|das|den|dem|des)\b", " ", text
+            )
+        elif inner_lang == "ar":
+            return re.sub("\sال^|ال", " ", text)  # noqa: W605
+        elif inner_lang == "zh":
             return text  # Chinese does not have formal articles
         else:
-            raise Exception('Unknown Language {}'.format(inner_lang))
+            raise Exception("Unknown Language {}".format(inner_lang))
 
     def white_space_fix(text, inner_lang):
         if inner_lang in WHITESPACE_LANGS:
@@ -122,11 +126,11 @@ def normalize_answer(s, lang):
         elif inner_lang in MIXED_SEGMENTATION_LANGS:
             tokens = mixed_segmentation(text)
         else:
-            raise Exception('Unknown Language {}'.format(inner_lang))
-        return ' '.join([t for t in tokens if t.strip() != ''])
+            raise Exception("Unknown Language {}".format(inner_lang))
+        return " ".join([t for t in tokens if t.strip() != ""])
 
     def remove_punc(text):
-        return ''.join(ch for ch in text if ch not in PUNCT)
+        return "".join(ch for ch in text if ch not in PUNCT)
 
     def lower(text):
         return text.lower()
@@ -162,22 +166,21 @@ def metric_max_over_ground_truths(metric_fn, prediction, ground_truths, lang):
 def evaluate(dataset, predictions, lang):
     f1 = exact_match = total = 0
     for article in dataset:
-        for paragraph in article['paragraphs']:
-            for qa in paragraph['qas']:
+        for paragraph in article["paragraphs"]:
+            for qa in paragraph["qas"]:
                 total += 1
-                if qa['id'] not in predictions:
-                    message = 'Unanswered question ' + qa['id'] + \
-                              ' will receive score 0.'
+                if qa["id"] not in predictions:
+                    message = "Unanswered question " + qa["id"] + " will receive score 0."
                     print(message, file=sys.stderr)
                     continue
-                ground_truths = list(map(lambda x: x['text'], qa['answers']))
-                prediction = predictions[qa['id']]
+                ground_truths = list(map(lambda x: x["text"], qa["answers"]))
+                prediction = predictions[qa["id"]]
                 exact_match += metric_max_over_ground_truths(
-                    exact_match_score, prediction, ground_truths, lang)
-                f1 += metric_max_over_ground_truths(
-                    f1_score, prediction, ground_truths, lang)
+                    exact_match_score, prediction, ground_truths, lang
+                )
+                f1 += metric_max_over_ground_truths(f1_score, prediction, ground_truths, lang)
 
     exact_match = 100.0 * exact_match / total
     f1 = 100.0 * f1 / total
 
-    return {'exact_match': exact_match, 'f1': f1}
+    return {"exact_match": exact_match, "f1": f1}

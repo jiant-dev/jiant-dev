@@ -482,10 +482,7 @@ class F1TaggingEvaluationScheme(BaseEvaluationScheme):
     @classmethod
     def get_labels(cls, cache, examples):
         labels = [
-            {
-                "pos_list": example.pos_list,
-                "label_mask": datum["data_row"].label_mask,
-            }
+            {"pos_list": example.pos_list, "label_mask": datum["data_row"].label_mask}
             for datum, example in zip(cache.iter_all(), examples)
         ]
         for label in labels:
@@ -500,25 +497,19 @@ class F1TaggingEvaluationScheme(BaseEvaluationScheme):
         logits = accumulator.get_accumulated()
         return np.argmax(logits, axis=-1)
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: ConcatenateLogitsAccumulator,
-                                         tokenizer,
-                                         labels: list) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
+    ) -> Metrics:
         preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
-        return self.compute_metrics_from_preds_and_labels(
-            task=task,
-            preds=preds,
-            labels=labels,
-        )
+        return self.compute_metrics_from_preds_and_labels(task=task, preds=preds, labels=labels,)
 
     @classmethod
     def compute_metrics_from_preds_and_labels(cls, task, preds, labels):
         label_mask = np.stack([row["label_mask"] for row in labels])
 
         # Account for smart-truncate
-        assert (label_mask[:, preds.shape[-1]:] == 0).all()
-        label_mask = label_mask[:, :preds.shape[-1]].astype(bool)
+        assert (label_mask[:, preds.shape[-1] :] == 0).all()
+        label_mask = label_mask[:, : preds.shape[-1]].astype(bool)
 
         labels_for_eval = [label["pos_list"] for label in labels]
         preds_for_eval = []
@@ -531,12 +522,9 @@ class F1TaggingEvaluationScheme(BaseEvaluationScheme):
         minor = {
             "precision": seqeval_metrics.precision_score(labels_for_eval, preds_for_eval),
             "recall": seqeval_metrics.recall_score(labels_for_eval, preds_for_eval),
-            "f1": seqeval_metrics.f1_score(labels_for_eval, preds_for_eval)
+            "f1": seqeval_metrics.f1_score(labels_for_eval, preds_for_eval),
         }
-        return Metrics(
-            major=minor["f1"],
-            minor=minor,
-        )
+        return Metrics(major=minor["f1"], minor=minor,)
 
 
 class SQuADEvaluationScheme(BaseEvaluationScheme):
@@ -577,7 +565,6 @@ class SQuADEvaluationScheme(BaseEvaluationScheme):
 
 
 class XlingQAEvaluationScheme(BaseEvaluationScheme):
-
     @classmethod
     def get_accumulator(cls) -> BaseAccumulator:
         return ConcatenateLogitsAccumulator()
@@ -593,11 +580,9 @@ class XlingQAEvaluationScheme(BaseEvaluationScheme):
     def get_preds_from_accumulator(self, task, accumulator):
         raise NotImplementedError("Currently can't be done without access to dataset")
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: BaseAccumulator,
-                                         tokenizer,
-                                         labels) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: BaseAccumulator, tokenizer, labels
+    ) -> Metrics:
         logits = accumulator.get_accumulated()
         assert isinstance(task, (tasks.TyDiQATask, tasks.XquadTask))
         lang = task.language
@@ -612,10 +597,7 @@ class XlingQAEvaluationScheme(BaseEvaluationScheme):
             skip_get_final_text=(lang == "zh"),
             tokenizer=tokenizer,
         )
-        return Metrics(
-            major=(results["f1"] + results["exact"]) / 2,
-            minor=results,
-        )
+        return Metrics(major=(results["f1"] + results["exact"]) / 2, minor=results,)
 
     @classmethod
     def get_label_from_data_row(cls, data_row):
@@ -623,15 +605,12 @@ class XlingQAEvaluationScheme(BaseEvaluationScheme):
 
 
 class MLQAEvaluationScheme(SQuADEvaluationScheme):
-
     def get_preds_from_accumulator(self, task, accumulator):
         raise NotImplementedError("Too hard for now, too much handled in one giant lib")
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: BaseAccumulator,
-                                         tokenizer,
-                                         labels) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: BaseAccumulator, tokenizer, labels
+    ) -> Metrics:
 
         # Todo: Fix val labels cache
         # This is a quick hack
@@ -653,15 +632,8 @@ class MLQAEvaluationScheme(SQuADEvaluationScheme):
             verbose=True,
         )
         dataset = read_json(task.val_path)["data"]
-        results = mlqa_lib.evaluate(
-            dataset=dataset,
-            predictions=predictions,
-            lang=lang,
-        )
-        return Metrics(
-            major=(results["f1"] + results["exact_match"]) / 2,
-            minor=results,
-        )
+        results = mlqa_lib.evaluate(dataset=dataset, predictions=predictions, lang=lang,)
+        return Metrics(major=(results["f1"] + results["exact_match"]) / 2, minor=results,)
 
 
 class MLMEvaluationScheme(BaseEvaluationScheme):
@@ -734,10 +706,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
         return MultiLabelAccAndF1EvaluationScheme()
     elif isinstance(task, (tasks.SquadTask,)):
         return SQuADEvaluationScheme()
-    elif isinstance(task, (
-                tasks.TyDiQATask,
-                tasks.XquadTask,
-            )):
+    elif isinstance(task, (tasks.TyDiQATask, tasks.XquadTask,)):
         return XlingQAEvaluationScheme()
     elif isinstance(task, tasks.MlqaTask):
         return MLQAEvaluationScheme()
@@ -747,10 +716,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
         return PearsonAndSpearmanEvaluationScheme()
     elif isinstance(task, (tasks.MLMWikitext103Task, tasks.MLMCrosslingualWikiTask)):
         return MLMEvaluationScheme()
-    elif isinstance(task, (
-                tasks.UdposPreprocTask,
-                tasks.PanxPreprocTask,
-            )):
+    elif isinstance(task, (tasks.UdposPreprocTask, tasks.PanxPreprocTask,)):
         return F1TaggingEvaluationScheme()
     else:
         raise KeyError(task)

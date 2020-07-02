@@ -88,16 +88,12 @@ class XnliTask(Task):
 
     def get_val_examples(self):
         return self._create_examples(
-            lines=read_jsonl(self.val_path),
-            set_type="val",
-            language=self.language,
+            lines=read_jsonl(self.val_path), set_type="val", language=self.language,
         )
 
     def get_test_examples(self):
         return self._create_examples(
-            lines=read_jsonl(self.test_path),
-            set_type="test",
-            language=self.language,
+            lines=read_jsonl(self.test_path), set_type="test", language=self.language,
         )
 
     @classmethod
@@ -106,10 +102,12 @@ class XnliTask(Task):
         for line in lines:
             if line["language"] != language:
                 continue
-            examples.append(Example(
-                guid="%s-%s" % (set_type, len(examples)),
-                input_premise=line["sentence1"],
-                input_hypothesis=line["sentence2"],
-                label=line["gold_label"] if set_type != "test" else cls.LABELS[-1],
-            ))
+            examples.append(
+                Example(
+                    guid="%s-%s" % (set_type, len(examples)),
+                    input_premise=line["sentence1"],
+                    input_hypothesis=line["sentence2"],
+                    label=line["gold_label"] if set_type != "test" else cls.LABELS[-1],
+                )
+            )
         return examples

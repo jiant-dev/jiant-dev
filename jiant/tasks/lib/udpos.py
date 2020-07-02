@@ -40,10 +40,7 @@ class Example(BaseExample):
             label_mask += [1] + [0] * padding_length
 
         return TokenizedExample(
-            guid=self.guid,
-            tokens=all_tokenized_tokens,
-            labels=labels,
-            label_mask=label_mask,
+            guid=self.guid, tokens=all_tokenized_tokens, labels=labels, label_mask=label_mask,
         )
 
 
@@ -56,9 +53,7 @@ class TokenizedExample(BaseTokenizedExample):
 
     def featurize(self, tokenizer, feat_spec):
         unpadded_inputs = construct_single_input_tokens_and_segment_ids(
-            input_tokens=self.tokens,
-            tokenizer=tokenizer,
-            feat_spec=feat_spec,
+            input_tokens=self.tokens, tokenizer=tokenizer, feat_spec=feat_spec,
         )
         input_set = create_input_set_from_tokens_and_segments(
             unpadded_tokens=unpadded_inputs.unpadded_tokens,
@@ -76,19 +71,19 @@ class TokenizedExample(BaseTokenizedExample):
             label_suffix = [None]
             mask_suffix = [0]
             special_tokens_count = 2  # CLS, SEP
-        unpadded_labels = [None] + self.labels[:feat_spec.max_seq_length - special_tokens_count] + label_suffix
+        unpadded_labels = (
+            [None] + self.labels[: feat_spec.max_seq_length - special_tokens_count] + label_suffix
+        )
         unpadded_labels = [i if i is not None else -1 for i in unpadded_labels]
-        unpadded_label_mask = [0] + self.label_mask[:feat_spec.max_seq_length - special_tokens_count] + mask_suffix
+        unpadded_label_mask = (
+            [0] + self.label_mask[: feat_spec.max_seq_length - special_tokens_count] + mask_suffix
+        )
 
         padded_labels = pad_single_with_feat_spec(
-            ls=unpadded_labels,
-            feat_spec=feat_spec,
-            pad_idx=-1,
+            ls=unpadded_labels, feat_spec=feat_spec, pad_idx=-1,
         )
         padded_label_mask = pad_single_with_feat_spec(
-            ls=unpadded_label_mask,
-            feat_spec=feat_spec,
-            pad_idx=0,
+            ls=unpadded_label_mask, feat_spec=feat_spec, pad_idx=0,
         )
 
         return DataRow(
@@ -133,8 +128,23 @@ class UdposPreprocTask(Task):
 
     TASK_TYPE = TaskTypes.TAGGING
     LABELS = [
-        'ADJ', 'ADP', 'ADV', 'AUX', 'CCONJ', 'DET', 'INTJ', 'NOUN', 'NUM', 'PART', 'PRON', 'PROPN',
-        'PUNCT', 'SCONJ', 'SYM', 'VERB', 'X'
+        "ADJ",
+        "ADP",
+        "ADV",
+        "AUX",
+        "CCONJ",
+        "DET",
+        "INTJ",
+        "NOUN",
+        "NUM",
+        "PART",
+        "PRON",
+        "PROPN",
+        "PUNCT",
+        "SCONJ",
+        "SYM",
+        "VERB",
+        "X",
     ]
     LABEL_BIMAP = labels_to_bimap(LABELS)
 
@@ -190,17 +200,17 @@ class UdposPreprocTask(Task):
                 idx_ls.append(int(idx_line))
             else:
                 idx = get_all_same(idx_ls)
-                examples.append(Example(
-                    guid="%s-%s" % (set_type, idx),
-                    tokens=curr_token_list,
-                    pos_list=curr_pos_list,
-                ))
+                examples.append(
+                    Example(
+                        guid="%s-%s" % (set_type, idx),
+                        tokens=curr_token_list,
+                        pos_list=curr_pos_list,
+                    )
+                )
                 curr_token_list, curr_pos_list, idx_ls = [], [], []
         if curr_token_list:
             idx = get_all_same(idx_ls)
-            examples.append(Example(
-                guid="%s-%s" % (idx, idx),
-                tokens=curr_token_list,
-                pos_list=curr_pos_list,
-            ))
+            examples.append(
+                Example(guid="%s-%s" % (idx, idx), tokens=curr_token_list, pos_list=curr_pos_list,)
+            )
         return examples

@@ -328,18 +328,12 @@ class BaseSquadStyleTask(Task):
 
     @classmethod
     def read_squad_examples(cls, path, set_type):
-        return generic_read_squad_examples(
-            path=path,
-            set_type=set_type,
-            example_class=cls.Example,
-        )
+        return generic_read_squad_examples(path=path, set_type=set_type, example_class=cls.Example,)
 
 
 def generic_read_squad_examples(
-        path: str,
-        set_type: str,
-        example_class: type = dict,
-        read_title: bool = True):
+    path: str, set_type: str, example_class: type = dict, read_title: bool = True
+):
 
     with open(path, "r", encoding="utf-8") as reader:
         input_data = json.load(reader)["data"]
@@ -385,7 +379,6 @@ def generic_read_squad_examples(
                 )
                 examples.append(example)
     return examples
-
 
 
 @dataclass
