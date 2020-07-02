@@ -580,6 +580,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
             tasks.SrlTask,
             tasks.NerTask,
             tasks.CorefTask,
+            tasks.DprTask,
         ),
     ):
         return MultiLabelAccAndF1EvaluationScheme()
