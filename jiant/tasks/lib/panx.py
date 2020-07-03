@@ -36,7 +36,7 @@ class Example(BaseExample):
             tokenized = tokenizer.tokenize(token)
             all_tokenized_tokens += tokenized
             padding_length = len(tokenized) - 1
-            labels += [PanxPreprocTask.LABEL_BIMAP.a.get(pos, None)] + [None] * padding_length
+            labels += [PanxPreprocTask.LABEL_TO_ID.get(pos, None)] + [None] * padding_length
             label_mask += [1] + [0] * padding_length
 
         return TokenizedExample(
@@ -128,7 +128,7 @@ class PanxPreprocTask(Task):
 
     TASK_TYPE = TaskTypes.TAGGING
     LABELS = ["B-LOC", "B-ORG", "B-PER", "I-LOC", "I-ORG", "I-PER", "O"]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def __init__(self, name, path_dict, language):
         super().__init__(name=name, path_dict=path_dict)

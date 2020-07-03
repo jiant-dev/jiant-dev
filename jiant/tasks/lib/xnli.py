@@ -27,7 +27,7 @@ class Example(BaseExample):
             guid=self.guid,
             input_premise=tokenizer.tokenize(self.input_premise),
             input_hypothesis=tokenizer.tokenize(self.input_hypothesis),
-            label_id=XnliTask.LABEL_BIMAP.a[self.label],
+            label_id=XnliTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -77,7 +77,7 @@ class XnliTask(Task):
 
     TASK_TYPE = TaskTypes.CLASSIFICATION
     LABELS = ["contradiction", "entailment", "neutral"]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def __init__(self, name, path_dict, language):
         super().__init__(name=name, path_dict=path_dict)

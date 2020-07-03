@@ -36,7 +36,7 @@ class Example(BaseExample):
             tokenized = tokenizer.tokenize(token)
             all_tokenized_tokens += tokenized
             padding_length = len(tokenized) - 1
-            labels += [UdposPreprocTask.LABEL_BIMAP.a.get(pos, None)] + [None] * padding_length
+            labels += [UdposPreprocTask.LABEL_TO_ID.a.get(pos, None)] + [None] * padding_length
             label_mask += [1] + [0] * padding_length
 
         return TokenizedExample(
@@ -146,7 +146,7 @@ class UdposPreprocTask(Task):
         "VERB",
         "X",
     ]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def __init__(self, name, path_dict, language):
         super().__init__(name=name, path_dict=path_dict)
