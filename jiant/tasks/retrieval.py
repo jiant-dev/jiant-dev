@@ -2,6 +2,7 @@ import os
 from typing import Optional
 
 from jiant.tasks.lib.abductive_nli import AbductiveNliTask
+from jiant.tasks.lib.acceptability_judgement.definiteness import AcceptabilityDefinitenessTask
 from jiant.tasks.lib.adversarial_nli import AdversarialNliTask
 from jiant.tasks.lib.boolq import BoolQTask
 from jiant.tasks.lib.ccg import CCGTask
@@ -37,6 +38,7 @@ from jiant.utils.python.io import read_json
 
 TASK_DICT = {
     "abductive_nli": AbductiveNliTask,
+    "acceptability_definiteness": AcceptabilityDefinitenessTask,
     "adversarial_nli": AdversarialNliTask,
     "boolq": BoolQTask,
     "cb": CommitmentBankTask,
