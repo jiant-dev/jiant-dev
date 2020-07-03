@@ -22,6 +22,7 @@ from jiant.tasks.lib.qnli import QnliTask
 from jiant.tasks.lib.record import ReCoRDTask
 from jiant.tasks.lib.rte import RteTask
 from jiant.tasks.lib.scitail import SciTailTask
+from jiant.tasks.lib.senteval.tense import SentevalTenseTask
 from jiant.tasks.lib.snli import SnliTask
 from jiant.tasks.lib.socialiqa import SocialIQATask
 from jiant.tasks.lib.spr1 import Spr1Task
@@ -59,6 +60,7 @@ TASK_DICT = {
     "record": ReCoRDTask,
     "rte": RteTask,
     "scitail": SciTailTask,
+    "senteval_tense": SentevalTenseTask,
     "snli": SnliTask,
     "socialiqa": SocialIQATask,
     "spr1": Spr1Task,
