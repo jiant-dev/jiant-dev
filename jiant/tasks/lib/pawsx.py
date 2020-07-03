@@ -27,7 +27,7 @@ class Example(BaseExample):
             guid=self.guid,
             text_a=tokenizer.tokenize(self.text_a),
             text_b=tokenizer.tokenize(self.text_b),
-            label_id=PawsXTask.LABEL_BIMAP.a[self.label],
+            label_id=PawsXTask.LABEL_TO_ID[self.label],
         )
 
 
@@ -77,7 +77,7 @@ class PawsXTask(Task):
 
     TASK_TYPE = TaskTypes.CLASSIFICATION
     LABELS = ["0", "1"]
-    LABEL_BIMAP = labels_to_bimap(LABELS)
+    LABEL_TO_ID, ID_TO_LABEL = labels_to_bimap(LABELS)
 
     def __init__(self, name, path_dict, language):
         super().__init__(name=name, path_dict=path_dict)
