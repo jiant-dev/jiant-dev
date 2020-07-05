@@ -9,6 +9,8 @@ Notes:
 """
 from typing import Iterable, Sequence, Tuple, Union
 
+from sacremoses import MosesDetokenizer
+from sacremoses import MosesTokenizer as SacreMosesTokenizer
 from Levenshtein.StringMatcher import StringMatcher
 from nltk.tokenize.util import string_span_tokenize
 import numpy as np
@@ -207,3 +209,36 @@ class TokenAligner(object):
             raise ValueError("provide a valid (end-exclusive) span.")
         tgt_idxs = self.project_tokens([start, end - 1])
         return min(tgt_idxs), max(tgt_idxs) + 1
+
+
+class MosesTokenizer(object):
+    def __init__(self):
+        super().__init__()
+        self._tokenizer = SacreMosesTokenizer()
+        self._detokenizer = MosesDetokenizer()
+
+    def tokenize(self, sentence):
+        return self._tokenizer.tokenize(sentence)
+
+    def detokenize(self, tokens):
+        """Unescape Moses punctuation tokens.
+
+        Replaces escape sequences like &#91; with the original characters
+        (such as '['), so they better align to the original text.
+        """
+        return [self._detokenizer.unescape_xml(t) for t in tokens]
+
+    def detokenize_ptb(self, tokens):
+        # Not a perfect detokenizer, but a "good-enough" stand in.
+        rep_dict = {
+            "-LSB-": "[",
+            "-RSB-": "]",
+            "-LRB-": "(",
+            "-RRB-": ")",
+            "-LCB-": "{",
+            "-RCB-": "}",
+            "``": '"',
+            "''": '"',
+        }
+        str1 = self._detokenizer.detokenize(replace_list(tokens, rep_dict))
+        return str1
