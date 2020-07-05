@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
 
 from jiant.tasks.core import (
     BaseExample,
@@ -39,8 +39,14 @@ class Example(BaseExample):
             space_tokenization, target_tokenization, tokenizer
         )
         aligner = retokenize.TokenAligner(normed_space_tokenization, normed_target_tokenization)
-        target_span1 = aligner.project_span(self.span1_idx, self.span1_idx + 1)
-        target_span2 = aligner.project_span(self.span2_idx, self.span2_idx + 1)
+        span1_token_count = len(self.span1_text.split())
+        span2_token_count = len(self.span2_text.split())
+        target_span1 = ExclusiveSpan(
+            aligner.project_span(self.span1_idx, self.span1_idx + span1_token_count)
+        )
+        target_span2 = ExclusiveSpan(
+            aligner.project_span(self.span2_idx, self.span2_idx + span2_token_count)
+        )
         return TokenizedExample(
             guid=self.guid,
             tokens=target_tokenization,
@@ -56,8 +62,8 @@ class Example(BaseExample):
 class TokenizedExample(BaseTokenizedExample):
     guid: str
     tokens: List
-    span1_span: Tuple[int, int]
-    span2_span: Tuple[int, int]
+    span1_span: ExclusiveSpan
+    span2_span: ExclusiveSpan
     span1_text: str
     span2_text: str
     label_id: int
