@@ -15,10 +15,13 @@ from jiant.tasks.lib.dpr import DprTask
 from jiant.tasks.lib.hellaswag import HellaSwagTask
 from jiant.tasks.lib.mlm_crosslingual_wiki import MLMCrosslingualWikiTask
 from jiant.tasks.lib.mlm_wikitext_103 import MLMWikitext103Task
+from jiant.tasks.lib.mlqa import MlqaTask
 from jiant.tasks.lib.mnli import MnliTask
 from jiant.tasks.lib.mrpc import MrpcTask
 from jiant.tasks.lib.multirc import MultiRCTask
 from jiant.tasks.lib.ner import NerTask
+from jiant.tasks.lib.panx import PanxPreprocTask
+from jiant.tasks.lib.pawsx import PawsXTask
 from jiant.tasks.lib.qqp import QqpTask
 from jiant.tasks.lib.qnli import QnliTask
 from jiant.tasks.lib.record import ReCoRDTask
@@ -34,9 +37,14 @@ from jiant.tasks.lib.srl import SrlTask
 from jiant.tasks.lib.sst import SstTask
 from jiant.tasks.lib.stsb import StsbTask
 from jiant.tasks.lib.swag import SWAGTask
+from jiant.tasks.lib.tydiqa import TyDiQATask
+from jiant.tasks.lib.udpos import UdposPreprocTask
 from jiant.tasks.lib.wic import WiCTask
 from jiant.tasks.lib.wnli import WnliTask
 from jiant.tasks.lib.wsc import WSCTask
+from jiant.tasks.lib.xnli import XnliTask
+from jiant.tasks.lib.xquad import XquadTask
+
 from jiant.tasks.core import Task
 from jiant.utils.python.io import read_json
 
@@ -56,11 +64,13 @@ TASK_DICT = {
     "hellaswag": HellaSwagTask,
     "mlm_wikitext103": MLMWikitext103Task,
     "mlm_crosslingual_wiki": MLMCrosslingualWikiTask,
-    "mlm": MLMWikitext103Task,
+    "mlqa": MlqaTask,
     "mnli": MnliTask,
     "mrc": MultiRCTask,
     "mrpc": MrpcTask,
     "ner": NerTask,
+    "pawsx": PawsXTask,
+    "panx": PanxPreprocTask,
     "qnli": QnliTask,
     "qqp": QqpTask,
     "record": ReCoRDTask,
@@ -76,9 +86,13 @@ TASK_DICT = {
     "sst": SstTask,
     "stsb": StsbTask,
     "swag": SWAGTask,
+    "tydiqa": TyDiQATask,
+    "udpos": UdposPreprocTask,
     "wic": WiCTask,
     "wnli": WnliTask,
     "wsc": WSCTask,
+    "xnli": XnliTask,
+    "xquad": XquadTask,
 }
 
 
