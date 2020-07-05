@@ -168,7 +168,7 @@ def convert_glue_data(input_base_path, task_data_path, task_name):
         py_io.write_jsonl(
             data=phase_data, path=phase_data_path,
         )
-        paths_dict[phase] = phase_data
+        paths_dict[phase] = phase_data_path
     return paths_dict
 
 
