@@ -16,6 +16,8 @@ from jiant.tasks.lib.mlm_wikitext_103 import MLMWikitext103Task
 from jiant.tasks.lib.mnli import MnliTask
 from jiant.tasks.lib.mrpc import MrpcTask
 from jiant.tasks.lib.multirc import MultiRCTask
+from jiant.tasks.lib.qamr import QAMRTask
+from jiant.tasks.lib.qasrl import QASRLTask
 from jiant.tasks.lib.qqp import QqpTask
 from jiant.tasks.lib.qnli import QnliTask
 from jiant.tasks.lib.record import ReCoRDTask
@@ -52,6 +54,8 @@ TASK_DICT = {
     "mnli": MnliTask,
     "mrc": MultiRCTask,
     "mrpc": MrpcTask,
+    "qamr": QAMRTask,
+    "qasrl": QASRLTask,
     "qnli": QnliTask,
     "qqp": QqpTask,
     "record": ReCoRDTask,
