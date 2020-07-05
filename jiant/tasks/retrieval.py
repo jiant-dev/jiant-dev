@@ -19,10 +19,7 @@ from jiant.tasks.lib.mlqa import MlqaTask
 from jiant.tasks.lib.mnli import MnliTask
 from jiant.tasks.lib.mrpc import MrpcTask
 from jiant.tasks.lib.multirc import MultiRCTask
-<<<<<<< HEAD
-=======
 from jiant.tasks.lib.ner import NerTask
->>>>>>> origin/master
 from jiant.tasks.lib.panx import PanxPreprocTask
 from jiant.tasks.lib.pawsx import PawsXTask
 from jiant.tasks.lib.qqp import QqpTask
