@@ -114,6 +114,15 @@ GLUE_CONVERSION = {
         },
         "dir_name": "WNLI",
     },
+    "glue_diagnostic": {
+        "data": {
+            "val": {
+                "cols": {"premise": 1, "hypothesis": 2},
+                "meta": {"filename": "diagnostic", "skiprows": 1},
+            },
+        },
+        "dir_name": "diagnostic",
+    },
 }
 
 
