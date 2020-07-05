@@ -166,5 +166,8 @@ class Batch(BatchMixin):
 
 
 class AbstractSpanPredicationTask(Task, ABC):
-
+    Example = Example
+    TokenizedExample = TokenizedExample
+    DataRow = DataRow
+    Batch = Batch
     TASK_TYPE = TaskTypes.SPAN_PREDICTION
