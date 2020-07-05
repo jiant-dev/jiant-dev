@@ -116,7 +116,7 @@ GLUE_CONVERSION = {
     },
     "glue_diagnostic": {
         "data": {
-            "val": {
+            "test": {
                 "cols": {"premise": 1, "hypothesis": 2},
                 "meta": {"filename": "diagnostic", "skiprows": 1},
             },
