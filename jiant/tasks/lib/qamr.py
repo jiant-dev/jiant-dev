@@ -44,7 +44,7 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
             # Answer indices are a space-limited list of numbers.
             # We simply take the min/max of the indices
             answer_idxs = list(map(int, row["answer"].split()))
-            ans_token_start, ans_token_end = min(answer_idxs), max(answer_idxs)
+            answer_token_start, answer_token_end = min(answer_idxs), max(answer_idxs)
             passage_ptb_tokens = row["sent"].split()
             passage_space_tokens = moses_tokenizer.detokenize_ptb(passage_ptb_tokens).split()
             passage_space_str = " ".join(passage_space_tokens)
@@ -52,8 +52,8 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
             token_aligner = TokenAligner(source=passage_ptb_tokens, target=passage_space_tokens)
             ptb_token_idx_to_space_char_idx = token_aligner.U.dot(token_aligner.C)
             answer_char_span = (
-                (ptb_token_idx_to_space_char_idx[ans_token_start] > 0).argmax(axis=0),
-                ptb_token_idx_to_space_char_idx[ans_token_end].cumsum(axis=0).argmax(axis=0),
+                (ptb_token_idx_to_space_char_idx[answer_token_start] > 0).argmax(axis=0),
+                ptb_token_idx_to_space_char_idx[answer_token_end].cumsum(axis=0).argmax(axis=0),
             )
 
             examples.append(
