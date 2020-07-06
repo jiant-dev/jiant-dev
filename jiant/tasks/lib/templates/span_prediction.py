@@ -108,7 +108,7 @@ class TokenizedExample(BaseTokenizedExample):
         )
         token_idx_to_char_idx_start = pad_to_max_seq_length(
             ls=[-1] * unpadded_inputs.cls_offset
-            + self.token_idx_to_char_idx_map.argmax(axis=1).tolist(),
+            + (self.token_idx_to_char_idx_map > 0).argmax(axis=1).tolist(),
             max_seq_length=feat_spec.max_seq_length,
             pad_idx=-1,
             pad_right=not feat_spec.pad_on_left,
@@ -121,8 +121,8 @@ class TokenizedExample(BaseTokenizedExample):
             pad_right=not feat_spec.pad_on_left,
         )
         # when there are multiple greatest elements, argmax will return the index of the first one
-        # so, argmax() will return the index of the first 1 in a 0-1 array
-        # and cumsum().argmax() will return the index of the last 1 in a 0-1 array
+        # so, (x > 0).argmax() will return the index of the first non-zero element in an array
+        # and x.cumsum().argmax() will return the index of the last non-zero element in an array
         return DataRow(
             guid=self.guid,
             input_ids=input_set.input_ids,
