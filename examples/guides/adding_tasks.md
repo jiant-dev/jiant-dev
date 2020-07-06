@@ -11,7 +11,7 @@ Adding Senteval’s Tense task will require touching three files:
 
 We’ll talk about these files in the following sections. 
 
-##1. The Task file
+## 1. The Task file
 
 Tasks files have 5 core components:
 
