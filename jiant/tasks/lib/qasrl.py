@@ -1,5 +1,6 @@
 import pandas as pd
 import gzip
+import json
 from dataclasses import dataclass
 
 from jiant.tasks.lib.templates import span_prediction as span_pred_template
@@ -63,7 +64,7 @@ class QASRLTask(span_pred_template.AbstractSpanPredicationTask):
                     for answer in answer_list:
                         for answer_span in answer:
                             answer_token_start = answer_span["span"][0]
-                            answer_token_end = answer_span["span"][1]
+                            answer_token_end = answer_span["span"][1] - 1
 
                             answer_char_span = (
                                 (ptb_token_idx_to_space_char_idx[answer_token_start] > 0).argmax(

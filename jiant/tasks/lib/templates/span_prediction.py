@@ -37,18 +37,24 @@ class Example(BaseExample):
         source_char_idx_to_target_token_idx = token_aligner.C.dot(
             token_aligner.V.T
         )  # maybe make this a function in retokenize?
+        try:
+            answer_token_span = tuple(
+                map(
+                    lambda x: source_char_idx_to_target_token_idx[x].nonzero()[0].item(),
+                    self.answer_char_span,
+                )
+            )
+        except ValueError:
+            import IPython
+
+            IPython.embed()
         return TokenizedExample(
             guid=self.guid,
             passage=passage_tokens,
             question=tokenizer.tokenize(self.question),
             answer_str=self.answer,
             passage_str=self.passage,
-            answer_token_span=tuple(
-                map(
-                    lambda x: source_char_idx_to_target_token_idx[x].nonzero()[1],
-                    self.answer_char_span,
-                )
-            ),
+            answer_token_span=answer_token_span,
             token_idx_to_char_idx_map=source_char_idx_to_target_token_idx.T,
         )
 
@@ -93,7 +99,7 @@ class TokenizedExample(BaseTokenizedExample):
             tokenizer=tokenizer,
             feat_spec=feat_spec,
         )
-        gt_span_idxs = list(map(lambda x: x + unpadded_inputs.cls_offset), self.answer_token_span)
+        gt_span_idxs = list(map(lambda x: x + unpadded_inputs.cls_offset, self.answer_token_span))
         input_set = create_input_set_from_tokens_and_segments(
             unpadded_tokens=unpadded_inputs.unpadded_tokens,
             unpadded_segment_ids=unpadded_inputs.unpadded_segment_ids,
@@ -123,6 +129,11 @@ class TokenizedExample(BaseTokenizedExample):
         # when there are multiple greatest elements, argmax will return the index of the first one
         # so, (x > 0).argmax() will return the index of the first non-zero element in an array
         # and x.cumsum().argmax() will return the index of the last non-zero element in an array
+
+        import IPython
+
+        IPython.embed()
+
         return DataRow(
             guid=self.guid,
             input_ids=input_set.input_ids,
