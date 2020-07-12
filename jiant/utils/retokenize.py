@@ -240,5 +240,9 @@ class MosesTokenizer(object):
             "``": '"',
             "''": '"',
         }
+
+        def replace_list(ls, d):
+            return [d.get(elem, elem) for elem in ls]
+
         str1 = self._detokenizer.detokenize(replace_list(tokens, rep_dict))
         return str1
