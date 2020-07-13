@@ -38,13 +38,16 @@ class Example(BaseExample):
             token_aligner.V.T
         )  # maybe make this a function in retokenize?
         try:
-            answer_token_span = tuple(
-                map(
-                    lambda x: source_char_idx_to_target_token_idx[x].nonzero()[0].item(),
-                    self.answer_char_span,
-                )
+            nonzero_idxs = (
+                source_char_idx_to_target_token_idx[
+                    self.answer_char_span[0] : self.answer_char_span[1] + 1
+                ]
+                .sum(axis=0)
+                .nonzero()[0]
+                .tolist()
             )
-        except ValueError:
+            answer_token_span = (nonzero_idxs[0], nonzero_idxs[-1])
+        except Exception as e:
             import IPython
 
             IPython.embed()
@@ -112,16 +115,22 @@ class TokenizedExample(BaseTokenizedExample):
             pad_idx=0,
             pad_right=not feat_spec.pad_on_left,
         )
+        ls = [-1] * unpadded_inputs.cls_offset + (self.token_idx_to_char_idx_map > 0).argmax(
+            axis=1
+        ).tolist()[: len(passage)]
+        if len(ls) > feat_spec.max_seq_length:
+            import IPython
+
+            IPython.embed()
         token_idx_to_char_idx_start = pad_to_max_seq_length(
-            ls=[-1] * unpadded_inputs.cls_offset
-            + (self.token_idx_to_char_idx_map > 0).argmax(axis=1).tolist(),
+            ls=ls,
             max_seq_length=feat_spec.max_seq_length,
             pad_idx=-1,
             pad_right=not feat_spec.pad_on_left,
         )
         token_idx_to_char_idx_end = pad_to_max_seq_length(
             ls=[-1] * unpadded_inputs.cls_offset
-            + self.token_idx_to_char_idx_map.cumsum(axis=1).argmax(axis=1).tolist(),
+            + self.token_idx_to_char_idx_map.cumsum(axis=1).argmax(axis=1).tolist()[: len(passage)],
             max_seq_length=feat_spec.max_seq_length,
             pad_idx=-1,
             pad_right=not feat_spec.pad_on_left,
@@ -130,21 +139,17 @@ class TokenizedExample(BaseTokenizedExample):
         # so, (x > 0).argmax() will return the index of the first non-zero element in an array
         # and x.cumsum().argmax() will return the index of the last non-zero element in an array
 
-        import IPython
-
-        IPython.embed()
-
         return DataRow(
             guid=self.guid,
-            input_ids=input_set.input_ids,
-            input_mask=input_set.input_mask,
-            segment_ids=input_set.segment_ids,
+            input_ids=np.array(input_set.input_ids),
+            input_mask=np.array(input_set.input_mask),
+            segment_ids=np.array(input_set.segment_ids),
             gt_span_str=self.answer_str,
-            gt_span_idxs=gt_span_idxs,
+            gt_span_idxs=np.array(gt_span_idxs),
             selection_str=self.passage_str,
-            selection_token_mask=pred_span_mask,
-            token_idx_to_char_idx_start=token_idx_to_char_idx_start,
-            token_idx_to_char_idx_end=token_idx_to_char_idx_end,
+            selection_token_mask=np.array(pred_span_mask),
+            token_idx_to_char_idx_start=np.array(token_idx_to_char_idx_start),
+            token_idx_to_char_idx_end=np.array(token_idx_to_char_idx_end),
         )
 
 
@@ -165,15 +170,15 @@ class DataRow(BaseDataRow):
 @dataclass
 class Batch(BatchMixin):
     guid: List[str]
-    input_ids: np.ndarray
-    input_mask: np.ndarray
-    segment_ids: np.ndarray
+    input_ids: torch.LongTensor
+    input_mask: torch.LongTensor
+    segment_ids: torch.LongTensor
     gt_span_str: List[str]
-    gt_span_idxs: np.ndarray
+    gt_span_idxs: torch.LongTensor
     selection_str: List[str]
-    selection_token_mask: np.ndarray
-    token_idx_to_char_idx_start: np.ndarray
-    token_idx_to_char_idx_end: np.ndarray
+    selection_token_mask: torch.LongTensor
+    token_idx_to_char_idx_start: torch.LongTensor
+    token_idx_to_char_idx_end: torch.LongTensor
 
 
 class AbstractSpanPredicationTask(Task, ABC):

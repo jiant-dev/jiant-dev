@@ -807,7 +807,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
     elif isinstance(task, (tasks.MLMWikitext103Task, tasks.MLMCrosslingualWikiTask)):
         return MLMEvaluationScheme()
     elif isinstance(task, (tasks.QAMRTask, tasks.QASRLTask)):
-        return SpanPredictionEvaluationScheme()
+        return SpanPredictionF1andEMScheme()
     elif isinstance(task, (tasks.UdposPreprocTask, tasks.PanxPreprocTask,)):
         return F1TaggingEvaluationScheme()
     else:

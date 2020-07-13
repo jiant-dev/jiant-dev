@@ -64,16 +64,23 @@ class QASRLTask(span_pred_template.AbstractSpanPredicationTask):
                     for answer in answer_list:
                         for answer_span in answer:
                             answer_token_start = answer_span["span"][0]
-                            answer_token_end = answer_span["span"][1] - 1
+                            answer_token_end = answer_span["span"][1]
 
-                            answer_char_span = (
-                                (ptb_token_idx_to_space_char_idx[answer_token_start] > 0).argmax(
-                                    axis=0
-                                ),
-                                ptb_token_idx_to_space_char_idx[answer_token_end]
-                                .cumsum(axis=0)
-                                .argmax(axis=0),
+                            nonzero_idxs = (
+                                ptb_token_idx_to_space_char_idx[
+                                    answer_token_start : answer_token_end + 1
+                                ]
+                                .sum(axis=0)
+                                .nonzero()[0]
+                                .tolist()
                             )
+
+                            try:
+                                answer_char_span = (nonzero_idxs[0], nonzero_idxs[-1])
+                            except Exception:
+                                import IPython
+
+                                IPython.embed()
 
                             examples.append(
                                 span_pred_template.Example(

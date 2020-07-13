@@ -51,14 +51,14 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
 
             token_aligner = TokenAligner(source=passage_ptb_tokens, target=passage_space_tokens)
             ptb_token_idx_to_space_char_idx = token_aligner.U.dot(token_aligner.C)
-            if max(answer_token_start, answer_token_end) >= len(ptb_token_idx_to_space_char_idx):
-                import IPython
 
-                IPython.embed()
-            answer_char_span = (
-                (ptb_token_idx_to_space_char_idx[answer_token_start] > 0).argmax(axis=0),
-                ptb_token_idx_to_space_char_idx[answer_token_end].cumsum(axis=0).argmax(axis=0),
+            nonzero_idxs = (
+                ptb_token_idx_to_space_char_idx[answer_token_start : answer_token_end + 1]
+                .sum(axis=0)
+                .nonzero()[0]
+                .tolist()
             )
+            answer_char_span = (nonzero_idxs[0], nonzero_idxs[-1])
 
             examples.append(
                 span_pred_template.Example(
