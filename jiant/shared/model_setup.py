@@ -104,8 +104,8 @@ class OptimizerScheduler:
                         )
                     self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.mul_(weight)
         # Scheduler updates first
-        self.scheduler.step()
         self.optimizer.step()
+        self.scheduler.step()
 
     def state_dict(self):
         return {
