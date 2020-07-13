@@ -67,7 +67,6 @@ def update_parser(parser, class_with_attributes: Any):
             if not is_positional:
                 if attribute.default is attr.NOTHING:
                     argparse_kwargs = argparse_kwargs.copy()
-                    argparse_kwargs["required"] = True
                 else:
                     argparse_kwargs["default"] = attribute.default
             if is_positional:

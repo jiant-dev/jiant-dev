@@ -14,12 +14,14 @@ from jiant.shared.constants import PHASE
 @zconf.run_config
 class RunConfiguration(zconf.RunConfig):
     # === Required parameters === #
-    task_config_path = zconf.attr(type=str, required=True)
     model_type = zconf.attr(type=str, required=True)
     model_tokenizer_path = zconf.attr(type=str, required=True)
     output_dir = zconf.attr(type=str, required=True)
 
     # === Optional parameters === #
+    # Way to add_mutually_exclusive_group as in zconf?
+    nlp_style_task = zconf.attr(type=str)
+    task_config_path = zconf.attr(type=str)
     phases = zconf.attr(default="train,val", type=str)
     max_seq_length = zconf.attr(default=128, type=int)
     chunk_size = zconf.attr(default=10000, type=int)
@@ -119,7 +121,9 @@ def iter_chunk_and_save(phase, examples, feat_spec, tokenizer, args: RunConfigur
 
 
 def main(args: RunConfiguration):
-    task = tasks.create_task_from_config_path(config_path=args.task_config_path, verbose=True)
+    if not args.nlp_style_task:
+        task = tasks.create_task_from_config_path(config_path=args.task_config_path, verbose=True)
+
     feat_spec = model_resolution.build_featurization_spec(
         model_type=args.model_type, max_seq_length=args.max_seq_length,
     )
@@ -133,11 +137,21 @@ def main(args: RunConfiguration):
     assert set(phases) <= {PHASE.TRAIN, PHASE.VAL, PHASE.TEST}
 
     paths_dict = {}
+    train_examples = []
+    val_examples = []
+    test_examples = []
+
+    if args.nlp_style_task:
+        dataset = nlp.load_dataset(args.nlp_style_task)
 
     if PHASE.TRAIN in phases:
+        if args.nlp_style_task:
+            train_examples = dataset["train"]
+        else:
+            train_examples = task.get_train_examples()
         chunk_and_save(
             phase=PHASE.TRAIN,
-            examples=task.get_train_examples(),
+            examples=train_examples,
             feat_spec=feat_spec,
             tokenizer=tokenizer,
             args=args,
@@ -145,7 +159,10 @@ def main(args: RunConfiguration):
         paths_dict["train"] = os.path.join(args.output_dir, PHASE.TRAIN)
 
     if PHASE.VAL in phases:
-        val_examples = task.get_val_examples()
+        if args.nlp_style_task:
+            val_examples = dataset["validation"]
+        else:
+            val_examples = task.get_val_examples()
         chunk_and_save(
             phase=PHASE.VAL,
             examples=val_examples,
@@ -170,9 +187,14 @@ def main(args: RunConfiguration):
         paths_dict["val_labels"] = os.path.join(args.output_dir, "val_labels")
 
     if PHASE.TEST in phases:
+        if args.nlp_style_task:
+            test_examples = dataset["test"]
+        else:
+            test_examples = task.get_test_examples()
+
         chunk_and_save(
             phase=PHASE.TEST,
-            examples=task.get_test_examples(),
+            examples=test_examples,
             feat_spec=feat_spec,
             tokenizer=tokenizer,
             args=args,
