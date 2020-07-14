@@ -13,13 +13,12 @@ def download_squad_v1_data_and_write_config(task_data_path: str, task_config_pat
         file_path=train_path,
     )
     download_utils.download_file(
-        url="https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json",
-        file_path=val_path,
+        url="https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json", file_path=val_path,
     )
     py_io.write_json(
         data={
             "task": "squad",
-            "paths": {"train_path": train_path, "val": val_path},
+            "paths": {"train": train_path, "val": val_path},
             "version_2_with_negative": False,
             "name": "squad_v1",
         },
@@ -36,13 +35,12 @@ def download_squad_v2_data_and_write_config(task_data_path: str, task_config_pat
         file_path=train_path,
     )
     download_utils.download_file(
-        url="https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v2.0.json",
-        file_path=val_path,
+        url="https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v2.0.json", file_path=val_path,
     )
     py_io.write_json(
         data={
             "task": "squad",
-            "paths": {"train_path": train_path, "val": val_path},
+            "paths": {"train": train_path, "val": val_path},
             "version_2_with_negative": True,
             "name": "squad_v2",
         },

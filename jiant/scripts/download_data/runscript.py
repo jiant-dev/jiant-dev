@@ -23,17 +23,19 @@ def download_data_and_write_config(
     os.makedirs(task_data_base_path, exist_ok=True)
     os.makedirs(task_config_base_path, exist_ok=True)
     if task_name in [
+        # GLUE
         "cola",
         "sst",
         "mrpc",
         "qqp",
         "stsb",
         "mnli",
-        "snli",
+        "mnli_mismatched",
         "qnli",
         "rte",
         "wnli",
         "glue_diagnostics",
+        # SuperGLUE
         "cb",
         "copa",
         "multirc",
@@ -43,6 +45,8 @@ def download_data_and_write_config(
         "record",
         "superglue_broadcoverage_diagnostics",
         "superglue_winogender_diagnostics",
+        # Other
+        "snli",
     ]:
         nlp_tasks_download.download_data_and_write_config(
             task_name=task_name,

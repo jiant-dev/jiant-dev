@@ -5,11 +5,30 @@ import urllib
 import zipfile
 
 import jiant.utils.python.io as py_io
+from jiant.utils.python.datastructures import replace_key
 
 
-def convert_nlp_dataset_to_examples(path, name=None, version=None,
-                                    field_map=None, label_map=None, phase_list=None):
+def convert_nlp_dataset_to_examples(
+    path, name=None, version=None, field_map=None, label_map=None, phase_map=None, phase_list=None
+):
+    """Helper function for reading from nlp.load_dataset and converting to examples
+
+    Args:
+        path: path argument (from nlp.load_dataset)
+        name: name argument (from nlp.load_dataset)
+        version: version argument (from nlp.load_dataset)
+        field_map: dictionary for renaming fields, non-exhaustive
+        label_map: dictionary for replacing labels, non-exhaustive
+        phase_map: dictionary for replacing phase names, non-exhaustive
+        phase_list: phases to keep (after phase_map)
+
+    Returns:
+        Dict[phase] -> list[examples]
+    """
     dataset = nlp.load_dataset(path=path, name=name, version=version)
+    if phase_map:
+        for old_phase_name, new_phase_name in phase_map.items():
+            replace_key(dataset, old_key=old_phase_name, new_key=new_phase_name)
     if phase_list is None:
         phase_list = dataset.keys()
     examples_dict = {}
@@ -18,8 +37,7 @@ def convert_nlp_dataset_to_examples(path, name=None, version=None,
         for raw_example in dataset[phase]:
             if field_map:
                 for old_field_name, new_field_name in field_map.items():
-                    raw_example[new_field_name] = raw_example[old_field_name]
-                    del raw_example[old_field_name]
+                    replace_key(raw_example, old_key=old_field_name, new_key=new_field_name)
             if label_map and "label" in raw_example and raw_example["label"] in label_map:
                 raw_example = label_map[raw_example["label"]]
             phase_examples.append(raw_example)
@@ -35,7 +53,6 @@ def write_examples_to_jsonls(examples_dict, task_data_path):
         py_io.write_jsonl(example_list, jsonl_path)
         paths_dict[phase] = jsonl_path
     return paths_dict
-
 
 
 def download_and_unzip(url, extract_location):
