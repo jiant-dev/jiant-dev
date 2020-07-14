@@ -81,7 +81,7 @@ def get_num_lines(path):
     return i + 1
 
 
-def get_dir(*args):
+def create_dir(*args):
     """Makes a folder and returns the path
 
     Args:

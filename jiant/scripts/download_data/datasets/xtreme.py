@@ -8,7 +8,7 @@ import jiant.utils.python.io as py_io
 
 
 def download_xnli_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
-    xnli_temp_path = py_io.get_dir(task_data_base_path, "xnli_temp")
+    xnli_temp_path = py_io.create_dir(task_data_base_path, "xnli_temp")
     download_utils.download_and_unzip(
         "https://dl.fbaipublicfiles.com/XNLI/XNLI-1.0.zip", xnli_temp_path,
     )
@@ -20,7 +20,7 @@ def download_xnli_data_and_write_config(task_data_base_path: str, task_config_ba
     assert len(languages) == 15
     for lang in languages:
         task_name = f"xnli_{lang}"
-        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        task_data_path = py_io.create_dir(task_data_base_path, task_name)
         val_path = os.path.join(task_data_path, "val.jsonl")
         test_path = os.path.join(task_data_path, "test.jsonl")
         py_io.write_jsonl(data=val_data[lang], path=val_path)
@@ -37,7 +37,7 @@ def download_xnli_data_and_write_config(task_data_base_path: str, task_config_ba
 
 
 def download_pawsx_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
-    pawsx_temp_path = py_io.get_dir(task_data_base_path, "pawsx_temp")
+    pawsx_temp_path = py_io.create_dir(task_data_base_path, "pawsx_temp")
     download_utils.download_and_untar(
         "https://storage.googleapis.com/paws/pawsx/x-final.tar.gz", pawsx_temp_path,
     )
@@ -66,7 +66,7 @@ def download_xquad_data_and_write_config(task_data_base_path: str, task_config_b
     languages = "ar de el en es hi ru th tr vi zh".split()
     for lang in languages:
         task_name = f"xquad_{lang}"
-        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        task_data_path = py_io.create_dir(task_data_base_path, task_name)
         path = os.path.join(task_data_path, "xquad.json")
         download_utils.download_file(
             url=f"https://raw.githubusercontent.com/deepmind/xquad/master/xquad.{lang}.json",
@@ -84,14 +84,14 @@ def download_xquad_data_and_write_config(task_data_base_path: str, task_config_b
 
 
 def download_mlqa_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
-    mlqa_temp_path = py_io.get_dir(task_data_base_path, "mlqa_temp")
+    mlqa_temp_path = py_io.create_dir(task_data_base_path, "mlqa_temp")
     download_utils.download_and_unzip(
         "https://dl.fbaipublicfiles.com/MLQA/MLQA_V1.zip", mlqa_temp_path,
     )
     languages = "ar de en es hi vi zh".split()
     for lang1, lang2 in itertools.product(languages, languages):
         task_name = f"mlqa_{lang1}_{lang2}"
-        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        task_data_path = py_io.create_dir(task_data_base_path, task_name)
         val_path = os.path.join(task_data_path, f"dev-context-{lang1}-question-{lang2}.json")
         os.rename(
             src=os.path.join(
@@ -119,7 +119,7 @@ def download_mlqa_data_and_write_config(task_data_base_path: str, task_config_ba
 
 
 def download_tydiqa_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
-    tydiqa_temp_path = py_io.get_dir(task_data_base_path, "tydiqa_temp")
+    tydiqa_temp_path = py_io.create_dir(task_data_base_path, "tydiqa_temp")
     full_train_path = os.path.join(tydiqa_temp_path, "tydiqa-goldp-v1.1-train.json")
     download_utils.download_file(
         "https://storage.googleapis.com/tydiqa/v1.1/tydiqa-goldp-v1.1-train.json", full_train_path,
@@ -170,7 +170,7 @@ def download_tydiqa_data_and_write_config(task_data_base_path: str, task_config_
 
     for full_lang, lang in languages_dict.items():
         task_name = f"tydiqa_{lang}"
-        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        task_data_path = py_io.create_dir(task_data_base_path, task_name)
         train_path = os.path.join(task_data_path, f"tydiqa.{lang}.train.json")
         py_io.write_json(
             data={"data": data, "version": version}, path=train_path,
@@ -195,7 +195,7 @@ def download_tydiqa_data_and_write_config(task_data_base_path: str, task_config_
 
 
 def download_bucc2018_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
-    bucc2018_temp_path = py_io.get_dir(task_data_base_path, "bucc_temp")
+    bucc2018_temp_path = py_io.create_dir(task_data_base_path, "bucc_temp")
     languages = "de fr ru zh".split()
     for lang in languages:
         download_utils.download_and_untar(
@@ -208,7 +208,7 @@ def download_bucc2018_data_and_write_config(task_data_base_path: str, task_confi
         )
     for lang in languages:
         task_name = f"bucc2018_{lang}"
-        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        task_data_path = py_io.create_dir(task_data_base_path, task_name)
         val_eng_path = os.path.join(task_data_path, f"{lang}-en.dev.en")
         val_other_path = os.path.join(task_data_path, f"{lang}-en.dev.{lang}")
         val_labels_path = os.path.join(task_data_path, f"{lang}-en.dev.gold")
@@ -262,7 +262,7 @@ def download_bucc2018_data_and_write_config(task_data_base_path: str, task_confi
 
 
 def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
-    tatoeba_temp_path = py_io.get_dir(task_data_base_path, "tatoeba_temp")
+    tatoeba_temp_path = py_io.create_dir(task_data_base_path, "tatoeba_temp")
     download_utils.download_and_unzip(
         "https://github.com/facebookresearch/LASER/archive/master.zip", tatoeba_temp_path,
     )
@@ -310,7 +310,7 @@ def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config
         task_name = f"tatoeba_{lang}"
         if lang == "en":
             continue
-        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        task_data_path = py_io.create_dir(task_data_base_path, task_name)
         eng_src = os.path.join(raw_base_path, f"tatoeba.{full_lang}-eng.eng")
         other_src = os.path.join(raw_base_path, f"tatoeba.{full_lang}-eng.{full_lang}")
         eng_out = os.path.join(task_data_path, f"{lang}-en.en")

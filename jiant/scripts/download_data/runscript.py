@@ -2,8 +2,7 @@ import os
 
 import jiant.utils.python.io as py_io
 import jiant.utils.zconf as zconf
-import jiant.scripts.download_data.datasets.glue as glue_download
-import jiant.scripts.download_data.datasets.superglue as superglue_download
+import jiant.scripts.download_data.datasets.glue_superglue as glue_superglue_download
 import jiant.scripts.download_data.datasets.xtreme as xtreme_download
 
 
@@ -34,13 +33,6 @@ def download_data_and_write_config(
         "rte",
         "wnli",
         "glue_diagnostics",
-    ]:
-        glue_download.download_glue_data_and_write_config(
-            task_name=task_name,
-            task_data_base_path=task_data_base_path,
-            task_config_base_path=task_config_base_path,
-        )
-    elif task_name in [
         "cb",
         "copa",
         "multirc",
@@ -52,7 +44,7 @@ def download_data_and_write_config(
         "superglue_winogender_diagnostics",
     ]:
         # Note: RTE handled by GLUE
-        superglue_download.download_superglue_data_and_write_config(
+        glue_superglue_download.download_data_and_write_config(
             task_name=task_name,
             task_data_path=os.path.join(task_data_base_path, task_name),
             task_config_path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
@@ -81,8 +73,8 @@ def download_all_data(output_base_path: str, task_name_ls: list, verbose=True):
     for i, task_name in enumerate(task_name_ls):
         download_data_and_write_config(
             task_name=task_name,
-            task_data_base_path=py_io.get_dir(output_base_path, "data"),
-            task_config_base_path=py_io.get_dir(output_base_path, "configs"),
+            task_data_base_path=py_io.create_dir(output_base_path, "data"),
+            task_config_base_path=py_io.create_dir(output_base_path, "configs"),
         )
         if verbose:
             print(f"Downloaded '{task_name}' ({i}/{len(task_name_ls)})")
