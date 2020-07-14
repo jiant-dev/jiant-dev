@@ -27,9 +27,54 @@ def download_xnli_data_and_write_config(task_data_base_path: str, task_config_ba
         py_io.write_json(
             data={
                 "task": "xnli",
-                "paths": {"val": val_path, "test": test_path,},
+                "paths": {"val": val_path, "test": test_path},
                 "name": task_name,
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
     shutil.rmtree(xnli_temp_path)
+
+
+def download_pawsx_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
+    pawsx_temp_path = py_io.get_dir(task_data_base_path, "pawsx_temp")
+    download_utils.download_and_untar(
+        "https://storage.googleapis.com/paws/pawsx/x-final.tar.gz", pawsx_temp_path,
+    )
+    languages = sorted(os.listdir(os.path.join(pawsx_temp_path, "x-final")))
+    for lang in languages:
+        task_name = f"pawsx_{lang}"
+        os.rename(
+            src=os.path.join(pawsx_temp_path, "x-final", lang),
+            dst=os.path.join(task_data_base_path, task_name),
+        )
+        py_io.write_json(
+            data={
+                "task": "pawsx",
+                "paths": {
+                    "val": os.path.join(task_data_base_path, task_name, "dev_2k.tsv"),
+                    "test": os.path.join(task_data_base_path, task_name, "test_2k.tsv"),
+                },
+                "name": task_name,
+            },
+            path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
+        )
+        assert os.path.exists(os.path.join(task_data_base_path, task_name, "dev_2k.tsv"))
+        assert os.path.exists(os.path.join(task_data_base_path, task_name, "test_2k.tsv"))
+    shutil.rmtree(pawsx_temp_path)
+
+
+def download_xtreme_data_and_write_config(
+    task_name: str, task_data_base_path: str, task_config_base_path: str
+):
+    if task_name == "xnli":
+        download_xnli_data_and_write_config(
+            task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
+        )
+    elif task_name == "pawsx":
+        download_xnli_data_and_write_config(
+            task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
+        )
+    elif task_name in ["udpos", "panx", "xquad", "mlqa", "tydiqa", "bucc2018", "tatoeba"]:
+        raise NotImplementedError(task_name)
+    else:
+        raise KeyError(task_name)

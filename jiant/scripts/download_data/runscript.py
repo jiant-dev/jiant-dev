@@ -4,6 +4,7 @@ import jiant.utils.python.io as py_io
 import jiant.utils.zconf as zconf
 import jiant.scripts.download_data.datasets.glue as glue_download
 import jiant.scripts.download_data.datasets.superglue as superglue_download
+import jiant.scripts.download_data.datasets.xtreme as xtreme_download
 
 
 @zconf.run_config
@@ -53,6 +54,12 @@ def download_data_and_write_config(
             task_name=task_name,
             task_data_path=os.path.join(task_data_base_path, task_name),
             task_config_path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
+        )
+    elif task_name in ["udpos", "panx", "xquad", "mlqa", "tydiqa", "bucc2018", "tatoeba"]:
+        xtreme_download.download_xtreme_data_and_write_config(
+            task_name=task_name,
+            task_data_base_path=task_data_base_path,
+            task_config_base_path=task_config_base_path,
         )
     else:
         raise KeyError(task_name)
