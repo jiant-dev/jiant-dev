@@ -1,7 +1,6 @@
 import os
-import urllib
-import zipfile
 
+import jiant.scripts.download_data.utils as download_utils
 import jiant.utils.python.io as py_io
 
 
@@ -67,11 +66,9 @@ def download_superglue_data(task_name: str, task_data_path: str):
     Returns:
         dictionary to paths of .jsonl SuperGLUE data
     """
-    data_file = os.path.join(task_data_path, f"{task_name}.zip")
-    urllib.request.urlretrieve(SUPERGLUE_METADATA[task_name]["url"], data_file)
-    with zipfile.ZipFile(data_file) as zip_ref:
-        zip_ref.extractall(task_data_path)
-    os.remove(data_file)
+    download_utils.download_and_unzip(
+        url=SUPERGLUE_METADATA[task_name]["url"], extract_location=task_data_path
+    )
     folder_name = SUPERGLUE_METADATA[task_name]["url"].split("/")[-1].replace(".zip", "")
     paths_dict = {}
     for phase, filename in SUPERGLUE_METADATA[task_name]["filenames"].items():

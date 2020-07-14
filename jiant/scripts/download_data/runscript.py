@@ -41,7 +41,6 @@ def download_data_and_write_config(
         "cb",
         "copa",
         "multirc",
-        "rte",
         "wic",
         "wsc",
         "boolq",
@@ -49,6 +48,7 @@ def download_data_and_write_config(
         "superglue_broadcoverage_diagnostics",
         "superglue_winogender_diagnostics",
     ]:
+        # Note: RTE handled by GLUE
         superglue_download.download_superglue_data_and_write_config(
             task_name=task_name,
             task_data_path=os.path.join(task_data_base_path, task_name),

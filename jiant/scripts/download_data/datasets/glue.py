@@ -9,6 +9,7 @@ import shutil
 import urllib.request
 import zipfile
 
+import jiant.scripts.download_data.utils as download_utils
 import jiant.utils.python.io as py_io
 
 
@@ -182,11 +183,9 @@ MRPC_TEST = "https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphras
 
 def download_and_extract(task_name: str, task_data_path: str):
     """Download raw GLUE task data (except MRPC, diagnostic)"""
-    data_file = os.path.join(task_data_path, f"{task_name}.zip")
-    urllib.request.urlretrieve(TASK2PATH[task_name], data_file)
-    with zipfile.ZipFile(data_file) as zip_ref:
-        zip_ref.extractall(task_data_path)
-    os.remove(data_file)
+    download_utils.download_and_unzip(
+        url=TASK2PATH[task_name], extract_location=task_data_path,
+    )
 
 
 def download_mrpc(task_data_path: str):
