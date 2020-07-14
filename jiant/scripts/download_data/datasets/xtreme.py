@@ -56,7 +56,7 @@ def download_pawsx_data_and_write_config(task_data_base_path: str, task_config_b
             paths_dict["train"] = (os.path.join(task_data_base_path, task_name, "train.tsv"),)
             datastructures.set_dict_keys(paths_dict, ["train", "val", "test"])
         py_io.write_json(
-            data={"task": "pawsx", "paths": paths_dict, "name": task_name,},
+            data={"task": "pawsx", "paths": paths_dict, "name": task_name},
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
     shutil.rmtree(pawsx_temp_path)
@@ -195,6 +195,80 @@ def download_tydiqa_data_and_write_config(task_data_base_path: str, task_config_
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
     shutil.rmtree(tydiqa_temp_path)
+
+
+def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
+    tatoeba_temp_path = py_io.get_dir(task_data_base_path, "tatoeba_temp")
+    download_utils.download_and_unzip(
+        "https://github.com/facebookresearch/LASER/archive/master.zip", tatoeba_temp_path,
+    )
+    languages_dict = {
+        "afr": "af",
+        "ara": "ar",
+        "bul": "bg",
+        "ben": "bn",
+        "deu": "de",
+        "ell": "el",
+        "spa": "es",
+        "est": "et",
+        "eus": "eu",
+        "pes": "fa",
+        "fin": "fi",
+        "fra": "fr",
+        "heb": "he",
+        "hin": "hi",
+        "hun": "hu",
+        "ind": "id",
+        "ita": "it",
+        "jpn": "ja",
+        "jav": "jv",
+        "kat": "ka",
+        "kaz": "kk",
+        "kor": "ko",
+        "mal": "ml",
+        "mar": "mr",
+        "nld": "nl",
+        "por": "pt",
+        "rus": "ru",
+        "swh": "sw",
+        "tam": "ta",
+        "tel": "te",
+        "tha": "th",
+        "tgl": "tl",
+        "tur": "tr",
+        "urd": "ur",
+        "vie": "vi",
+        "cmn": "zh",
+        "eng": "en",
+    }
+    raw_base_path = os.path.join(tatoeba_temp_path, "LASER-master", "data", "tatoeba", "v1")
+    for full_lang, lang in languages_dict.items():
+        task_name = f"tatoeba_{lang}"
+        if lang == "en":
+            continue
+        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        eng_src = os.path.join(raw_base_path, f"tatoeba.{full_lang}-eng.eng")
+        other_src = os.path.join(raw_base_path, f"tatoeba.{full_lang}-eng.{full_lang}")
+        eng_out = os.path.join(task_data_path, f"{lang}-en.en")
+        other_out = os.path.join(task_data_path, f"{lang}-en.{lang}")
+        labels_out = os.path.join(task_data_path, f"{lang}-en.labels")
+        tgts = [line.strip() for line in py_io.read_file_lines(eng_src)]
+        os.rename(src=other_src, dst=other_out)
+        idx = range(len(tgts))
+        data = zip(tgts, idx)
+        with open(eng_out, "w") as ftgt, open(labels_out, "w") as flabels:
+            for t, i in sorted(data, key=lambda x: x[0]):
+                ftgt.write(f"{t}\n")
+                flabels.write(f"{i}\n")
+        py_io.write_json(
+            data={
+                "task": "tatoeba",
+                "paths": {"eng": eng_out, "other": other_out, "labels_path": labels_out,},
+                "name": task_name,
+            },
+            path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
+        )
+    shutil.rmtree(tatoeba_temp_path)
 
 
 def download_xtreme_data_and_write_config(
