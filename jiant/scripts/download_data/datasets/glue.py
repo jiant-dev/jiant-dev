@@ -134,7 +134,7 @@ GLUE_CONVERSION = {
         },
         "dir_name": "WNLI",
     },
-    "glue_diagnostic": {
+    "glue_diagnostics": {
         "data": {
             "test": {
                 "cols": {"premise": 1, "hypothesis": 2},
@@ -166,7 +166,7 @@ TASK2PATH = {
     "data%2FRTE.zip?alt=media&token=5efa7e85-a0bb-4f19-8ea2-9e1840f077fb",
     "wnli": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com/o/"
     "data%2FWNLI.zip?alt=media&token=068ad0a0-ded7-4bd7-99a5-5e00222e0faf",
-    "glue_diagnostic": "https://storage.googleapis.com/mtl-sentence-representations.appspot.com/"
+    "glue_diagnostics": "https://storage.googleapis.com/mtl-sentence-representations.appspot.com/"
     "tsvsWithoutLabels%2FAX.tsv?GoogleAccessId=firebase-adminsdk-0khhl@"
     "mtl-sentence-representations.iam.gserviceaccount.com&Expires=2498860800&Signature"
     "=DuQ2CSPt2Yfre0C%2BiISrVYrIFaZH1Lc7hBVZDD4ZyR7fZYOMNOUGpi8QxBmTNOrNPjR3z1cggo7WXFf"
@@ -232,7 +232,7 @@ def download_diagnostic(data_dir: str):
     """Download raw GLUE diagnostic data"""
     os.makedirs(os.path.join(data_dir, "diagnostic"), exist_ok=True)
     data_file = os.path.join(data_dir, "diagnostic", "diagnostic.tsv")
-    urllib.request.urlretrieve(TASK2PATH["glue_diagnostic"], data_file)
+    urllib.request.urlretrieve(TASK2PATH["glue_diagnostics"], data_file)
 
 
 def read_tsv(input_file, quotechar=None, skiprows=None):
@@ -256,7 +256,7 @@ def download_glue_data(task_name: str, task_data_path: str) -> str:
     """
     if task_name == "mrpc":
         download_mrpc(task_data_path)
-    elif task_name == "glue_diagnostic":
+    elif task_name == "glue_diagnostics":
         download_diagnostic(task_data_path)
     else:
         download_and_extract(task_name=task_name, task_data_path=task_data_path)

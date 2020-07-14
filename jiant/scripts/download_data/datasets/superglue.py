@@ -12,13 +12,6 @@ _STANDARD_FILENAMES = {
 }
 
 SUPERGLUE_METADATA = {
-    "superglue_broadcoverage_diagnostics": {
-        "url": "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/AX-b.zip",
-        "filenames": {
-            "test": "AX-B.jsonl",
-        },
-        "jiant_task": "rte",
-    },
     "cb": {
         "url": "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/CB.zip",
         "filenames": _STANDARD_FILENAMES,
@@ -51,11 +44,14 @@ SUPERGLUE_METADATA = {
         "url": "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/ReCoRD.zip",
         "filenames": _STANDARD_FILENAMES,
     },
+    "superglue_broadcoverage_diagnostics": {
+        "url": "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/AX-b.zip",
+        "filenames": {"test": "AX-b.jsonl",},
+        "jiant_task": "rte",
+    },
     "superglue_winogender_diagnostics": {
         "url": "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/AX-g.zip",
-        "filenames": {
-            "test": "AX-g.jsonl",
-        },
+        "filenames": {"test": "AX-g.jsonl",},
         "jiant_task": "wsc",
     },
 }
@@ -81,15 +77,14 @@ def download_superglue_data(task_name: str, task_data_path: str):
     for phase, filename in SUPERGLUE_METADATA[task_name]["filenames"].items():
         path = os.path.join(task_data_path, filename)
         os.rename(
-            src=os.path.join(task_data_path, folder_name, filename),
-            dst=path,
+            src=os.path.join(task_data_path, folder_name, filename), dst=path,
         )
         paths_dict[phase] = path
     os.rmdir(os.path.join(task_data_path, folder_name))
     return paths_dict
 
 
-def download_glue_data_and_write_config(
+def download_superglue_data_and_write_config(
     task_name: str, task_data_path: str, task_config_path: str
 ):
     """Download SuperGLUE data and write config (for one task)
@@ -99,16 +94,13 @@ def download_glue_data_and_write_config(
         task_data_path: Path to write task data into
         task_config_path: Path to write configs into
     """
-    paths_dict = download_superglue_data(
-        task_name=task_name,
-        task_data_path=task_data_path,
-    )
+    os.makedirs(task_data_path, exist_ok=True)
+    paths_dict = download_superglue_data(task_name=task_name, task_data_path=task_data_path,)
     task_config = {
         "task": SUPERGLUE_METADATA[task_name].get("jiant_task", task_name),
         "paths": paths_dict,
         "name": task_name,
     }
     py_io.write_json(
-        data=task_config,
-        path=task_config_path,
+        data=task_config, path=task_config_path,
     )

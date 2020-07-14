@@ -1,6 +1,9 @@
+import os
+
 import jiant.utils.python.io as py_io
 import jiant.utils.zconf as zconf
-from jiant.scripts.download_data.datasets.glue import download_glue_data_and_write_config
+import jiant.scripts.download_data.datasets.glue as glue_download
+import jiant.scripts.download_data.datasets.superglue as superglue_download
 
 
 @zconf.run_config
@@ -27,12 +30,29 @@ def download_data_and_write_config(
         "qnli",
         "rte",
         "wnli",
-        "glue_diagnostic",
+        "glue_diagnostics",
     ]:
-        download_glue_data_and_write_config(
+        glue_download.download_glue_data_and_write_config(
             task_name=task_name,
             task_data_base_path=task_data_base_path,
             task_config_base_path=task_config_base_path,
+        )
+    elif task_name in [
+        "cb",
+        "copa",
+        "multirc",
+        "rte",
+        "wic",
+        "wsc",
+        "boolq",
+        "record",
+        "superglue_broadcoverage_diagnostics",
+        "superglue_winogender_diagnostics",
+    ]:
+        superglue_download.download_superglue_data_and_write_config(
+            task_name=task_name,
+            task_data_path=os.path.join(task_data_base_path, task_name),
+            task_config_path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
     else:
         raise KeyError(task_name)
