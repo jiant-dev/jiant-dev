@@ -45,12 +45,12 @@ SUPERGLUE_METADATA = {
     },
     "superglue_broadcoverage_diagnostics": {
         "url": "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/AX-b.zip",
-        "filenames": {"test": "AX-b.jsonl",},
+        "filenames": {"test": "AX-b.jsonl"},
         "jiant_task": "rte",
     },
     "superglue_winogender_diagnostics": {
         "url": "https://dl.fbaipublicfiles.com/glue/superglue/data/v2/AX-g.zip",
-        "filenames": {"test": "AX-g.jsonl",},
+        "filenames": {"test": "AX-g.jsonl"},
         "jiant_task": "wsc",
     },
 }

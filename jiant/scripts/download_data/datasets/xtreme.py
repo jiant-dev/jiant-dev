@@ -256,7 +256,7 @@ def download_bucc2018_data_and_write_config(task_data_base_path: str, task_confi
                         "other": val_other_path,
                         "labels": val_labels_path,
                     },
-                    "test": {"eng": test_eng_path, "other": test_other_path,},
+                    "test": {"eng": test_eng_path, "other": test_other_path},
                 },
                 "name": task_name,
             },
@@ -346,10 +346,30 @@ def download_xtreme_data_and_write_config(
             task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
         )
     elif task_name == "pawsx":
-        download_xnli_data_and_write_config(
+        download_pawsx_data_and_write_config(
             task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
         )
-    elif task_name in ["udpos", "panx", "xquad", "mlqa", "tydiqa", "bucc2018", "tatoeba"]:
+    elif task_name == "xquad":
+        download_xquad_data_and_write_config(
+            task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
+        )
+    elif task_name == "mlqa":
+        download_mlqa_data_and_write_config(
+            task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
+        )
+    elif task_name == "tydiqa":
+        download_tydiqa_data_and_write_config(
+            task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
+        )
+    elif task_name == "bucc2018":
+        download_bucc2018_data_and_write_config(
+            task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
+        )
+    elif task_name == "tatoeba":
+        download_tatoeba_data_and_write_config(
+            task_data_base_path=task_data_base_path, task_config_base_path=task_config_base_path,
+        )
+    elif task_name in ["udpos", "panx"]:
         raise NotImplementedError(task_name)
     else:
         raise KeyError(task_name)
