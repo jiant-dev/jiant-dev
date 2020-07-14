@@ -47,13 +47,15 @@ def download_pawsx_data_and_write_config(task_data_base_path: str, task_config_b
             src=os.path.join(pawsx_temp_path, "x-final", lang),
             dst=os.path.join(task_data_base_path, task_name),
         )
+
+        paths_dict = {
+            "val": os.path.join(task_data_base_path, task_name, "dev_2k.tsv"),
+            "test": os.path.join(task_data_base_path, task_name, "test_2k.tsv"),
+        }
         py_io.write_json(
             data={
                 "task": "pawsx",
-                "paths": {
-                    "val": os.path.join(task_data_base_path, task_name, "dev_2k.tsv"),
-                    "test": os.path.join(task_data_base_path, task_name, "test_2k.tsv"),
-                },
+                "paths": paths_dict,
                 "name": task_name,
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),

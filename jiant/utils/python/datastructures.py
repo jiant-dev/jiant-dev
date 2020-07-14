@@ -105,6 +105,12 @@ def sort_dict(d: dict):
     return {k: d[k] for k in sorted(list(d.keys()))}
 
 
+def set_dict_keys(d, key_list):
+    """Return a new dictionary with specified key order"""
+    assert set(d) == set(key_list)
+    return {k: d[k] for k in key_list}
+
+
 def partition_list(ls, n, strict=False):
     length = len(ls)
     if strict:
