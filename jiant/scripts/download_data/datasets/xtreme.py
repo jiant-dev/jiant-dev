@@ -197,6 +197,73 @@ def download_tydiqa_data_and_write_config(task_data_base_path: str, task_config_
     shutil.rmtree(tydiqa_temp_path)
 
 
+def download_bucc2018_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
+    bucc2018_temp_path = py_io.get_dir(task_data_base_path, "bucc_temp")
+    languages = "de fr ru zh".split()
+    for lang in languages:
+        download_utils.download_and_untar(
+            f"https://comparable.limsi.fr/bucc2018/bucc2018-{lang}-en.training-gold.tar.bz2",
+            bucc2018_temp_path,
+        )
+        download_utils.download_and_untar(
+            f"https://comparable.limsi.fr/bucc2018/bucc2018-{lang}-en.sample-gold.tar.bz2",
+            bucc2018_temp_path,
+        )
+    for lang in languages:
+        task_name = f"bucc2018_{lang}"
+        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        val_eng_path = os.path.join(task_data_path, f"{lang}-en.dev.en")
+        val_other_path = os.path.join(task_data_path, f"{lang}-en.dev.{lang}")
+        val_labels_path = os.path.join(task_data_path, f"{lang}-en.dev.gold")
+        test_eng_path = os.path.join(task_data_path, f"{lang}-en.test.en")
+        test_other_path = os.path.join(task_data_path, f"{lang}-en.test.{lang}")
+        # sample -> dev
+        # training -> test (yup, it's weird)
+        os.rename(
+            src=os.path.join(bucc2018_temp_path, "bucc2018", f"{lang}-en", f"{lang}-en.sample.en"),
+            dst=val_eng_path,
+        )
+        os.rename(
+            src=os.path.join(
+                bucc2018_temp_path, "bucc2018", f"{lang}-en", f"{lang}-en.sample.{lang}"
+            ),
+            dst=val_other_path,
+        )
+        os.rename(
+            src=os.path.join(
+                bucc2018_temp_path, "bucc2018", f"{lang}-en", f"{lang}-en.sample.gold"
+            ),
+            dst=val_labels_path,
+        )
+        os.rename(
+            src=os.path.join(
+                bucc2018_temp_path, "bucc2018", f"{lang}-en", f"{lang}-en.training.en"
+            ),
+            dst=test_eng_path,
+        )
+        os.rename(
+            src=os.path.join(
+                bucc2018_temp_path, "bucc2018", f"{lang}-en", f"{lang}-en.training.{lang}"
+            ),
+            dst=test_other_path,
+        )
+        py_io.write_json(
+            data={
+                "task": "tatoeba",
+                "paths": {
+                    "val": {
+                        "eng": val_eng_path,
+                        "other": val_other_path,
+                        "labels": val_labels_path,
+                    },
+                    "test": {"eng": test_eng_path, "other": test_other_path,},
+                },
+                "name": task_name,
+            },
+            path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
+        )
+
+
 def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
     tatoeba_temp_path = py_io.get_dir(task_data_base_path, "tatoeba_temp")
     download_utils.download_and_unzip(
@@ -263,7 +330,7 @@ def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config
         py_io.write_json(
             data={
                 "task": "tatoeba",
-                "paths": {"eng": eng_out, "other": other_out, "labels_path": labels_out,},
+                "paths": {"eng": eng_out, "other": other_out, "labels_path": labels_out},
                 "name": task_name,
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
