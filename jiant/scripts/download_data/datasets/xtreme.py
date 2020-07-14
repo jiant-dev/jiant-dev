@@ -69,7 +69,7 @@ def download_xquad_data_and_write_config(task_data_base_path: str, task_config_b
         task_data_path = py_io.get_dir(task_data_base_path, task_name)
         path = os.path.join(task_data_path, "xquad.json")
         download_utils.download_file(
-            url="https://raw.githubusercontent.com/deepmind/xquad/master/xquad.${lang}.json",
+            url=f"https://raw.githubusercontent.com/deepmind/xquad/master/xquad.{lang}.json",
             file_path=path,
         )
         py_io.write_json(
@@ -85,24 +85,21 @@ def download_xquad_data_and_write_config(task_data_base_path: str, task_config_b
 
 def download_mlqa_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
     mlqa_temp_path = py_io.get_dir(task_data_base_path, "mlqa_temp")
-    download_utils.download_and_untar(
+    download_utils.download_and_unzip(
         "https://dl.fbaipublicfiles.com/MLQA/MLQA_V1.zip", mlqa_temp_path,
     )
     languages = "ar de en es hi vi zh".split()
     for lang1, lang2 in itertools.product(languages, languages):
         task_name = f"mlqa_{lang1}_{lang2}"
-        val_path = os.path.join(
-            task_data_base_path, task_name, f"dev-context-{lang1}-question-{lang2}.json"
-        )
+        task_data_path = py_io.get_dir(task_data_base_path, task_name)
+        val_path = os.path.join(task_data_path, f"dev-context-{lang1}-question-{lang2}.json")
         os.rename(
             src=os.path.join(
                 mlqa_temp_path, "MLQA_V1", "dev", f"dev-context-{lang1}-question-{lang2}.json"
             ),
             dst=val_path,
         )
-        test_path = os.path.join(
-            task_data_base_path, task_name, f"test-context-{lang1}-question-{lang2}.json"
-        )
+        test_path = os.path.join(task_data_path, f"test-context-{lang1}-question-{lang2}.json")
         os.rename(
             src=os.path.join(
                 mlqa_temp_path, "MLQA_V1", "test", f"test-context-{lang1}-question-{lang2}.json"

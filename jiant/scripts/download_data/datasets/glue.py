@@ -146,25 +146,25 @@ GLUE_CONVERSION = {
 
 TASK2PATH = {
     "cola": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-            "/o/data%2FCoLA.zip?alt=media&token=46d5e637-3411-4188-bc44-5809b5bfb5f4",
+    "/o/data%2FCoLA.zip?alt=media&token=46d5e637-3411-4188-bc44-5809b5bfb5f4",
     "sst": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-           "/o/data%2FSST-2.zip?alt=media&token=aabc5f6b-e466-44a2-b9b4-cf6337f84ac8",
+    "/o/data%2FSST-2.zip?alt=media&token=aabc5f6b-e466-44a2-b9b4-cf6337f84ac8",
     "mrpc": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-            "/o/data%2Fmrpc_dev_ids.tsv?alt=media&token=ec5c0836-31d5-48f4-b431-7480817f1adc",
+    "/o/data%2Fmrpc_dev_ids.tsv?alt=media&token=ec5c0836-31d5-48f4-b431-7480817f1adc",
     "qqp": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-           "/o/data%2FQQP.zip?alt=media&token=700c6acf-160d-4d89-81d1-de4191d02cb5",
+    "/o/data%2FQQP.zip?alt=media&token=700c6acf-160d-4d89-81d1-de4191d02cb5",
     "stsb": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-            "/o/data%2FSTS-B.zip?alt=media&token=bddb94a7-8706-4e0d-a694-1109e12273b5",
+    "/o/data%2FSTS-B.zip?alt=media&token=bddb94a7-8706-4e0d-a694-1109e12273b5",
     "mnli": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-            "/o/data%2FMNLI.zip?alt=media&token=50329ea1-e339-40e2-809c-10c40afff3ce",
+    "/o/data%2FMNLI.zip?alt=media&token=50329ea1-e339-40e2-809c-10c40afff3ce",
     "snli": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-            "/o/data%2FSNLI.zip?alt=media&token=4afcfbb2-ff0c-4b2d-a09a-dbf07926f4df",
+    "/o/data%2FSNLI.zip?alt=media&token=4afcfbb2-ff0c-4b2d-a09a-dbf07926f4df",
     "qnli": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-            "/o/data%2FQNLIv2.zip?alt=media&token=6fdcf570-0fc5-4631-8456-9505272d1601",
+    "/o/data%2FQNLIv2.zip?alt=media&token=6fdcf570-0fc5-4631-8456-9505272d1601",
     "rte": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-           "/o/data%2FRTE.zip?alt=media&token=5efa7e85-a0bb-4f19-8ea2-9e1840f077fb",
+    "/o/data%2FRTE.zip?alt=media&token=5efa7e85-a0bb-4f19-8ea2-9e1840f077fb",
     "wnli": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com"
-            "/o/data%2FWNLI.zip?alt=media&token=068ad0a0-ded7-4bd7-99a5-5e00222e0faf",
+    "/o/data%2FWNLI.zip?alt=media&token=068ad0a0-ded7-4bd7-99a5-5e00222e0faf",
     "glue_diagnostics": "https://storage.googleapis.com/mtl-sentence-representations.appspot.com/"
     "tsvsWithoutLabels%2FAX.tsv?GoogleAccessId=firebase-adminsdk-0khhl@"
     "mtl-sentence-representations.iam.gserviceaccount.com&Expires=2498860800&Signature"

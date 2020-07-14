@@ -20,6 +20,8 @@ class RunConfiguration(zconf.RunConfig):
 def download_data_and_write_config(
     task_name: str, task_data_base_path: str, task_config_base_path: str
 ):
+    os.makedirs(task_data_base_path, exist_ok=True)
+    os.makedirs(task_config_base_path, exist_ok=True)
     if task_name in [
         "cola",
         "sst",
@@ -55,7 +57,17 @@ def download_data_and_write_config(
             task_data_path=os.path.join(task_data_base_path, task_name),
             task_config_path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
-    elif task_name in ["udpos", "panx", "xquad", "mlqa", "tydiqa", "bucc2018", "tatoeba"]:
+    elif task_name in [
+        "xnli",
+        "pawsx",
+        "udpos",
+        "panx",
+        "xquad",
+        "mlqa",
+        "tydiqa",
+        "bucc2018",
+        "tatoeba",
+    ]:
         xtreme_download.download_xtreme_data_and_write_config(
             task_name=task_name,
             task_data_base_path=task_data_base_path,
@@ -65,17 +77,19 @@ def download_data_and_write_config(
         raise KeyError(task_name)
 
 
-def download_all_data(output_base_path: str, task_name_ls: list):
-    for task_name in task_name_ls:
+def download_all_data(output_base_path: str, task_name_ls: list, verbose=True):
+    for i, task_name in enumerate(task_name_ls):
         download_data_and_write_config(
             task_name=task_name,
             task_data_base_path=py_io.get_dir(output_base_path, "data"),
             task_config_base_path=py_io.get_dir(output_base_path, "configs"),
         )
+        if verbose:
+            print(f"Downloaded '{task_name}' ({i}/{len(task_name_ls)})")
 
 
 def main():
     args = RunConfiguration.default_run_cli()
     download_all_data(
-        output_base_path=args.output_base_path, task_name_ls=args.task_name_ls,
+        output_base_path=args.output_base_path, task_name_ls=args.task_name_ls, verbose=True,
     )
