@@ -2,8 +2,9 @@ import os
 
 import jiant.utils.python.io as py_io
 import jiant.utils.zconf as zconf
-import jiant.scripts.download_data.datasets.glue_superglue as glue_superglue_download
+import jiant.scripts.download_data.datasets.nlp_tasks as nlp_tasks_download
 import jiant.scripts.download_data.datasets.xtreme as xtreme_download
+import jiant.scripts.download_data.datasets.files_tasks as files_tasks_download
 
 
 @zconf.run_config
@@ -43,8 +44,7 @@ def download_data_and_write_config(
         "superglue_broadcoverage_diagnostics",
         "superglue_winogender_diagnostics",
     ]:
-        # Note: RTE handled by GLUE
-        glue_superglue_download.download_data_and_write_config(
+        nlp_tasks_download.download_data_and_write_config(
             task_name=task_name,
             task_data_path=os.path.join(task_data_base_path, task_name),
             task_config_path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
@@ -64,6 +64,16 @@ def download_data_and_write_config(
             task_name=task_name,
             task_data_base_path=task_data_base_path,
             task_config_base_path=task_config_base_path,
+        )
+    elif task_name == "squad_v1":
+        files_tasks_download.download_squad_v1_data_and_write_config(
+            task_data_path=os.path.join(task_data_base_path, task_name),
+            task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),
+        )
+    elif task_name == "squad_v2":
+        files_tasks_download.download_squad_v2_data_and_write_config(
+            task_data_path=os.path.join(task_data_base_path, task_name),
+            task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),
         )
     else:
         raise KeyError(task_name)

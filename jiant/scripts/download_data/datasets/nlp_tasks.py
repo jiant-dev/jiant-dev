@@ -1,3 +1,5 @@
+"""Use this from tasks that can be obtained from NLP without further/special processing"""
+
 import jiant.scripts.download_data.utils as download_utils
 import jiant.utils.python.io as py_io
 from jiant.utils.python.strings import replace_prefix
@@ -113,9 +115,13 @@ NLP_CONVERSION_DICT = {
     "superglue_winogender_diagnostics": {
         "path": "super_glue",
         "name": "axg",
-        "field_map": {"sentence1": "premise", "sentence2": "hypothesis"},
         "label_map": {0: "entailment", 1: "not_entailment"},
         "jiant_task_name": "rte",
+    },
+    # === Other === #
+    "snli": {
+        "path": "snli",
+        "label_map": {0: "contradiction", 1: "entailment", 2: "neutral"},
     },
 }
 
@@ -132,7 +138,7 @@ def download_data_and_write_config(
         phase_list=nlp_conversion_metadata.get("phase_list"),
     )
     for phase in list(examples_dict):
-        if phase.startwith("validation_"):
+        if phase.startswith("validation_"):
             examples_dict[replace_prefix(phase, "validation_", "val_")] = examples_dict[phase]
             del examples_dict[phase]
     paths_dict = download_utils.write_examples_to_jsonls(

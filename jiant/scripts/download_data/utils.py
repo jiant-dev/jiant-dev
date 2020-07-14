@@ -23,6 +23,7 @@ def convert_nlp_dataset_to_examples(path, name=None, version=None,
             if label_map and "label" in raw_example and raw_example["label"] in label_map:
                 raw_example = label_map[raw_example["label"]]
             phase_examples.append(raw_example)
+        examples_dict[phase] = phase_examples
     return examples_dict
 
 
