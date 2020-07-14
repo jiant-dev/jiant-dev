@@ -182,7 +182,7 @@ MRPC_TEST = "https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphras
 
 def download_and_extract(task_name: str, task_data_path: str):
     """Download raw GLUE task data (except MRPC, diagnostic)"""
-    data_file = "%s.zip" % task_name
+    data_file = os.path.join(task_data_path, f"{task_name}.zip")
     urllib.request.urlretrieve(TASK2PATH[task_name], data_file)
     with zipfile.ZipFile(data_file) as zip_ref:
         zip_ref.extractall(task_data_path)
@@ -229,7 +229,7 @@ def download_mrpc(task_data_path: str):
 
 
 def download_diagnostic(data_dir: str):
-    """Download raw glue diagnostic data"""
+    """Download raw GLUE diagnostic data"""
     os.makedirs(os.path.join(data_dir, "diagnostic"), exist_ok=True)
     data_file = os.path.join(data_dir, "diagnostic", "diagnostic.tsv")
     urllib.request.urlretrieve(TASK2PATH["glue_diagnostic"], data_file)
@@ -245,7 +245,7 @@ def read_tsv(input_file, quotechar=None, skiprows=None):
 
 
 def download_glue_data(task_name: str, task_data_path: str) -> str:
-    """Download raw glue data
+    """Download raw GLUE data
 
     Args:
         task_name: Task name
@@ -267,10 +267,11 @@ def get_full_examples(task_name: str, raw_task_data_path: str) -> dict:
     """Get examples from raw task data
 
     Args:
-        task_name: glue task name
+        task_name: GLUE task name
         raw_task_data_path: directory containing raw data
 
-    Returns: Dict of list of examples (dicts)
+    Returns:
+        Dict of list of examples (dicts)
     """
     task_metadata = GLUE_CONVERSION[task_name]
     all_examples = {}
@@ -297,15 +298,15 @@ def get_full_examples(task_name: str, raw_task_data_path: str) -> dict:
 def convert_glue_data_to_jsonl(
     raw_task_data_path: str, task_data_path: str, task_name: str
 ) -> dict:
-    """Convert raw glue data to jsonl for one task
+    """Convert raw GLUE data to jsonl for one task
 
     Args:
-        raw_task_data_path: Path to raw glue data directory
-        task_data_path: Path to write .jsonl glue data
+        raw_task_data_path: Path to raw GLUE data directory
+        task_data_path: Path to write .jsonl GLUE data
         task_name: task name
 
     Returns:
-        dictionary to paths of .jsonl glue data
+        dictionary to paths of .jsonl GLUE data
     """
     os.makedirs(task_data_path, exist_ok=True)
     task_all_examples = get_full_examples(
@@ -363,6 +364,11 @@ def download_glue_data_and_write_config(
                 "name": "mnli_mismatched",
             },
             path=os.path.join(task_config_base_path, f"mnli_mismatched_config.json"),
+        )
+    elif task_name == "glue_diagnostics":
+        py_io.write_json(
+            data={"task": "mnli", "paths": paths_dict, "name": task_name},
+            path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
     else:
         py_io.write_json(
