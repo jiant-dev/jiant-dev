@@ -110,7 +110,7 @@ class JiantRunner:
             )
             loss_val += loss.item()
 
-        self.optimizer_scheduler.step(task_name)
+        optimizer_info = self.optimizer_scheduler.step(task_name)
         self.optimizer_scheduler.optimizer.zero_grad()
 
         train_state.step(task_name=task_name)
@@ -121,6 +121,7 @@ class JiantRunner:
                 "task_step": train_state.task_steps[task_name],
                 "global_step": train_state.global_steps,
                 "loss_val": loss_val / task_specific_config.gradient_accumulation_steps,
+                "gradient_weight": optimizer_info["gradient_weight"]
             },
         )
 

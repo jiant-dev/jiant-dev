@@ -44,38 +44,40 @@ class OptimizerScheduler:
         super().__init__()
         self.optimizer = optimizer
         self.scheduler = scheduler
-        self.main_grad = [
+        self.target = [
             [torch.zeros_like(p.data) for p in p_group["params"]] if p_group["shared"] else []
             for p_group in optimizer.param_groups
         ]
         self.global_sim = args.global_sim
-        self.main_grad_momentum = args.main_grad_momentum
+        self.target_momentum = args.target_momentum
         self.source_task = args.source_task
         self.target_task = args.target_task
+        self.source_amplifier = args.source_amplifier
 
     def step(self, task=""):
+        optimizer_info= {"gradient_weight": []}
         if task == self.target_task:
-            for p_group_idx, _ in enumerate(self.main_grad):
-                for p_idx, _ in enumerate(self.main_grad[p_group_idx]):
-                    self.main_grad[p_group_idx][p_idx].mul_(self.main_grad_momentum).add_(
+            for p_group_idx, _ in enumerate(self.target):
+                for p_idx, _ in enumerate(self.target[p_group_idx]):
+                    self.target[p_group_idx][p_idx].mul_(self.target_momentum).add_(
                         self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.data,
-                        alpha=1.0 - self.main_grad_momentum,
+                        alpha=1.0 - self.target_momentum,
                     )
         elif task == self.source_task:
             grad_sim = []
-            main_grad_norm = []
+            target_norm = []
             grad_norm = []
-            for p_group_idx, _ in enumerate(self.main_grad):
+            for p_group_idx, _ in enumerate(self.target):
                 grad_sim.append([])
-                for p_idx, _ in enumerate(self.main_grad[p_group_idx]):
+                for p_idx, _ in enumerate(self.target[p_group_idx]):
                     grad_sim[-1].append(
                         (
-                            self.main_grad[p_group_idx][p_idx]
+                            self.target[p_group_idx][p_idx]
                             * self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.data
                         ).sum()
                     )
                     if self.global_sim:
-                        main_grad_norm.append((self.main_grad[p_group_idx][p_idx] ** 2).sum())
+                        target_norm.append((self.target[p_group_idx][p_idx] ** 2).sum())
                         grad_norm.append(
                             (
                                 self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.data
@@ -85,10 +87,12 @@ class OptimizerScheduler:
             if self.global_sim:
                 global_weight = torch.relu(
                     sum([prod for ls in grad_sim for prod in ls])
-                    / (sum(main_grad_norm).sqrt() * sum(grad_norm).sqrt() + 1e-8)
-                ).sqrt()
-            for p_group_idx, _ in enumerate(self.main_grad):
-                for p_idx, _ in enumerate(self.main_grad[p_group_idx]):
+                    / (sum(target_norm).sqrt() * sum(grad_norm).sqrt() + 1e-8)
+                ).pow(1 / self.source_amplifier)
+                optimizer_info["gradient_weight"].append(global_weight.cpu().item())
+                
+            for p_group_idx, _ in enumerate(self.target):
+                for p_idx, _ in enumerate(self.target[p_group_idx]):
                     if self.global_sim:
                         weight = global_weight
                     else:
@@ -98,14 +102,16 @@ class OptimizerScheduler:
                                 self.optimizer.param_groups[p_group_idx]["params"][
                                     p_idx
                                 ].grad.data.norm()
-                                * self.main_grad[p_group_idx][p_idx].norm()
+                                * self.target[p_group_idx][p_idx].norm()
                                 + 1e-8
                             )
-                        )
+                        ).pow(1 / self.source_amplifier)
+                        optimizer_info["gradient_weight"].append(weight.cpu().item())
                     self.optimizer.param_groups[p_group_idx]["params"][p_idx].grad.mul_(weight)
         # Scheduler updates first
         self.optimizer.step()
         self.scheduler.step()
+        return optimizer_info
 
     def state_dict(self):
         return {
@@ -188,7 +194,7 @@ def create_optimizer_from_params(
                 for n, p in used_named_parameters
                 if (not n.startswith("encoder.e")) and (not any(nd in n for nd in no_decay))
             ],
-            "weight_decay": 0.01,
+            "weight_decay": 0.005,
             "shared": False,
         },
         {

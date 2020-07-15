@@ -58,9 +58,10 @@ class RunConfiguration(zconf.RunConfig):
 
     # Experimental
     global_sim = zconf.attr(action="store_true")
-    main_grad_momentum = zconf.attr(default=0.99, type=float)
+    target_momentum = zconf.attr(default=0.99, type=float)
     source_task = zconf.attr(type=str)
     target_task = zconf.attr(type=str)
+    source_amplifier = zconf.attr(default=1, type=float)
 
 
 @zconf.run_config
