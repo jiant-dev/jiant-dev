@@ -8,7 +8,7 @@ import jiant.scripts.download_data.datasets.files_tasks as files_tasks_download
 from jiant.tasks.constants import GLUE_TASKS, SUPERGLUE_TASKS, XTREME_TASKS, BENCHMARKS
 
 NLP_DOWNLOADER_TASKS = GLUE_TASKS | SUPERGLUE_TASKS
-SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1", "squad_v2"}
+SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1.1", "squad_v2.0"}
 
 
 def list_supported_tasks(args):
@@ -50,20 +50,14 @@ def download_data(args):
             except NotImplementedError:
                 print("ERROR: " + task_name + " not implemented yet")
                 error_flag = True
-        elif task_name == "squad_v1":
-            files_tasks_download.download_squad_v1_data_and_write_config(
-                task_name=task_name,
-                task_data_path=task_data_path,
-                task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),
-            )
-        elif task_name == "squad_v2":
-            files_tasks_download.download_squad_v2_data_and_write_config(
+        elif task_name.startswith("squad"):
+            files_tasks_download.download_squad_data_and_write_config(
                 task_name=task_name,
                 task_data_path=task_data_path,
                 task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),
             )
         if not error_flag:
-            print(f"Downloaded and generated configs for '{task_name}' ({i}/{len(task_names)})")
+            print(f"Downloaded and generated configs for '{task_name}' ({i+1}/{len(task_names)})")
 
 
 def main():
