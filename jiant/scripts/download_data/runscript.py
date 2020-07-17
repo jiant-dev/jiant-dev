@@ -53,12 +53,14 @@ def download_data(args):
             except NotImplementedError:
                 print("ERROR: " + task_name + " not implemented yet")
                 error_flag = True
-        elif task_name.startswith("squad"):
+        elif task_name in {"squad_v1.1", "squad_v2.0"}:
             files_tasks_download.download_squad_data_and_write_config(
                 task_name=task_name,
                 task_data_path=task_data_path,
                 task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),
             )
+        else:
+            raise KeyError()
         if not error_flag:
             print(f"Downloaded and generated configs for '{task_name}' ({i+1}/{len(task_names)})")
 

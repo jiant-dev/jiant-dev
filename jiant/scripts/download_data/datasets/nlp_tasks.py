@@ -3,6 +3,23 @@
 import jiant.scripts.download_data.utils as download_utils
 import jiant.utils.python.io as py_io
 
+# Note to future selves: beware of circular imports when refactoring
+from jiant.tasks.retrieval import (
+    ColaTask,
+    MnliTask,
+    MrpcTask,
+    QnliTask,
+    QqpTask,
+    RteTask,
+    SstTask,
+    WnliTask,
+    BoolQTask,
+    CommitmentBankTask,
+    WiCTask,
+    WSCTask,
+    SnliTask,
+)
+
 
 NLP_CONVERSION_DICT = {
     # === GLUE === #
@@ -10,19 +27,19 @@ NLP_CONVERSION_DICT = {
         "path": "glue",
         "name": "cola",
         "field_map": {"sentence": "text"},
-        "label_map": {0: "0", 1: "1"},
+        "label_map": ColaTask.ID_TO_LABEL,
     },
     "mnli": {
         "path": "glue",
         "name": "mnli",
-        "label_map": {0: "contradiction", 1: "entailment", 2: "neutral"},
+        "label_map": MnliTask.ID_TO_LABEL,
         "phase_map": {"validation_matched": "val", "test_matched": "test"},
         "phase_list": ["train", "val", "test"],
     },
     "mnli_mismatched": {
         "path": "glue",
         "name": "mnli",
-        "label_map": {0: "contradiction", 1: "entailment", 2: "neutral"},
+        "label_map": MnliTask.ID_TO_LABEL,
         "phase_map": {"validation_mismatched": "val", "test_mismatched": "test"},
         "phase_list": ["val", "test"],
         "jiant_task_name": "mnli",
@@ -31,31 +48,31 @@ NLP_CONVERSION_DICT = {
         "path": "glue",
         "name": "mrpc",
         "field_map": {"sentence1": "text_a", "sentence2": "text_b"},
-        "label_map": {0: "0", 1: "1"},
+        "label_map": MrpcTask.ID_TO_LABEL,
     },
     "qnli": {
         "path": "glue",
         "name": "qnli",
         "field_map": {"question": "premise", "sentence": "hypothesis"},
-        "label_map": {0: "contradiction", 1: "entailment", 2: "neutral"},
+        "label_map": QnliTask.ID_TO_LABEL,
     },
     "qqp": {
         "path": "glue",
         "name": "qqp",
         "field_map": {"question1": "text_a", "question2": "text_b"},
-        "label_map": {0: "0", 1: "1"},
+        "label_map": QqpTask.ID_TO_LABEL,
     },
     "rte": {
         "path": "glue",
         "name": "rte",
         "field_map": {"sentence1": "premise", "sentence2": "hypothesis"},
-        "label_map": {0: "entailment", 1: "not_entailment"},
+        "label_map": RteTask.ID_TO_LABEL,
     },
     "sst": {
         "path": "glue",
         "name": "sst2",
         "field_map": {"sentence": "text"},
-        "label_map": {0: "0", 1: "1"},
+        "label_map": SstTask.ID_TO_LABEL,
     },
     "stsb": {
         "path": "glue",
@@ -66,7 +83,7 @@ NLP_CONVERSION_DICT = {
         "path": "glue",
         "name": "wnli",
         "field_map": {"sentence1": "premise", "sentence2": "hypothesis"},
-        "label_map": {0: "0", 1: "1"},
+        "label_map": WnliTask.ID_TO_LABEL,
     },
     "glue_diagnostics": {
         "path": "glue",
@@ -75,34 +92,34 @@ NLP_CONVERSION_DICT = {
         "jiant_task_name": "mnli",
     },
     # === SuperGLUE === #
-    "boolq": {"path": "super_glue", "name": "boolq", "label_map": {0: False, 1: True}},
+    "boolq": {"path": "super_glue", "name": "boolq", "label_map": BoolQTask.ID_TO_LABEL},
     "cb": {
         "path": "super_glue",
         "name": "cb",
-        "label_map": {0: "contradiction", 1: "entailment", 2: "neutral"},
+        "label_map": CommitmentBankTask.ID_TO_LABEL,
     },
     "copa": {"path": "super_glue", "name": "copa"},
     "multirc": {"path": "super_glue", "name": "multirc"},
     "record": {"path": "super_glue", "name": "record"},
-    "wic": {"path": "super_glue", "name": "wic", "label_map": {0: False, 1: True}},
-    "wsc": {"path": "super_glue", "name": "wsc.fixed", "label_map": {0: False, 1: True}},
+    "wic": {"path": "super_glue", "name": "wic", "label_map": WiCTask.ID_TO_LABEL},
+    "wsc": {"path": "super_glue", "name": "wsc.fixed", "label_map": WSCTask.ID_TO_LABEL},
     "superglue_broadcoverage_diagnostics": {
         "path": "super_glue",
         "name": "axb",
         "field_map": {"sentence1": "premise", "sentence2": "hypothesis"},
-        "label_map": {0: "entailment", 1: "not_entailment"},
+        "label_map": RteTask.ID_TO_LABEL,
         "phase_map": None,
         "jiant_task_name": "rte",
     },
     "superglue_winogender_diagnostics": {
         "path": "super_glue",
         "name": "axg",
-        "label_map": {0: "entailment", 1: "not_entailment"},
+        "label_map": RteTask.ID_TO_LABEL,
         "phase_map": None,
         "jiant_task_name": "rte",
     },
     # === Other === #
-    "snli": {"path": "snli", "label_map": {0: "contradiction", 1: "entailment", 2: "neutral"}},
+    "snli": {"path": "snli", "label_map": SnliTask.ID_TO_LABEL},
 }
 
 # NLP uses "validation", we use "valid"
