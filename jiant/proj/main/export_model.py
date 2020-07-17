@@ -46,17 +46,21 @@ def export_model(model_type, output_base_path, model_class, tokenizer_class):
 
 
 def get_model_and_tokenizer_classes(model_type):
+    # We want the chosen model to have all the weights from pretraining (if possible)
     class_lookup = {
         "bert": (transformers.BertForPreTraining, transformers.BertTokenizer),
-        "xlm-clm-": (transformers.XLMWithLMHeadModel, transformers.XLMTokenizer),
         "roberta": (transformers.RobertaForMaskedLM, transformers.RobertaTokenizer),
         "albert": (transformers.AlbertForMaskedLM, transformers.AlbertTokenizer),
+        "bart": (transformers.BartForConditionalGeneration, transformers.BartTokenizer),
+        "mbart": (transformers.BartForConditionalGeneration, transformers.MBartTokenizer),
     }
     if model_type.split("-")[0] in class_lookup:
         return class_lookup[model_type.split("-")[0]]
     elif model_type.startswith("xlm-mlm-") or model_type.startswith("xlm-clm-"):
         return transformers.XLMWithLMHeadModel, transformers.XLMTokenizer
     elif model_type.startswith("xlm-roberta-"):
+        return transformers.XLMRobertaForMaskedLM, transformers.XLMRobertaTokenizer
+    elif model_type.startswith("facebook/bart-") or model_type.startswith("facebook/mbart-"):
         return transformers.XLMRobertaForMaskedLM, transformers.XLMRobertaTokenizer
     else:
         raise KeyError()

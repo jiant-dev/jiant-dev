@@ -329,6 +329,8 @@ def create_taskmodel(
                 vocab_size=encoder.config.vocab_size,
                 layer_norm_eps=encoder.config.layer_norm_eps,
             )
+        elif model_arch == ModelArchitectures.BART:
+            raise NotImplementedError()
         else:
             raise KeyError(model_arch)
         taskmodel = taskmodels.MLMModel(encoder=encoder, mlm_head=mlm_head)
@@ -373,6 +375,8 @@ def get_encoder(model_arch, ancestor_model):
         return ancestor_model.albert
     elif model_arch == ModelArchitectures.XLM_ROBERTA:
         return ancestor_model.roberta
+    elif model_arch == ModelArchitectures.BART:
+        return ancestor_model.model
     else:
         raise KeyError(model_arch)
 
@@ -405,6 +409,11 @@ TRANSFORMERS_CLASS_SPEC_DICT = {
         tokenizer_class=transformers.XLMRobertaTokenizer,
         model_class=transformers.XLMRobertaForMaskedLM,
     ),
+    ModelArchitectures.BART: TransformersClassSpec(
+        config_class=transformers.BartConfig,
+        tokenizer_class=transformers.BartTokenizer,
+        model_class=transformers.BartForConditionalGeneration,
+    ),
 }
 
 
@@ -417,6 +426,8 @@ def get_model_arch_from_encoder(encoder: nn.Module) -> ModelArchitectures:
         return ModelArchitectures.ALBERT
     elif type(encoder) is transformers.XLMRobertaModel:
         return ModelArchitectures.XLM_ROBERTA
+    elif type(encoder) is transformers.BartModel:
+        return ModelArchitectures.BART
     else:
         raise KeyError(type(encoder))
 
@@ -448,6 +459,7 @@ MODEL_PREFIX = {
     ModelArchitectures.ROBERTA: "roberta",
     ModelArchitectures.ALBERT: "albert",
     ModelArchitectures.XLM_ROBERTA: "xlm-roberta",
+    ModelArchitectures.BART: "bart",
 }
 
 
