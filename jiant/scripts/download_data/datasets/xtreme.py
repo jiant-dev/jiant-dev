@@ -17,7 +17,6 @@ def download_xnli_data_and_write_config(task_data_base_path: str, task_config_ba
     full_test_data = py_io.read_jsonl(os.path.join(xnli_temp_path, "XNLI-1.0", "xnli.test.jsonl"))
     test_data = datastructures.group_by(full_test_data, lambda elem: elem["language"])
     languages = sorted(list(val_data))
-    assert len(languages) == 15
     for lang in languages:
         task_name = f"xnli_{lang}"
         task_data_path = py_io.create_dir(task_data_base_path, task_name)
