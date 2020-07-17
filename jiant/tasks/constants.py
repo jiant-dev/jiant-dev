@@ -27,8 +27,6 @@ SUPERGLUE_TASKS = {
 XTREME_TASKS = {
     "xnli",
     "pawsx",
-    "udpos",
-    "panx",
     "xquad",
     "mlqa",
     "tydiqa",

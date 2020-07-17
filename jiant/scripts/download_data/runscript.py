@@ -12,13 +12,13 @@ SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1", "squad_v2"}
 
 
 # noinspection PyUnusedLocal
-def list_supported_tasks(args):
+def list_supported_tasks_cli(args):
     print("Supported tasks:")
     for task in SUPPORTED_TASKS:
         print(task)
 
 
-def download_data(args):
+def download_data_cli(args):
     output_base_path = args.output_path
     if args.tasks:
         task_names = args.tasks
@@ -26,7 +26,13 @@ def download_data(args):
         task_names = BENCHMARKS[args.benchmark]
     else:
         raise RuntimeError()
+    download_data(
+        task_names=task_names,
+        output_base_path=output_base_path,
+    )
 
+
+def download_data(task_names, output_base_path):
     task_data_base_path = py_io.create_dir(output_base_path, "data")
     task_config_base_path = py_io.create_dir(output_base_path, "configs")
 
@@ -34,7 +40,6 @@ def download_data(args):
 
     # Download specified tasks and generate configs for specified tasks
     for i, task_name in enumerate(task_names):
-        error_flag = False
         task_data_path = os.path.join(task_data_base_path, task_name)
 
         if task_name in NLP_DOWNLOADER_TASKS:
@@ -44,15 +49,11 @@ def download_data(args):
                 task_config_path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
             )
         elif task_name in XTREME_TASKS:
-            try:
-                xtreme_download.download_xtreme_data_and_write_config(
-                    task_name=task_name,
-                    task_data_base_path=task_data_base_path,
-                    task_config_base_path=task_config_base_path,
-                )
-            except NotImplementedError:
-                print("ERROR: " + task_name + " not implemented yet")
-                error_flag = True
+            xtreme_download.download_xtreme_data_and_write_config(
+                task_name=task_name,
+                task_data_base_path=task_data_base_path,
+                task_config_base_path=task_config_base_path,
+            )
         elif task_name in ["squad_v1", "squad_v2"]:
             files_tasks_download.download_squad_data_and_write_config(
                 task_name=task_name,
@@ -61,8 +62,7 @@ def download_data(args):
             )
         else:
             raise KeyError()
-        if not error_flag:
-            print(f"Downloaded and generated configs for '{task_name}' ({i+1}/{len(task_names)})")
+        print(f"Downloaded and generated configs for '{task_name}' ({i+1}/{len(task_names)})")
 
 
 def main():
@@ -78,8 +78,8 @@ def main():
     sp_download_group.add_argument("--benchmark", choices=BENCHMARKS)
 
     # Hook subparsers up to functions
-    sp_list.set_defaults(func=list_supported_tasks)
-    sp_download.set_defaults(func=download_data)
+    sp_list.set_defaults(func=list_supported_tasks_cli)
+    sp_download.set_defaults(func=download_data_cli)
 
     args = parser.parse_args()
     args.func(args)
