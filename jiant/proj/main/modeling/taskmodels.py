@@ -131,7 +131,7 @@ class SpanPredictionModel(Taskmodel):
         logits = self.span_prediction_head(unpooled=encoder_output.unpooled)
         # ensure logits in valid range is at lease self.offset_margin higher than others
         logits_offset = logits.max() - logits.min() + self.offset_margin
-        logits = logits + logits_offset * batch.selection_token_mask
+        logits = logits + logits_offset * batch.selection_token_mask.unsqueeze(dim=2)
         if compute_loss:
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(
