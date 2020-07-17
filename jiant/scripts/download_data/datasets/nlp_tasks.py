@@ -113,7 +113,7 @@ def download_data_and_write_config(task_name: str, task_data_path: str, task_con
     nlp_conversion_metadata = NLP_CONVERSION_DICT[task_name]
     examples_dict = download_utils.convert_nlp_dataset_to_examples(
         path=nlp_conversion_metadata["path"],
-        name=nlp_conversion_metadata["name"],
+        name=nlp_conversion_metadata.get("name"),
         field_map=nlp_conversion_metadata.get("field_map"),
         label_map=nlp_conversion_metadata.get("label_map"),
         phase_map=nlp_conversion_metadata.get("phase_map", DEFAULT_PHASE_MAP),
