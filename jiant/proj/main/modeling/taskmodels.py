@@ -128,7 +128,7 @@ class SpanPredictionModel(Taskmodel):
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
         encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
-        logits = self.span_prediction_head(unpooled=encoder_output.unpooled, spans=batch.spans)
+        logits = self.span_prediction_head(unpooled=encoder_output.unpooled)
         # ensure logits in valid range is at lease self.offset_margin higher than others
         logits_offset = logits.max() - logits.min() + self.offset_margin
         logits = logits + logits_offset * batch.selection_token_mask
