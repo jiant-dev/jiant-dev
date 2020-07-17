@@ -9,6 +9,7 @@ import jiant.proj.main.modeling.heads as heads
 import jiant.utils.transformer_utils as transformer_utils
 from jiant.proj.main.components.outputs import LogitsOutput, LogitsAndLossOutput
 from jiant.utils.python.datastructures import take_one
+from jiant.shared.model_setup import ModelArchitectures
 
 
 class Taskmodel(nn.Module, metaclass=abc.ABCMeta):
@@ -276,12 +277,32 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
         EncoderOutput containing pooled and unpooled model outputs as well as any other outputs.
 
     """
-    output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+
+    model_arch = ModelArchitectures.from_encoder(encoder)
+    if model_arch in [
+        ModelArchitectures.BERT,
+        ModelArchitectures.ROBERTA,
+        ModelArchitectures.XLM,
+        ModelArchitectures.ALBERT,
+        ModelArchitectures.XLM_ROBERTA,
+    ]:
+        output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+        pooled, unpooled, other = output[1], output[0], output[2:]
+    elif model_arch in [
+        ModelArchitectures.BART,
+    ]:
+        output = encoder(input_ids=input_ids, attention_mask=input_mask)
+        unpooled, other = output[0], output[1:]
+        eos_mask = input_ids.eq(encoder.config.eos_token_id)
+        pooled = unpooled[eos_mask, :].view(unpooled.size(0), -1, unpooled.size(-1))[:, -1, :]
+    else:
+        raise KeyError()
+
     if len(output) == 2:
-        return EncoderOutput(pooled=output[1], unpooled=output[0],)
+        return EncoderOutput(pooled=pooled, unpooled=unpooled)
     elif len(output) > 2:
         # Extend later with attention, hidden_acts, etc
-        return EncoderOutput(pooled=output[1], unpooled=output[0], other=output[2:])
+        return EncoderOutput(pooled=pooled, unpooled=unpooled, other=output[2:])
     else:
         raise RuntimeError()
 

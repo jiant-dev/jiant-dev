@@ -119,7 +119,7 @@ class ModelArchitectures(Enum):
             isinstance(encoder, transformers.BartModel)
             and encoder.__class__.__name__ == "BartModel"
         ):
-            return cls.XLM_ROBERTA
+            return cls.BART
         else:
             raise KeyError(type(encoder))
 

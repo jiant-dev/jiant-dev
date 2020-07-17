@@ -239,11 +239,28 @@ def create_taskmodel(
         Taskmodel (e.g., ClassificationModel) appropriate for the task type and encoder.
 
     """
+    if model_arch in [
+        ModelArchitectures.BERT,
+        ModelArchitectures.ROBERTA,
+        ModelArchitectures.XLM,
+        ModelArchitectures.ALBERT,
+        ModelArchitectures.XLM_ROBERTA,
+    ]:
+        hidden_size = encoder.config.hidden_size
+        hidden_dropout_prob = encoder.config.hidden_dropout_prob
+    elif model_arch in [
+        ModelArchitectures.BART,
+    ]:
+        hidden_size = encoder.config.d_model
+        hidden_dropout_prob = encoder.config.dropout
+    else:
+        raise KeyError()
+
     if task.TASK_TYPE == TaskTypes.CLASSIFICATION:
         assert taskmodel_kwargs is None
         classification_head = heads.ClassificationHead(
-            hidden_size=encoder.config.hidden_size,
-            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+            hidden_size=hidden_size,
+            hidden_dropout_prob=hidden_dropout_prob,
             num_labels=len(task.LABELS),
         )
         taskmodel = taskmodels.ClassificationModel(
@@ -252,15 +269,15 @@ def create_taskmodel(
     elif task.TASK_TYPE == TaskTypes.REGRESSION:
         assert taskmodel_kwargs is None
         regression_head = heads.RegressionHead(
-            hidden_size=encoder.config.hidden_size,
-            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+            hidden_size=hidden_size,
+            hidden_dropout_prob=hidden_dropout_prob,
         )
         taskmodel = taskmodels.RegressionModel(encoder=encoder, regression_head=regression_head)
     elif task.TASK_TYPE == TaskTypes.MULTIPLE_CHOICE:
         assert taskmodel_kwargs is None
         choice_scoring_head = heads.RegressionHead(
-            hidden_size=encoder.config.hidden_size,
-            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+            hidden_size=hidden_size,
+            hidden_dropout_prob=hidden_dropout_prob,
         )
         taskmodel = taskmodels.MultipleChoiceModel(
             encoder=encoder, num_choices=task.NUM_CHOICES, choice_scoring_head=choice_scoring_head,
@@ -268,8 +285,8 @@ def create_taskmodel(
     elif task.TASK_TYPE == TaskTypes.SPAN_COMPARISON_CLASSIFICATION:
         assert taskmodel_kwargs is None
         span_comparison_head = heads.SpanComparisonHead(
-            hidden_size=encoder.config.hidden_size,
-            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+            hidden_size=hidden_size,
+            hidden_dropout_prob=hidden_dropout_prob,
             num_spans=task.num_spans,
             num_labels=len(task.LABELS),
         )
@@ -279,8 +296,8 @@ def create_taskmodel(
     elif task.TASK_TYPE == TaskTypes.MULTI_LABEL_SPAN_CLASSIFICATION:
         assert taskmodel_kwargs is None
         span_comparison_head = heads.SpanComparisonHead(
-            hidden_size=encoder.config.hidden_size,
-            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+            hidden_size=hidden_size,
+            hidden_dropout_prob=hidden_dropout_prob,
             num_spans=task.num_spans,
             num_labels=len(task.LABELS),
         )
@@ -290,8 +307,8 @@ def create_taskmodel(
     elif task.TASK_TYPE == TaskTypes.TAGGING:
         assert taskmodel_kwargs is None
         token_classification_head = heads.TokenClassificationHead(
-            hidden_size=encoder.config.hidden_size,
-            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+            hidden_size=hidden_size,
+            hidden_dropout_prob=hidden_dropout_prob,
             num_labels=len(task.LABELS),
         )
         taskmodel = taskmodels.TokenClassificationModel(
@@ -459,7 +476,7 @@ MODEL_PREFIX = {
     ModelArchitectures.ROBERTA: "roberta",
     ModelArchitectures.ALBERT: "albert",
     ModelArchitectures.XLM_ROBERTA: "xlm-roberta",
-    ModelArchitectures.BART: "bart",
+    ModelArchitectures.BART: "model",
 }
 
 
