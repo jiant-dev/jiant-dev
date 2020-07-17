@@ -320,6 +320,14 @@ def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config
         os.rename(src=other_src, dst=other_out)
         idx = range(len(tgts))
         data = zip(tgts, idx)
+
+        # Tatoeba is a retrieval dataset where you have a set of sentences in English and another set
+        # in another language, and you need to match them. It also doesn't have training data, so it's
+        # pretty much evaluation only. However, the dataset is distributed with the sentences in order,
+        # i.e. the retrieval pairing is the sentence order.
+        #
+        # The XTREME authors intentionally scramble the order by sorting one of the two sets alphabetically.
+        # We're following their recipe, but also retaining the labels for internal scoring.
         with open(eng_out, "w") as ftgt, open(labels_out, "w") as flabels:
             for t, i in sorted(data, key=lambda x: x[0]):
                 ftgt.write(f"{t}\n")
