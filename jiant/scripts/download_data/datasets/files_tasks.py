@@ -4,7 +4,9 @@ import jiant.scripts.download_data.utils as download_utils
 import jiant.utils.python.io as py_io
 
 
-def download_squad_data_and_write_config(task_name: str, task_data_path: str, task_config_path: str):
+def download_squad_data_and_write_config(
+    task_name: str, task_data_path: str, task_config_path: str
+):
     if task_name == "squad_v1":
         train_file = "train-v1.1.json"
         dev_file = "dev-v1.1.json"
@@ -24,8 +26,7 @@ def download_squad_data_and_write_config(task_name: str, task_data_path: str, ta
         file_path=train_path,
     )
     download_utils.download_file(
-        url=f"https://rajpurkar.github.io/SQuAD-explorer/dataset/{dev_file}",
-        file_path=val_path,
+        url=f"https://rajpurkar.github.io/SQuAD-explorer/dataset/{dev_file}", file_path=val_path,
     )
     py_io.write_json(
         data={

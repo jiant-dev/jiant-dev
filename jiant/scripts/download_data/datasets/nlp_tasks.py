@@ -93,11 +93,7 @@ NLP_CONVERSION_DICT = {
     },
     # === SuperGLUE === #
     "boolq": {"path": "super_glue", "name": "boolq", "label_map": BoolQTask.ID_TO_LABEL},
-    "cb": {
-        "path": "super_glue",
-        "name": "cb",
-        "label_map": CommitmentBankTask.ID_TO_LABEL,
-    },
+    "cb": {"path": "super_glue", "name": "cb", "label_map": CommitmentBankTask.ID_TO_LABEL,},
     "copa": {"path": "super_glue", "name": "copa"},
     "multirc": {"path": "super_glue", "name": "multirc"},
     "record": {"path": "super_glue", "name": "record"},
