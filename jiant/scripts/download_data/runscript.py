@@ -11,6 +11,7 @@ NLP_DOWNLOADER_TASKS = GLUE_TASKS | SUPERGLUE_TASKS
 SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1.1", "squad_v2.0"}
 
 
+# noinspection PyUnusedLocal
 def list_supported_tasks(args):
     print("Supported tasks:")
     for task in SUPPORTED_TASKS:
@@ -23,6 +24,8 @@ def download_data(args):
         task_names = args.tasks
     elif args.benchmark:
         task_names = BENCHMARKS[args.benchmark]
+    else:
+        raise RuntimeError()
 
     task_data_base_path = py_io.create_dir(output_base_path, "data")
     task_config_base_path = py_io.create_dir(output_base_path, "configs")
