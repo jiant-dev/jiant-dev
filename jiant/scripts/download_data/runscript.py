@@ -8,7 +8,7 @@ import jiant.scripts.download_data.datasets.files_tasks as files_tasks_download
 from jiant.tasks.constants import GLUE_TASKS, SUPERGLUE_TASKS, XTREME_TASKS, BENCHMARKS
 
 NLP_DOWNLOADER_TASKS = GLUE_TASKS | SUPERGLUE_TASKS
-SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1.1", "squad_v2.0"}
+SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1", "squad_v2"}
 
 
 # noinspection PyUnusedLocal
@@ -53,7 +53,7 @@ def download_data(args):
             except NotImplementedError:
                 print("ERROR: " + task_name + " not implemented yet")
                 error_flag = True
-        elif task_name in {"squad_v1.1", "squad_v2.0"}:
+        elif task_name in ["squad_v1", "squad_v2"]:
             files_tasks_download.download_squad_data_and_write_config(
                 task_name=task_name,
                 task_data_path=task_data_path,
