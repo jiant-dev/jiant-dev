@@ -89,8 +89,6 @@ def get_model_and_tokenizer_classes(model_type: str) -> \
         return transformers.XLMWithLMHeadModel, transformers.XLMTokenizer
     elif model_type.startswith("xlm-roberta-"):
         return transformers.XLMRobertaForMaskedLM, transformers.XLMRobertaTokenizer
-    elif model_type.startswith("facebook/bart-") or model_type.startswith("facebook/mbart-"):
-        return transformers.XLMRobertaForMaskedLM, transformers.XLMRobertaTokenizer
     else:
         raise KeyError()
 

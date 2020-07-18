@@ -290,6 +290,7 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
         pooled, unpooled, other = output[1], output[0], output[2:]
     elif model_arch in [
         ModelArchitectures.BART,
+        ModelArchitectures.MBART,
     ]:
         output = encoder(input_ids=input_ids, attention_mask=input_mask)
         unpooled, other = output[0], output[1:]
