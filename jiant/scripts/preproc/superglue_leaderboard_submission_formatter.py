@@ -21,8 +21,8 @@ raw_pred_input_filepaths = {
     "rte": None,
     "wic": None,
     "wsc": None,
-    # "TBD1": None, # Broadcoverage diagnostic
-    # "TBD2": None, # Winogender Schema diagnostic
+    "superglue_broadcoverage_diagnostics": None,
+    "superglue_winogender_diagnostics": None,
 }
 
 # this map specifies the location where the SuperGLUE-leaderboard-submission-formatted prediction
@@ -37,8 +37,8 @@ formatted_pred_output_filepaths = {
     "rte": "./RTE.jsonl",
     "wic": "./WiC.jsonl",
     "wsc": "./WSC.jsonl",
-    # "TBD1": "./AX-b.jsonl",
-    # "TBD2": "./AX-g.jsonl",
+    "superglue_broadcoverage_diagnostics": "./AX-b.jsonl",
+    "superglue_winogender_diagnostics": "./AX-g.jsonl",
 }
 
 for task_name, input_filepath in raw_pred_input_filepaths.items():
