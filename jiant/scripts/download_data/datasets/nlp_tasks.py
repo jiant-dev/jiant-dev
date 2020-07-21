@@ -18,7 +18,7 @@ from jiant.tasks.retrieval import (
     WiCTask,
     WSCTask,
     SnliTask,
-    GlueDiagnosticsTask
+    GlueDiagnosticsTask,
 )
 
 
