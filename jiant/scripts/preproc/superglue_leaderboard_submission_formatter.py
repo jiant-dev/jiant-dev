@@ -1,9 +1,9 @@
 """Translate raw prediction files for SuperGLUE tasks into format expected by SuperGLUE leaderboard.
 
-This script helps translate the raw prediction files for SuperGLUE tasks into the jsonl files
-required by the SuperGLUE leaderboard. See https://super.gluebenchmark.com/faq for leaderboard info.
+This script translates raw prediction files for SuperGLUE tasks into the jsonl files required
+by the SuperGLUE leaderboard. See https://super.gluebenchmark.com/faq for leaderboard info.
 
-To use this script specify one or more raw prediction input filepath in raw_pred_input_filepaths.
+To use this script, specify one or more raw prediction input filepath in raw_pred_input_filepaths.
 
 """
 import json
