@@ -1,3 +1,4 @@
+import collections
 import numpy as np
 
 import torch
@@ -172,3 +173,23 @@ class MultiRCTask(Task):
                         )
                     )
         return examples
+
+    @staticmethod
+    def super_glue_format_preds(pred_dict):
+        """Reformat this task's raw predictions to have the structure expected by SuperGLUE."""
+        lines = []
+        # formatting code adapted from: https://github.com/nyu-mll/jiant/blob/
+        # 14fae87d2ebc5a45dbe7254e9007d1a148dd6b18/jiant/evaluate.py#L427
+        par_qst_ans_d = collections.defaultdict(lambda: collections.defaultdict(list))
+        for pred, guid in zip(list(pred_dict["preds"]), list(pred_dict["guids"])):
+            passage_id, question_id, answer_id = [int(i) for i in guid.split("-")[1:]]
+            ans_d = {"idx": answer_id, "label": int(pred)}
+            par_qst_ans_d[passage_id][question_id].append(ans_d)
+        for par_idx, qst_ans_d in par_qst_ans_d.items():
+            qst_ds = []
+            for qst_idx, answers in qst_ans_d.items():
+                qst_d = {"idx": qst_idx, "answers": answers}
+                qst_ds.append(qst_d)
+            out_d = {"idx": par_idx, "passage": {"questions": qst_ds}}
+            lines.append(out_d)
+        return lines
