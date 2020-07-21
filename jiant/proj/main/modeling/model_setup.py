@@ -142,7 +142,7 @@ def load_encoder_from_transformers_weights(
     """
     remainder_weights_dict = {}
     load_weights_dict = {}
-    model_arch = get_model_arch_from_encoder(encoder=encoder)
+    model_arch = ModelArchitectures.from_encoder(encoder=encoder)
     encoder_prefix = MODEL_PREFIX[model_arch] + "."
     # Encoder
     for k, v in weights_dict.items():
@@ -250,6 +250,7 @@ def create_taskmodel(
         hidden_dropout_prob = encoder.config.hidden_dropout_prob
     elif model_arch in [
         ModelArchitectures.BART,
+        ModelArchitectures.MBART,
     ]:
         hidden_size = encoder.config.d_model
         hidden_dropout_prob = encoder.config.dropout
@@ -392,7 +393,7 @@ def get_encoder(model_arch, ancestor_model):
         return ancestor_model.albert
     elif model_arch == ModelArchitectures.XLM_ROBERTA:
         return ancestor_model.roberta
-    elif model_arch == ModelArchitectures.BART:
+    elif model_arch in (ModelArchitectures.BART, ModelArchitectures.MBART):
         return ancestor_model.model
     else:
         raise KeyError(model_arch)
@@ -431,22 +432,12 @@ TRANSFORMERS_CLASS_SPEC_DICT = {
         tokenizer_class=transformers.BartTokenizer,
         model_class=transformers.BartForConditionalGeneration,
     ),
+    ModelArchitectures.MBART: TransformersClassSpec(
+        config_class=transformers.BartConfig,
+        tokenizer_class=transformers.MBartTokenizer,
+        model_class=transformers.BartForConditionalGeneration,
+    ),
 }
-
-
-def get_model_arch_from_encoder(encoder: nn.Module) -> ModelArchitectures:
-    if type(encoder) is transformers.BertModel:
-        return ModelArchitectures.BERT
-    elif type(encoder) is transformers.RobertaModel:
-        return ModelArchitectures.ROBERTA
-    elif type(encoder) is transformers.AlbertModel:
-        return ModelArchitectures.ALBERT
-    elif type(encoder) is transformers.XLMRobertaModel:
-        return ModelArchitectures.XLM_ROBERTA
-    elif type(encoder) is transformers.BartModel:
-        return ModelArchitectures.BART
-    else:
-        raise KeyError(type(encoder))
 
 
 def get_taskmodel_and_task_names(task_to_taskmodel_map: Dict[str, str]) -> Dict[str, List[str]]:
@@ -468,7 +459,7 @@ def get_taskmodel_and_task_names(task_to_taskmodel_map: Dict[str, str]) -> Dict[
 
 
 def get_model_arch_from_jiant_model(jiant_model: nn.Module) -> ModelArchitectures:
-    return get_model_arch_from_encoder(encoder=jiant_model.encoder)
+    return ModelArchitectures.from_encoder(encoder=jiant_model.encoder)
 
 
 MODEL_PREFIX = {
@@ -477,6 +468,7 @@ MODEL_PREFIX = {
     ModelArchitectures.ALBERT: "albert",
     ModelArchitectures.XLM_ROBERTA: "xlm-roberta",
     ModelArchitectures.BART: "model",
+    ModelArchitectures.MBART: "model",
 }
 
 
