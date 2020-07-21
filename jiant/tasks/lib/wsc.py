@@ -179,6 +179,7 @@ class WSCTask(Task):
         for line in lines:
             examples.append(
                 Example(
+                    # NOTE: super_glue_format_preds() is dependent on this guid format.
                     guid="%s-%s" % (set_type, line["idx"]),
                     text=line["text"],
                     span1_idx=line["target"]["span1_index"],
@@ -189,6 +190,14 @@ class WSCTask(Task):
                 )
             )
         return examples
+
+    @classmethod
+    def super_glue_format_preds(cls, pred_dict):
+        """Reformat this task's raw predictions to have the structure expected by SuperGLUE."""
+        lines = []
+        for pred, guid in zip(list(pred_dict["preds"]), list(pred_dict["guids"])):
+            lines.append({"idx": int(guid.split("-")[1]), "label": str(cls.LABELS[pred])})
+        return lines
 
 
 def extract_char_span(full_text, span_text, space_index):
