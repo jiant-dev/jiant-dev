@@ -292,12 +292,18 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
         ModelArchitectures.BART,
         ModelArchitectures.MBART,
     ]:
+        # BART and mBART and encoder-decoder architectures.
+        # As described in the BART paper and implemented in Transformers,
+        # for single input tasks, the encoder input is the sequence,
+        # the decode input is 1-shifted sequence, and the resulting
+        # sentence representation is the final decoder state.
+        # That's what we use for `unpooled` here.
         output = encoder(input_ids=input_ids, attention_mask=input_mask)
         unpooled, other = output[0], output[1:]
         eos_mask = input_ids.eq(encoder.config.eos_token_id)
         pooled = unpooled[eos_mask, :].view(unpooled.size(0), -1, unpooled.size(-1))[:, -1, :]
     else:
-        raise KeyError()
+        raise KeyError(model_arch)
 
     if len(output) == 2:
         return EncoderOutput(pooled=pooled, unpooled=unpooled)
