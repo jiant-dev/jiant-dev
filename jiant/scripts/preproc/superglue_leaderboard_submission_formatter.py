@@ -7,6 +7,8 @@ To use this script, specify one or more raw prediction input filepath in raw_pre
 
 """
 import json
+import os
+
 import torch
 
 from jiant.tasks import retrieval
@@ -46,7 +48,9 @@ for task_name, input_filepath in raw_pred_input_filepaths.items():
         task = retrieval.get_task_class(task_name)
         task_preds = torch.load(input_filepath)[task_name]
         formatted_preds = task.super_glue_format_preds(task_preds)
-        with open(formatted_pred_output_filepaths[task_name], "w") as f:
+        output_filepath = formatted_pred_output_filepaths[task_name]
+        with open(output_filepath, "w") as f:
             for entry in formatted_preds:
                 json.dump(entry, f)
                 f.write("\n")
+        print(task_name, ":", os.path.abspath(output_filepath))
