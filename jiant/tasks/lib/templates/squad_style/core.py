@@ -310,12 +310,18 @@ class BaseSquadStyleTask(Task):
         n_best_size=20,
         max_answer_length=30,
         null_score_diff_threshold=0.0,
+        doc_stride=128,
+        max_query_length=64,
     ):
         super().__init__(name=name, path_dict=path_dict)
         self.version_2_with_negative = version_2_with_negative
         self.n_best_size = n_best_size
         self.max_answer_length = max_answer_length
         self.null_score_diff_threshold = null_score_diff_threshold
+
+        # Tokenization hyperparameters
+        self.doc_stride = doc_stride
+        self.max_query_length = max_query_length
 
     def get_train_examples(self):
         return self.read_squad_examples(path=self.train_path, set_type=PHASE.TRAIN)
