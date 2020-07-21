@@ -45,7 +45,7 @@ def download_data(task_names, output_base_path):
             nlp_tasks_download.download_data_and_write_config(
                 task_name=task_name,
                 task_data_path=task_data_path,
-                task_config_path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
+                task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),
             )
         elif task_name in XTREME_TASKS:
             xtreme_download.download_xtreme_data_and_write_config(
