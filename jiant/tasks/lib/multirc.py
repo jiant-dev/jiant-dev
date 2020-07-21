@@ -151,16 +151,19 @@ class MultiRCTask(Task):
 
     def _create_examples(self, lines, set_type):
         examples = []
-        question_id = 0
         for line in lines:
             passage = line["passage"]["text"]
+            passage_id = line["idx"]
             for question_dict in line["passage"]["questions"]:
                 question = question_dict["question"]
+                question_id = question_dict["idx"]
                 for answer_dict in question_dict["answers"]:
+                    answer_id = answer_dict["idx"]
                     answer = answer_dict["text"]
                     examples.append(
                         Example(
-                            guid="%s-%s" % (set_type, line["idx"]),
+                            # NOTE: super_glue_format_preds() is dependent on this guid format.
+                            guid="%s-%s-%s-%s" % (set_type, passage_id, question_id, answer_id),
                             paragraph=passage,
                             question=question,
                             answer=answer,
@@ -168,5 +171,4 @@ class MultiRCTask(Task):
                             question_id=question_id,
                         )
                     )
-                question_id += 1
         return examples
