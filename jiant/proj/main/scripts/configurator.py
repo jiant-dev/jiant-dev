@@ -131,7 +131,7 @@ class SimpleAPIMultiTaskConfigurator(zconf.RunConfig):
         if self.task_config_base_path is not None:
             assert self.task_config_path_dict is None
             task_config_path_dict = {
-                task_name: os.path.join(self.task_config_base_path, f"{task_name}.json")
+                task_name: os.path.join(self.task_config_base_path, f"{task_name}_config.json")
                 for task_name in full_task_name_list
             }
         else:
