@@ -166,7 +166,6 @@ def tokenize_and_featurize(
             # TODO: Expose parameters  (Issue #49)
             data_rows += example.to_feature_list(
                 tokenizer=tokenizer,
-                feat_spec=feat_spec,
                 max_seq_length=feat_spec.max_seq_length,
                 doc_stride=128,
                 max_query_length=64,
