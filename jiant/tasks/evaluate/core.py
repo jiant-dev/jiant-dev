@@ -686,6 +686,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
             tasks.SnliTask,
             tasks.SstTask,
             tasks.WiCTask,
+            tasks.SuperglueWinogenderDiagnosticsTask,
             tasks.WnliTask,
             tasks.WSCTask,
             tasks.XnliTask,

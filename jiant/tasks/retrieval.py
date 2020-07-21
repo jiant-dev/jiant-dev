@@ -38,6 +38,7 @@ from jiant.tasks.lib.squad import SquadTask
 from jiant.tasks.lib.srl import SrlTask
 from jiant.tasks.lib.sst import SstTask
 from jiant.tasks.lib.stsb import StsbTask
+from jiant.tasks.lib.axg import SuperglueWinogenderDiagnosticsTask
 from jiant.tasks.lib.swag import SWAGTask
 from jiant.tasks.lib.tydiqa import TyDiQATask
 from jiant.tasks.lib.udpos import UdposPreprocTask
@@ -53,6 +54,7 @@ from jiant.utils.python.io import read_json
 
 TASK_DICT = {
     "abductive_nli": AbductiveNliTask,
+    "axg": SuperglueWinogenderDiagnosticsTask,
     "acceptability_definiteness": AcceptabilityDefinitenessTask,
     "adversarial_nli": AdversarialNliTask,
     "boolq": BoolQTask,

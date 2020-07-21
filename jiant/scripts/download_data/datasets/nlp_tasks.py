@@ -18,6 +18,7 @@ from jiant.tasks.retrieval import (
     WiCTask,
     WSCTask,
     SnliTask,
+    SuperglueWinogenderDiagnosticsTask,
 )
 
 
@@ -110,9 +111,9 @@ NLP_CONVERSION_DICT = {
     "superglue_winogender_diagnostics": {
         "path": "super_glue",
         "name": "axg",
-        "label_map": RteTask.ID_TO_LABEL,
+        "label_map": SuperglueWinogenderDiagnosticsTask.ID_TO_LABEL,
         "phase_map": None,
-        "jiant_task_name": "rte",
+        "jiant_task_name": "axg",
     },
     # === Other === #
     "snli": {"path": "snli", "label_map": SnliTask.ID_TO_LABEL},
