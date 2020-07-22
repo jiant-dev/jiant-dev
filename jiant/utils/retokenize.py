@@ -9,8 +9,6 @@ Notes:
 """
 from typing import Iterable, Sequence, Tuple, Union
 
-from sacremoses import MosesDetokenizer
-from sacremoses import MosesTokenizer as SacreMosesTokenizer
 from Levenshtein.StringMatcher import StringMatcher
 from nltk.tokenize.util import string_span_tokenize
 import numpy as np

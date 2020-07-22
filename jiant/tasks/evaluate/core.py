@@ -124,7 +124,8 @@ class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
     def compute_metrics_from_preds_and_labels(self, preds, labels):
         def normalize_answer(s):
             """Lower text and remove punctuation, articles and extra whitespace.
-            From official ReCoRD eval script """
+            From official ReCoRD eval script
+            """
 
             def remove_articles(text):
                 return re.sub(r"\b(a|an|the)\b", " ", text)
@@ -142,8 +143,9 @@ class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
             return white_space_fix(remove_articles(remove_punc(lower(s))))
 
         def f1_score(prediction, ground_truth):
-            """ Compute normalized token level F1
-            From official ReCoRD eval script """
+            """Compute normalized token level F1
+            From official ReCoRD eval script
+            """
             prediction_tokens = normalize_answer(prediction).split()
             ground_truth_tokens = normalize_answer(ground_truth).split()
             common = collections.Counter(prediction_tokens) & collections.Counter(
@@ -158,8 +160,9 @@ class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
             return f1
 
         def exact_match_score(prediction, ground_truth):
-            """ Compute normalized exact match
-            From official ReCoRD eval script """
+            """Compute normalized exact match
+            From official ReCoRD eval script
+            """
             return normalize_answer(prediction) == normalize_answer(ground_truth)
 
         em = sum([exact_match_score(s1, s2) for s1, s2 in zip(preds, labels)]) / len(labels)

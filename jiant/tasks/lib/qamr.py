@@ -1,9 +1,7 @@
 import pandas as pd
 import nltk
-from dataclasses import dataclass
 
 from jiant.tasks.lib.templates import span_prediction as span_pred_template
-from jiant.utils.python.io import read_json_lines
 from jiant.utils.retokenize import TokenAligner
 
 
