@@ -1,9 +1,10 @@
 import pandas as pd
+import nltk
 from dataclasses import dataclass
 
 from jiant.tasks.lib.templates import span_prediction as span_pred_template
 from jiant.utils.python.io import read_json_lines
-from jiant.utils.retokenize import TokenAligner, MosesTokenizer
+from jiant.utils.retokenize import TokenAligner
 
 
 class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
@@ -39,14 +40,14 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
         data_df["sent"] = data_df["sent_id"].apply(wiki_dict.get)
 
         examples = []
-        moses_tokenizer = MosesTokenizer()
         for i, row in data_df.iterrows():
+        ptb_detokenizer = nltk.tokenize.treebank.TreebankWordDetokenizer()
             # Answer indices are a space-limited list of numbers.
             # We simply take the min/max of the indices
             answer_idxs = list(map(int, row["answer"].split()))
             answer_token_start, answer_token_end = min(answer_idxs), max(answer_idxs)
             passage_ptb_tokens = row["sent"].split()
-            passage_space_tokens = moses_tokenizer.detokenize_ptb(passage_ptb_tokens).split()
+            passage_space_tokens = ptb_detokenizer.detokenize(passage_ptb_tokens).split()
             passage_space_str = " ".join(passage_space_tokens)
 
             token_aligner = TokenAligner(source=passage_ptb_tokens, target=passage_space_tokens)

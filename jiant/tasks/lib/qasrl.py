@@ -1,10 +1,11 @@
 import pandas as pd
 import gzip
+import nltk
 import json
 from dataclasses import dataclass
 
 from jiant.tasks.lib.templates import span_prediction as span_pred_template
-from jiant.utils.retokenize import TokenAligner, MosesTokenizer
+from jiant.utils.retokenize import TokenAligner
 
 
 class QASRLTask(span_pred_template.AbstractSpanPredicationTask):
@@ -23,7 +24,7 @@ class QASRLTask(span_pred_template.AbstractSpanPredicationTask):
             lines = f.read().splitlines()
 
         examples = []
-        moses_tokenizer = MosesTokenizer()
+        ptb_detokenizer = nltk.tokenize.treebank.TreebankWordDetokenizer()
 
         for line in lines:
             datum = json.loads(line)
@@ -53,7 +54,7 @@ class QASRLTask(span_pred_template.AbstractSpanPredicationTask):
             }
 
             passage_ptb_tokens = datum["sentence_tokens"]
-            passage_space_tokens = moses_tokenizer.detokenize_ptb(passage_ptb_tokens).split()
+            passage_space_tokens = ptb_detokenizer.detokenize(passage_ptb_tokens).split()
             passage_space_str = " ".join(passage_space_tokens)
 
             token_aligner = TokenAligner(source=passage_ptb_tokens, target=passage_space_tokens)
