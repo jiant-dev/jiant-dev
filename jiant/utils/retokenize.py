@@ -239,6 +239,7 @@ class MosesTokenizer(object):
             "-RCB-": "}",
             "``": '"',
             "''": '"',
+            "`": "'",
         }
 
         def replace_list(ls, d):
