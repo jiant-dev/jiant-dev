@@ -88,13 +88,16 @@ class ConcatnateStringListAccumulator(BaseAccumulator):
         self.str_list = []
 
     def update(self, batch_logits, batch_loss, batch, batch_metadata):
-        _, span_pred = batch_logits.max(dim=1)
-        pred_token_start, pred_token_end = batch_logits[:, 0], batch_logits[:, 1]
-        pred_char_start = batch.token_idx_to_char_idx_start[pred_token_start]
-        pred_char_end = batch.token_idx_to_char_idx_end[pred_token_end]
+        bs = len(batch_logits)
+        span_pred = batch_logits.argmax(axis=1)
+        pred_token_start, pred_token_end = span_pred[:, 0], span_pred[:, 1]
+        pred_char_start = batch.token_idx_to_char_idx_start.cpu().numpy()[
+            range(bs), pred_token_start
+        ]
+        pred_char_end = batch.token_idx_to_char_idx_end.cpu().numpy()[range(bs), pred_token_end]
         self.str_list.extend(
             [
-                s[i1, i2 + 1]
+                s[i1 : i2 + 1]
                 for i1, i2, s in zip(pred_char_start, pred_char_end, batch.selection_str)
             ]
         )
@@ -158,6 +161,12 @@ class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
         f1 = sum([f1_score(s1, s2) for s1, s2 in zip(preds, labels)]) / len(labels)
         scores = {"f1": f1, "em": em, "avg": (f1 + em) / 2}
         return Metrics(major=scores["avg"], minor=scores)
+
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatnateStringListAccumulator, tokenizer, labels: list
+    ) -> Metrics:
+        preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
+        return self.compute_metrics_from_preds_and_labels(preds=preds, labels=labels)
 
 
 class BaseLogitsEvaluationScheme(BaseEvaluationScheme):
