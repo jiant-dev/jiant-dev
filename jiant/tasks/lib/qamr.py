@@ -19,7 +19,7 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
 
     def _create_examples(self, qa_file_path, set_type):
         wiki_df = pd.read_csv(self.path_dict["wiki_dict"], sep="\t", names=["sent_id", "text"])
-        wiki_dict = {row["sent_id"]: row["text"] for _, row in wiki_df.iterrows()}
+        wiki_dict = {row.sent_id: row.text for row in wiki_df.itertuples(index=False)}
 
         data_df = pd.read_csv(
             qa_file_path,
@@ -40,8 +40,8 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
         data_df["sent"] = data_df["sent_id"].apply(wiki_dict.get)
 
         examples = []
-        for i, row in data_df.iterrows():
         ptb_detokenizer = nltk.tokenize.treebank.TreebankWordDetokenizer()
+        for i, row in enumerate(data_df.itertuples(index=False)):
             # Answer indices are a space-limited list of numbers.
             # We simply take the min/max of the indices
             answer_idxs = list(map(int, row["answer"].split()))
