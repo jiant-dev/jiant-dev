@@ -44,9 +44,9 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
         for i, row in enumerate(data_df.itertuples(index=False)):
             # Answer indices are a space-limited list of numbers.
             # We simply take the min/max of the indices
-            answer_idxs = list(map(int, row["answer"].split()))
+            answer_idxs = list(map(int, row.answer.split()))
             answer_token_start, answer_token_end = min(answer_idxs), max(answer_idxs)
-            passage_ptb_tokens = row["sent"].split()
+            passage_ptb_tokens = row.sent.split()
             passage_space_tokens = ptb_detokenizer.detokenize(passage_ptb_tokens).split()
             passage_space_str = " ".join(passage_space_tokens)
 
@@ -66,7 +66,7 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
                 span_pred_template.Example(
                     guid="%s-%s" % (set_type, i),
                     passage=passage_space_str,
-                    question=row["question"],
+                    question=row.question,
                     answer=answer_str,
                     answer_char_span=answer_char_span,
                 )
