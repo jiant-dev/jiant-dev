@@ -336,6 +336,26 @@ class BaseSquadStyleTask(Task):
         doc_stride=128,
         max_query_length=64,
     ):
+        """SQuAD-style Task object, with support for both SQuAD v1.1 and SQuAD v2.0 formats
+
+        Args:
+            name (str): task_name
+            path_dict (Dict[str, str]): Dictionary to paths to data
+            version_2_with_negative (bool): Whether negative (impossible-to-answer) is an option.
+                                            False for SQuAD v1.1-type tasks
+                                            True for SquAD 2.0-type tasks
+            n_best_size (int): The total number of n-best predictions to generate in the
+                               n-best predictions.
+            max_answer_length (int): The maximum length of an answer that can be generated.
+                                     This is needed because the start and end predictions are
+                                     not conditioned on one another.
+            null_score_diff_threshold (float): If null_score - best_non_null is greater than
+                                               the threshold predict null.
+            doc_stride (int): When splitting up a long document into chunks, how much stride
+                              to take between chunks.
+            max_query_length (int): The maximum number of tokens for the question. Questions
+                                    longer than this will be truncated to this length.
+        """
         super().__init__(name=name, path_dict=path_dict)
         self.version_2_with_negative = version_2_with_negative
         self.n_best_size = n_best_size

@@ -105,7 +105,7 @@ def convert_examples_to_dataset(
     """Create ListDataset containing DataRows and metadata.
 
     Args:
-        task: Task object
+        task (Task): Task object
         examples (list[Example]): list of task Examples.
         tokenizer: TODO  (Issue #44)
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
@@ -155,7 +155,7 @@ def tokenize_and_featurize(
     """Create list of DataRows containing tokenized and featurized examples.
 
     Args:
-        task: Task object
+        task (Task): Task object
         examples (list[Example]): list of task Examples.
         tokenizer: TODO  (Issue #44)
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
@@ -170,7 +170,6 @@ def tokenize_and_featurize(
     if task.TASK_TYPE == TaskTypes.SQUAD_STYLE_QA:
         data_rows = []
         for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose):
-            # TODO: Expose parameters  (Issue #49)
             data_rows += example.to_feature_list(
                 tokenizer=tokenizer,
                 max_seq_length=feat_spec.max_seq_length,
@@ -192,7 +191,7 @@ def iter_chunk_tokenize_and_featurize(
     """Generator of DataRows containing tokenized and featurized examples.
 
     Args:
-        task: Task object
+        task (Task): Task object
         examples (list[Example]): list of task Examples.
         tokenizer: TODO  (Issue #44)
         feat_spec (FeaturizationSpec): Tokenization-related metadata.
@@ -206,7 +205,6 @@ def iter_chunk_tokenize_and_featurize(
     for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose):
         # TODO: Better solution  (Issue #48)
         if task.TASK_TYPE == TaskTypes.SQUAD_STYLE_QA:
-            # TODO: Expose parameters  (Issue #49)
             yield from example.to_feature_list(
                 tokenizer=tokenizer,
                 max_seq_length=feat_spec.max_seq_length,
