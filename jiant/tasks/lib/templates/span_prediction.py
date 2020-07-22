@@ -37,20 +37,16 @@ class Example(BaseExample):
         source_char_idx_to_target_token_idx = token_aligner.C.dot(
             token_aligner.V.T
         )  # maybe make this a function in retokenize?
-        try:
-            nonzero_idxs = (
-                source_char_idx_to_target_token_idx[
-                    self.answer_char_span[0] : self.answer_char_span[1] + 1
-                ]
-                .sum(axis=0)
-                .nonzero()[0]
-                .tolist()
-            )
-            answer_token_span = (nonzero_idxs[0], nonzero_idxs[-1])
-        except Exception as e:
-            import IPython
+        nonzero_idxs = (
+            source_char_idx_to_target_token_idx[
+                self.answer_char_span[0] : self.answer_char_span[1] + 1
+            ]
+            .sum(axis=0)
+            .nonzero()[0]
+            .tolist()
+        )
+        answer_token_span = (nonzero_idxs[0], nonzero_idxs[-1])
 
-            IPython.embed()
         return TokenizedExample(
             guid=self.guid,
             passage=passage_tokens,
@@ -118,10 +114,6 @@ class TokenizedExample(BaseTokenizedExample):
         ls = [-1] * unpadded_inputs.cls_offset + (self.token_idx_to_char_idx_map > 0).argmax(
             axis=1
         ).tolist()[: len(passage)]
-        if len(ls) > feat_spec.max_seq_length:
-            import IPython
-
-            IPython.embed()
         token_idx_to_char_idx_start = pad_to_max_seq_length(
             ls=ls,
             max_seq_length=feat_spec.max_seq_length,

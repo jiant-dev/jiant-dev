@@ -59,13 +59,14 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
                 .tolist()
             )
             answer_char_span = (nonzero_idxs[0], nonzero_idxs[-1])
+            answer_str = passage_space_str[answer_char_span[0] : answer_char_span[1] + 1]
 
             examples.append(
                 span_pred_template.Example(
                     guid="%s-%s" % (set_type, i),
                     passage=passage_space_str,
                     question=row["question"],
-                    answer=passage_space_str[answer_char_span[0] : answer_char_span[1] + 1],
+                    answer=answer_str,
                     answer_char_span=answer_char_span,
                 )
             )
