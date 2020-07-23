@@ -150,14 +150,16 @@ class TokenAligner(object):
             source = " ".join(source)
         if not isinstance(target, str):
             target = " ".join(target)
-        self.U = token_to_char(source)
-        self.V = token_to_char(target)  # (n x N)
-        self.C = char_to_char(source, target)  # (M x N)
+        self.U = token_to_char(source)  # (m X M) source token idx to source char idx
+        self.V = token_to_char(target)  # (n x N) target token idx to target char idx
+        self.C = char_to_char(source, target)  # (M x N) source char idx to target char idx
         # Token transfer matrix from (m) tokens in source to (n) tokens in the target. Mat value at
         # index i, j measures the character overlap btwn the ith source token and jth target token.
-        self.T = self.U.dot(self.C).dot(self.V.T)
+        self.source_token_idx_to_target_token_idx = self.U.dot(self.C).dot(self.V.T)
+        self.source_token_idx_to_target_char_idx = self.U.dot(self.C)
+        self.source_char_idx_to_target_token_idx = self.C.dot(self.V.T)
 
-    def project_tokens(self, idxs: Union[int, Sequence[int]]) -> Sequence[int]:
+    def project_token_idxs(self, idxs: Union[int, Sequence[int]]) -> Sequence[int]:
         """Project source token index(s) to target token indices.
 
         Takes a list of token indices in the source token sequence, and returns the corresponding
@@ -170,7 +172,7 @@ class TokenAligner(object):
             >>> source_tokens = ['abc', 'def', 'ghi', 'jkl']
             >>> target_tokens = ['abc', 'd', 'ef', 'ghi', 'jkl']
             >>> ta = TokenAligner(source_tokens, target_tokens)
-            >>> print(ta.project_tokens([1, 2]))
+            >>> print(ta.project_token_idxs([1, 2]))
             [1 2 3]
 
         Returns:
@@ -179,31 +181,91 @@ class TokenAligner(object):
         """
         if isinstance(idxs, int):
             idxs = [idxs]
-        return self.T[idxs].nonzero()[1]  # column indices
+        return self.source_token_idx_to_target_token_idx[idxs].nonzero()[1]  # column indices
 
-    def project_span(self, start, end) -> Tuple[int, int]:
+    @classmethod
+    def _project_span(cls, mat, start, end, inclusive):
+        if inclusive:
+            end = end + 1
+        target_matches = mat[start:end].sum(axis=0).nonzero()[0].tolist()
+        if len(target_matches) == 0:
+            raise ValueError("Project into empty span in target sequence")
+        output_start, output_end = target_matches[0], target_matches[-1]
+        if not inclusive:
+            output_end = output_end + 1
+        return (output_start, output_end)
+
+    def project_token_span(self, start, end, inclusive=False) -> Tuple[int, int]:
         """Project a span from source to target token sequence.
 
         Notes:
-            Span end is taken to be exclusive, so this actually projects end - 1 and maps back to an
-            exclusive target span.
+            If inclusive is False, span start is inclusive, while the end exclusive.
+            This affects input and output simultaneously.
 
         Examples:
             >>> source_tokens = ['abc', 'def', 'ghi', 'jkl']
             >>> target_tokens = ['abc', 'd', 'ef', 'ghi', 'jkl']
             >>> ta = TokenAligner(source_tokens, target_tokens)
             >>> start, end = 0, 2
-            >>> print(ta.project_span(start, end))
+            >>> print(ta.project_token_span(start, end))
             (0, 3)
 
-        Raises:
-            ValueError if span end index is not greater than start index.
+        Raise:
+            When target span is empty
 
         Returns:
-            Tuple[int, int] representing the target span (span end exclusive) for the source span.
-
+            Tuple[int, int] representing the target span corresponding to the source span.
         """
-        if start >= end:
-            raise ValueError("provide a valid (end-exclusive) span.")
-        tgt_idxs = self.project_tokens([start, end - 1])
-        return min(tgt_idxs), max(tgt_idxs) + 1
+        return self._project_span(
+            mat=self.source_token_idx_to_target_token_idx, start=start, end=end, inclusive=inclusive
+        )
+
+    def project_token_to_char_span(self, start, end, inclusive=False) -> Tuple[int, int]:
+        """Project a span from source to target token sequence.
+
+        Notes:
+            If inclusive is False, span start is inclusive, while the end exclusive.
+            This affects input and output simultaneously.
+
+        Examples:
+            >>> source_tokens = ['abc', 'def', 'ghi', 'jkl']
+            >>> target_str = 'abc d ef ghi jkl'
+            >>> ta = TokenAligner(source_tokens, target_str)
+            >>> start, end = 0, 2
+            >>> print(ta.project_token_span(start, end))
+            (0, 8)
+
+        Raise:
+            When target span is empty
+
+        Returns:
+            Tuple[int, int] representing the target span corresponding to the source span.
+        """
+        return self._project_span(
+            mat=self.source_token_idx_to_target_char_idx, start=start, end=end, inclusive=inclusive
+        )
+
+    def project_char_to_token_span(self, start, end, inclusive=False) -> Tuple[int, int]:
+        """Project a span from source to target token sequence.
+
+        Notes:
+            If inclusive is False, span start is inclusive, while the end exclusive.
+            This affects input and output simultaneously.
+
+        Examples:
+            >>> source_str = 'abc def ghi jkl'
+            >>> target_tokens = ['abc', 'd', 'ef', 'ghi', 'jkl']
+            >>> ta = TokenAligner(source_str, target_tokens)
+            >>> start, end = 0, 4
+            >>> print(ta.project_token_span(start, end))
+            (0, 1)
+
+        Raise:
+            When target span is empty
+
+        Returns:
+            Tuple[int, int] representing the target span corresponding to the source span.
+        """
+        return self._project_span(
+            mat=self.source_char_idx_to_target_token_idx, start=start, end=end, inclusive=inclusive
+        )
