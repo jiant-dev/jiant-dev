@@ -696,7 +696,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
         return CCGEvaluationScheme()
     elif isinstance(task, tasks.CommitmentBankTask):
         return CommitmentBankEvaluationScheme()
-    elif isinstance(task, tasks.ColaTask, tasks.GlueDiagnosticsTask):
+    elif isinstance(task, tasks.ColaTask):
         return MCCEvaluationScheme()
     elif isinstance(
         task,
