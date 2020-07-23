@@ -242,12 +242,16 @@ def create_taskmodel(
     if model_arch in [
         ModelArchitectures.BERT,
         ModelArchitectures.ROBERTA,
-        ModelArchitectures.XLM,
         ModelArchitectures.ALBERT,
         ModelArchitectures.XLM_ROBERTA,
     ]:
         hidden_size = encoder.config.hidden_size
         hidden_dropout_prob = encoder.config.hidden_dropout_prob
+    elif model_arch in [
+        ModelArchitectures.XLM,
+    ]:
+        hidden_size = encoder.config.emb_dim
+        hidden_dropout_prob = encoder.config.dropout
     elif model_arch in [
         ModelArchitectures.BART,
         ModelArchitectures.MBART,
@@ -391,6 +395,8 @@ def get_encoder(model_arch, ancestor_model):
         return ancestor_model.roberta
     elif model_arch == ModelArchitectures.ALBERT:
         return ancestor_model.albert
+    elif model_arch == ModelArchitectures.XLM:
+        return ancestor_model.transformer
     elif model_arch == ModelArchitectures.XLM_ROBERTA:
         return ancestor_model.roberta
     elif model_arch in (ModelArchitectures.BART, ModelArchitectures.MBART):
@@ -421,6 +427,11 @@ TRANSFORMERS_CLASS_SPEC_DICT = {
         config_class=transformers.AlbertConfig,
         tokenizer_class=transformers.AlbertTokenizer,
         model_class=transformers.AlbertForMaskedLM,
+    ),
+    ModelArchitectures.XLM: TransformersClassSpec(
+        config_class=transformers.XLMConfig,
+        tokenizer_class=transformers.XLMTokenizer,
+        model_class=transformers.XLMWithLMHeadModel,
     ),
     ModelArchitectures.XLM_ROBERTA: TransformersClassSpec(
         config_class=transformers.XLMRobertaConfig,
@@ -464,6 +475,7 @@ def get_model_arch_from_jiant_model(jiant_model: nn.Module) -> ModelArchitecture
 
 MODEL_PREFIX = {
     ModelArchitectures.BERT: "bert",
+    ModelArchitectures.XLM: "transformer",
     ModelArchitectures.ROBERTA: "roberta",
     ModelArchitectures.ALBERT: "albert",
     ModelArchitectures.XLM_ROBERTA: "xlm-roberta",

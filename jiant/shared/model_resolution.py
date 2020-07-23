@@ -74,7 +74,7 @@ class ModelArchitectures(Enum):
         if isinstance(tokenizer_class, transformers.BertTokenizer):
             return cls.BERT
         elif isinstance(tokenizer_class, transformers.XLMTokenizer):
-            return cls.XLM_ROBERTA
+            return cls.XLM
         elif isinstance(tokenizer_class, transformers.RobertaTokenizer):
             return cls.ROBERTA
         elif isinstance(tokenizer_class, transformers.XLMRobertaTokenizer):
@@ -107,6 +107,11 @@ class ModelArchitectures(Enum):
             and encoder.__class__.__name__ == "BertModel"
         ):
             return cls.BERT
+        elif (
+            isinstance(encoder, transformers.XLMModel)
+            and encoder.__class__.__name__ == "XLMModel"
+        ):
+            return cls.XLM
         elif (
             isinstance(encoder, transformers.RobertaModel)
             and encoder.__class__.__name__ == "RobertaModel"

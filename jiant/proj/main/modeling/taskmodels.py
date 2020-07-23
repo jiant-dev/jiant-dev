@@ -282,12 +282,18 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
     if model_arch in [
         ModelArchitectures.BERT,
         ModelArchitectures.ROBERTA,
-        ModelArchitectures.XLM,
         ModelArchitectures.ALBERT,
         ModelArchitectures.XLM_ROBERTA,
     ]:
         output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
         pooled, unpooled, other = output[1], output[0], output[2:]
+    elif model_arch in [
+        ModelArchitectures.XLM,
+    ]:
+        output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+        unpooled, other = output[0], output[1:]
+        # We take the hidden state for the first token. HF has this configurable, but I'm not sure why
+        pooled = unpooled[:, 0]
     elif model_arch in [
         ModelArchitectures.BART,
         ModelArchitectures.MBART,
@@ -305,13 +311,11 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
     else:
         raise KeyError(model_arch)
 
-    if len(output) == 2:
+    # Extend later with attention, hidden_acts, etc
+    if other:
         return EncoderOutput(pooled=pooled, unpooled=unpooled)
-    elif len(output) > 2:
-        # Extend later with attention, hidden_acts, etc
-        return EncoderOutput(pooled=pooled, unpooled=unpooled, other=output[2:])
     else:
-        raise RuntimeError()
+        return EncoderOutput(pooled=pooled, unpooled=unpooled, other=output[2:])
 
 
 def compute_mlm_loss(logits, masked_lm_labels):
