@@ -24,4 +24,8 @@ class Batch(mnli.Batch):
 
 
 class GlueDiagnosticsTask(mnli.MnliTask):
-    pass
+    def get_train_examples(self):
+        return None
+
+    def get_val_examples(self):
+        return None
