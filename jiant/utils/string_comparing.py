@@ -24,7 +24,7 @@ def normalize_answer(s):
     return white_space_fix(remove_articles(remove_punc(lower(s))))
 
 
-def f1_score(prediction, ground_truth):
+def string_f1_score(prediction, ground_truth):
     """Compute normalized token level F1
     From official ReCoRD eval script
     """
