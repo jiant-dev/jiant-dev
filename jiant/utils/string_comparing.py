@@ -1,5 +1,6 @@
 import re
 import string
+import collections
 
 
 def normalize_answer(s):
