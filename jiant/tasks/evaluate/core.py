@@ -16,7 +16,9 @@ import jiant.tasks.lib.templates.squad_style.utils as squad_style_utils
 import jiant.tasks.lib.mlqa as mlqa_lib
 from jiant.utils.python.datastructures import ExtendedDataClassMixin
 from jiant.utils.python.io import read_json
-from jiant.utils.string_comparing import f1_score, exact_match_score
+from jiant.utils.string_comparing import f1_score as string_f1_score
+from jiant.utils.string_comparing import exact_match_score
+, 
 
 
 @dataclass
@@ -121,7 +123,7 @@ class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
 
     def compute_metrics_from_preds_and_labels(self, preds, labels):
         em = sum([exact_match_score(s1, s2) for s1, s2 in zip(preds, labels)]) / len(labels)
-        f1 = sum([f1_score(s1, s2) for s1, s2 in zip(preds, labels)]) / len(labels)
+        f1 = sum([string_f1_score(s1, s2) for s1, s2 in zip(preds, labels)]) / len(labels)
         scores = {"f1": f1, "em": em, "avg": (f1 + em) / 2}
         return Metrics(major=scores["avg"], minor=scores)
 
@@ -402,7 +404,7 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
             pred_ans = relevant_examples[psg_qns_pred].entity_str
 
             # F1
-            f1 = cls.metric_max_over_ground_truths(f1_score, pred_ans, golds)
+            f1 = cls.metric_max_over_ground_truths(string_f1_score, pred_ans, golds)
             f1_ls.append(f1)
 
             # EM
