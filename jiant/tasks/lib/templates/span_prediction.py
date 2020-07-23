@@ -76,7 +76,7 @@ class TokenizedExample(BaseTokenizedExample):
         )
         assert (
             len(passage) >= self.answer_token_span[1]
-        ), "Answer span truncated, please raise max_seq_length."
+        ), f"Answer span {self.answer_token_span} truncated, please raise max_seq_length."
         unpadded_inputs = add_cls_token(
             unpadded_tokens=(
                 passage + [tokenizer.sep_token] + maybe_extra_sep + question + [tokenizer.sep_token]
