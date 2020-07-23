@@ -49,15 +49,9 @@ class QAMRTask(span_pred_template.AbstractSpanPredicationTask):
             passage_space_str = " ".join(passage_space_tokens)
 
             token_aligner = TokenAligner(source=passage_ptb_tokens, target=passage_space_tokens)
-            ptb_token_idx_to_space_char_idx = token_aligner.U.dot(token_aligner.C)
-
-            nonzero_idxs = (
-                ptb_token_idx_to_space_char_idx[answer_token_start : answer_token_end + 1]
-                .sum(axis=0)
-                .nonzero()[0]
-                .tolist()
+            answer_char_span = token_aligner.project_token_to_char_span(
+                answer_token_start, answer_token_end, inclusive=True
             )
-            answer_char_span = (nonzero_idxs[0], nonzero_idxs[-1])
             answer_str = passage_space_str[answer_char_span[0] : answer_char_span[1] + 1]
 
             examples.append(

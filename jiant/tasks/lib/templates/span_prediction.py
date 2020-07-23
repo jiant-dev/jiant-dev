@@ -34,18 +34,9 @@ class Example(BaseExample):
 
         passage_tokens = tokenizer.tokenize(self.passage)
         token_aligner = TokenAligner(source=self.passage, target=passage_tokens)
-        source_char_idx_to_target_token_idx = token_aligner.C.dot(
-            token_aligner.V.T
-        )  # maybe make this a function in retokenize?
-        nonzero_idxs = (
-            source_char_idx_to_target_token_idx[
-                self.answer_char_span[0] : self.answer_char_span[1] + 1
-            ]
-            .sum(axis=0)
-            .nonzero()[0]
-            .tolist()
+        answer_token_span = token_aligner.project_char_to_token_span(
+            self.answer_char_span[0], self.answer_char_span[1], inclusive=True
         )
-        answer_token_span = (nonzero_idxs[0], nonzero_idxs[-1])
 
         return TokenizedExample(
             guid=self.guid,
@@ -54,7 +45,7 @@ class Example(BaseExample):
             answer_str=self.answer,
             passage_str=self.passage,
             answer_token_span=answer_token_span,
-            token_idx_to_char_idx_map=source_char_idx_to_target_token_idx.T,
+            token_idx_to_char_idx_map=token_aligner.source_char_idx_to_target_token_idx.T,
         )
 
 
