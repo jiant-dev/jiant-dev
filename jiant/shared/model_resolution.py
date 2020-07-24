@@ -165,7 +165,7 @@ def build_featurization_spec(model_type, max_seq_length):
             pad_on_left=False,
             cls_token_segment_id=0,
             pad_token_segment_id=0,
-            pad_token_id=0,
+            pad_token_id=2,  # XLM uses pad_token_id = 1
             pad_token_mask_id=0,
             sequence_a_segment_id=0,
             sequence_b_segment_id=0,  # RoBERTa has no token_type_ids

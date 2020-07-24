@@ -290,7 +290,12 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
     elif model_arch in [
         ModelArchitectures.XLM,
     ]:
-        output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+        output = encoder(
+            input_ids=input_ids,
+            token_type_ids=None,
+            # ^ Need None, otherwise XLM will use regular embeddings on token_type_ids
+            attention_mask=input_mask,
+        )
         unpooled, other = output[0], output[1:]
         # We take the hidden state for the first token. HF has this configurable, but I'm not sure why
         pooled = unpooled[:, 0]
