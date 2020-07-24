@@ -62,9 +62,14 @@ class BaseEvaluationScheme:
 class ConcatenateLogitsAccumulator(BaseAccumulator):
     def __init__(self):
         self.logits_list = []
+        self.guid_list = []
 
     def update(self, batch_logits, batch_loss, batch, batch_metadata):
         self.logits_list.append(batch_logits)
+        self.guid_list.append(batch_metadata.get("guid"))
+
+    def get_guids(self):
+        return np.concatenate(self.guid_list)
 
     def get_accumulated(self):
         all_logits = np.concatenate(self.logits_list)
@@ -262,7 +267,8 @@ class MultiRCEvaluationScheme(BaseEvaluationScheme):
         return self.get_labels_from_examples(task=task, examples=examples)
 
     def get_preds_from_accumulator(self, task, accumulator):
-        raise NotImplementedError()
+        logits = accumulator.get_accumulated()
+        return np.argmax(logits, axis=-1)
 
     def compute_metrics_from_accumulator(
         self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
@@ -668,6 +674,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
         (
             tasks.AdversarialNliTask,
             tasks.AbductiveNliTask,
+            tasks.AcceptabilityDefinitenessTask,
             tasks.BoolQTask,
             tasks.CopaTask,
             tasks.MnliTask,
@@ -675,9 +682,11 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
             tasks.QnliTask,
             tasks.RteTask,
             tasks.SciTailTask,
+            tasks.SentevalTenseTask,
             tasks.SnliTask,
             tasks.SstTask,
             tasks.WiCTask,
+            tasks.WnliTask,
             tasks.WSCTask,
             tasks.XnliTask,
         ),
