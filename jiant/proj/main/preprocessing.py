@@ -160,7 +160,9 @@ def tokenize_and_featurize(
 
     """
     # TODO: Better solution  (Issue #48)
-    if isinstance(examples[0], squad_style.Example):
+    if (examples is None) or (examples == []):
+        data_rows = []
+    elif isinstance(examples[0], squad_style.Example):
         data_rows = []
         for example in maybe_tqdm(examples, desc="Tokenizing", verbose=verbose):
             # TODO: Expose parameters  (Issue #49)
