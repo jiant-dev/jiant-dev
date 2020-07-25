@@ -43,6 +43,10 @@ def setup_jiant_model(
         transformers_class_spec=transformers_class_spec, model_config_path=model_config_path,
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
+    if model_arch == ModelArchitectures.XLM:
+        # Need to pass the id2lang and lang2id map to the encoder
+        encoder.id2lang = ancestor_model.config.id2lang
+        encoder.lang2id = ancestor_model.config.lang2id
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
             task=task_dict[task_name_list[0]],  # Take the first task

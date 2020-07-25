@@ -290,10 +290,13 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
     elif model_arch in [
         ModelArchitectures.XLM,
     ]:
+        lang_id = encoder.lang2id["en"]
+        langs = input_ids.new(*input_ids.shape).fill_(lang_id)
         output = encoder(
             input_ids=input_ids,
             token_type_ids=None,
             # ^ Need None, otherwise XLM will use regular embeddings on token_type_ids
+            langs=langs,
             attention_mask=input_mask,
         )
         unpooled, other = output[0], output[1:]
