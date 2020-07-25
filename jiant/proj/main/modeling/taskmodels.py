@@ -258,10 +258,11 @@ def get_output_from_encoder_and_batch(encoder, batch) -> EncoderOutput:
         input_ids=batch.input_ids,
         segment_ids=batch.segment_ids,
         input_mask=batch.input_mask,
+        batch=batch,
     )
 
 
-def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> EncoderOutput:
+def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) -> EncoderOutput:
     """Pass inputs to encoder, return encoder output.
 
     Args:
@@ -269,6 +270,8 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
         input_ids: token indices (see huggingface.co/transformers/glossary.html#input-ids).
         segment_ids: token type ids (see huggingface.co/transformers/glossary.html#token-type-ids).
         input_mask: attention mask (see huggingface.co/transformers/glossary.html#attention-mask).
+        batch: Batch object (used to resolve any additional metadata beyond
+               input_ids/segment_ids/input_mask).
 
     Raises:
         RuntimeError if encoder output contains less than 2 elements.
@@ -290,18 +293,12 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
     elif model_arch in [
         ModelArchitectures.XLM,
     ]:
-        lang_id = encoder.lang2id["en"]
-        langs = input_ids.new(*input_ids.shape).fill_(lang_id)
-        output = encoder(
+        pooled, unpooled, other = get_output_from_xlm_with_lang_handing(
+            encoder=encoder,
             input_ids=input_ids,
-            token_type_ids=None,
-            # ^ Need None, otherwise XLM will use regular embeddings on token_type_ids
-            langs=langs,
-            attention_mask=input_mask,
+            input_mask=input_mask,
+            batch=batch,
         )
-        unpooled, other = output[0], output[1:]
-        # We take the hidden state for the first token. HF has this configurable, but I'm not sure why
-        pooled = unpooled[:, 0]
     elif model_arch in [
         ModelArchitectures.BART,
         ModelArchitectures.MBART,
@@ -323,7 +320,35 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
     if other:
         return EncoderOutput(pooled=pooled, unpooled=unpooled)
     else:
-        return EncoderOutput(pooled=pooled, unpooled=unpooled, other=output[2:])
+        return EncoderOutput(pooled=pooled, unpooled=unpooled, other=other)
+
+
+def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch):
+    # getattr is bad, but XLM is currently the only model architecture that requires additional
+    # metadata
+    if hasattr(batch, "lang"):
+        langs = batch.lang
+    else:
+        assert hasattr(encoder, "default_lang"), (
+            "The batch does not have a `lang` attribute, and the XLMModel encoder also does not"
+            " have a default_lang configuration. XLM needs a language embedding or its performance"
+            " is horrendous. If this task requires handling different languages, consider adding"
+            " a `lang` field to the batch. Otherwise, consider adding default_lang='en' or "
+            " a similar default language code to use to the model_config (from model_config_path)."
+        )
+        lang_id = encoder.lang2id[encoder.default_lang]
+        langs = input_ids.new(*input_ids.shape).fill_(lang_id)
+    output = encoder(
+        input_ids=input_ids,
+        token_type_ids=None,
+        # ^ Need None, otherwise XLM will use regular embeddings on token_type_ids
+        langs=langs,
+        attention_mask=input_mask,
+    )
+    unpooled, other = output[0], output[1:]
+    # We take the hidden state for the first token. HF has this configurable, but I'm not sure why
+    pooled = unpooled[:, 0]
+    return EncoderOutput(pooled=pooled, unpooled=unpooled, other=other)
 
 
 def compute_mlm_loss(logits, masked_lm_labels):

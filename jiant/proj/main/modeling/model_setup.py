@@ -5,12 +5,12 @@ import torch
 import torch.nn as nn
 import transformers
 
-
 import jiant.proj.main.components.container_setup as container_setup
 import jiant.proj.main.modeling.primary as primary
 import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.proj.main.modeling.heads as heads
 import jiant.shared.model_setup as model_setup
+import jiant.utils.python.io as io
 import jiant.utils.python.strings as strings
 from jiant.shared.model_setup import ModelArchitectures
 from jiant.tasks import Task, TaskTypes
@@ -45,8 +45,11 @@ def setup_jiant_model(
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
     if model_arch == ModelArchitectures.XLM:
         # Need to pass the id2lang and lang2id map to the encoder
-        encoder.id2lang = ancestor_model.config.id2lang
-        encoder.lang2id = ancestor_model.config.lang2id
+        xlm_specific_setup(
+            encoder=encoder,
+            ancestor_model=ancestor_model,
+            model_config_path=model_config_path,
+        )
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
             task=task_dict[task_name_list[0]],  # Take the first task
@@ -65,6 +68,21 @@ def setup_jiant_model(
         task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
         tokenizer=tokenizer,
     )
+
+
+def xlm_specific_setup(encoder, ancestor_model: transformers.XLMModel, model_config_path: str):
+    # XLM requires language embeddings to work well, so we need to provide a lang_id for each
+    # input.
+    # 1) We copy the id2lang/lang2id maps from XLMModel.config here.
+    # 2) We also set a default_lang so we can fall back to a default language without modifying
+    #    the task Batch objects. This requires modifying the model_config JSON.
+    #    We make default_lang optional here as some workflows may not require a default_lang to
+    #    be specified. If it turns out to be required later, an error will be thrown.
+    model_config = io.read_json(model_config_path)
+    if "default_lang" in model_config:
+        encoder.default_lang = model_config["default_lang"]
+    encoder.id2lang = ancestor_model.config.id2lang
+    encoder.lang2id = ancestor_model.config.lang2id
 
 
 def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, load_mode: str):
