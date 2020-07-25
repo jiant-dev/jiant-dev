@@ -78,6 +78,8 @@ def xlm_specific_setup(encoder, ancestor_model: transformers.XLMModel, model_con
     #    the task Batch objects. This requires modifying the model_config JSON.
     #    We make default_lang optional here as some workflows may not require a default_lang to
     #    be specified. If it turns out to be required later, an error will be thrown.
+    # (Transformers actually does provide a `lang_id` default, but it's set to an arbitrary value and
+    #  isn't consistently used. Here, we force the user to set it to a desired value if necessary.)
     model_config = io.read_json(model_config_path)
     if "default_lang" in model_config:
         encoder.default_lang = model_config["default_lang"]

@@ -326,8 +326,8 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
 def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch):
     # getattr is bad, but XLM is currently the only model architecture that requires additional
     # metadata
-    if hasattr(batch, "lang"):
-        langs = batch.lang
+    if hasattr(batch, "lang_id"):
+        lang_id = batch.lang_id
     else:
         assert hasattr(encoder, "default_lang"), (
             "The batch does not have a `lang` attribute, and the XLMModel encoder also does not"
@@ -337,7 +337,7 @@ def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch)
             " a similar default language code to use to the model_config (from model_config_path)."
         )
         lang_id = encoder.lang2id[encoder.default_lang]
-        langs = input_ids.new(*input_ids.shape).fill_(lang_id)
+    langs = input_ids.new(*input_ids.shape).fill_(lang_id)
     output = encoder(
         input_ids=input_ids,
         token_type_ids=None,
@@ -348,7 +348,7 @@ def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch)
     unpooled, other = output[0], output[1:]
     # We take the hidden state for the first token. HF has this configurable, but I'm not sure why
     pooled = unpooled[:, 0]
-    return EncoderOutput(pooled=pooled, unpooled=unpooled, other=other)
+    return pooled, unpooled, other
 
 
 def compute_mlm_loss(logits, masked_lm_labels):
