@@ -226,7 +226,7 @@ def build_featurization_spec(model_type, max_seq_length):
         # Also two '</s>'s are used between sentences. Yes, not '</s><s>'.
         return FeaturizationSpec(
             max_seq_length=max_seq_length,
-            cls_token_at_end=True,
+            cls_token_at_end=False,
             pad_on_left=False,
             cls_token_segment_id=0,
             pad_token_segment_id=0,
@@ -243,7 +243,7 @@ def build_featurization_spec(model_type, max_seq_length):
         # Also two '</s>'s are used between sentences. Yes, not '</s><s>'.
         return FeaturizationSpec(
             max_seq_length=max_seq_length,
-            cls_token_at_end=True,
+            cls_token_at_end=False,
             pad_on_left=False,
             cls_token_segment_id=0,
             pad_token_segment_id=0,
@@ -291,12 +291,14 @@ def resolve_is_lower_case(tokenizer):
 
 
 def bart_or_mbart_model_heuristic(model_config: transformers.BartConfig) -> ModelArchitectures:
-    warnings.warn("No clean way of disambiguating between BART and mBART models based on"
-                  " the transformer class, so we're falling back on a heuristic.")
     assert model_config.scale_embedding == \
         model_config.normalize_before == \
         model_config.add_final_layer_norm
     if model_config.scale_embedding:
-        return ModelArchitectures.MBART
+        model_arch = ModelArchitectures.MBART
     else:
-        return ModelArchitectures.BART
+        model_arch = ModelArchitectures.BART
+    warnings.warn("No clean way of disambiguating between BART and mBART models based on"
+                  " the transformer class, so we're falling back on a heuristic. "
+                  f"Guessing: {model_arch}")
+    return model_arch
