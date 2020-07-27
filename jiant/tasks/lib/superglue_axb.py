@@ -25,7 +25,7 @@ class Batch(rte.Batch):
 
 class SuperglueBroadcoverageDiagnosticsTask(rte.RteTask):
     def get_train_examples(self):
-        return None
+        raise RuntimeError("This task does not support training examples")
 
     def get_val_examples(self):
-        return None
+        raise RuntimeError("This task does not support validation examples")
