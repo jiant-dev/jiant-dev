@@ -311,8 +311,10 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
         # That's what we use for `unpooled` here.
         output = encoder(input_ids=input_ids, attention_mask=input_mask)
         unpooled, other = output[0], output[1:]
-        eos_mask = input_ids.eq(encoder.config.eos_token_id)
-        pooled = unpooled[eos_mask, :].view(unpooled.size(0), -1, unpooled.size(-1))[:, -1, :]
+        bsize, slen = input_ids.shape
+        batch_idx = torch.arange(bsize).to(input_ids.device)
+        # Get last non-pad index
+        pooled = unpooled[batch_idx, slen - input_ids.eq(encoder.config.pad_token_id).sum(1) - 1]
     else:
         raise KeyError(model_arch)
 

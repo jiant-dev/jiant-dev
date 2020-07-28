@@ -291,9 +291,9 @@ def resolve_is_lower_case(tokenizer):
 
 
 def bart_or_mbart_model_heuristic(model_config: transformers.BartConfig) -> ModelArchitectures:
-    assert model_config.scale_embedding == \
-        model_config.normalize_before == \
-        model_config.add_final_layer_norm
+    # assert model_config.scale_embedding == \
+    #     model_config.normalize_before == \
+    #     model_config.add_final_layer_norm
     if model_config.scale_embedding:
         model_arch = ModelArchitectures.MBART
     else:
