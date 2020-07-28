@@ -16,6 +16,8 @@ from jiant.tasks.retrieval import (
     CommitmentBankTask,
     WiCTask,
     WSCTask,
+    SuperglueWinogenderDiagnosticsTask,
+    GlueDiagnosticsTask,
 )
 
 
@@ -86,8 +88,9 @@ NLP_CONVERSION_DICT = {
     "glue_diagnostics": {
         "path": "glue",
         "name": "ax",
+        "label_map": GlueDiagnosticsTask.ID_TO_LABEL,
         "phase_map": None,
-        "jiant_task_name": "mnli",
+        "jiant_task_name": "glue_diagnostics",
     },
     # === SuperGLUE === #
     "boolq": {"path": "super_glue", "name": "boolq", "label_map": BoolQTask.ID_TO_LABEL},
@@ -107,10 +110,10 @@ NLP_CONVERSION_DICT = {
     },
     "superglue_winogender_diagnostics": {
         "path": "super_glue",
-        "name": "axg",
-        "label_map": RteTask.ID_TO_LABEL,
+        "name": "superglue_axg",
+        "label_map": SuperglueWinogenderDiagnosticsTask.ID_TO_LABEL,
         "phase_map": None,
-        "jiant_task_name": "rte",
+        "jiant_task_name": "superglue_axg",
     },
     # === Other === #
     "snli": {"path": "snli", "label_map": {0: "entailment", 1: "neutral", 2: "contradiction"}},
