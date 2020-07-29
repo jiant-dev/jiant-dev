@@ -236,7 +236,7 @@ class TokenAligner(object):
             >>> target_str = 'abc d ef ghi jkl'
             >>> ta = TokenAligner(source_tokens, target_str)
             >>> start, end = 0, 2
-            >>> print(ta.project_token_span(start, end))
+            >>> print(ta.project_token_to_char_span(start, end))
             (0, 8)
 
         Raise:
@@ -263,7 +263,7 @@ class TokenAligner(object):
             >>> target_tokens = ['abc', 'd', 'ef', 'ghi', 'jkl']
             >>> ta = TokenAligner(source_str, target_tokens)
             >>> start, end = 0, 4
-            >>> print(ta.project_token_span(start, end))
+            >>> print(ta.project_char_to_token_span(start, end))
             (0, 1)
 
         Raise:
