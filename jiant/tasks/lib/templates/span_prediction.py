@@ -102,11 +102,9 @@ class TokenizedExample(BaseTokenizedExample):
             pad_idx=0,
             pad_right=not feat_spec.pad_on_left,
         )
-        ls = [-1] * unpadded_inputs.cls_offset + (self.token_idx_to_char_idx_map > 0).argmax(
-            axis=1
-        ).tolist()[: len(passage)]
         token_idx_to_char_idx_start = pad_to_max_seq_length(
-            ls=ls,
+            ls=[-1] * unpadded_inputs.cls_offset
+            + (self.token_idx_to_char_idx_map > 0).argmax(axis=1).tolist()[: len(passage)],
             max_seq_length=feat_spec.max_seq_length,
             pad_idx=-1,
             pad_right=not feat_spec.pad_on_left,
@@ -118,9 +116,14 @@ class TokenizedExample(BaseTokenizedExample):
             pad_idx=-1,
             pad_right=not feat_spec.pad_on_left,
         )
-        # when there are multiple greatest elements, argmax will return the index of the first one
-        # so, (x > 0).argmax() will return the index of the first non-zero element in an array
-        # and x.cumsum().argmax() will return the index of the last non-zero element in an array
+        # When there are multiple greatest elements, argmax will return the index of the first one.
+        # So, (x > 0).argmax() will return the index of the first non-zero element in an array,
+        # token_idx_to_char_idx_start is computed in this way to map each token index to the
+        # beginning char index of that token. On the other side, x.cumsum().argmax() will return
+        # the index of the last non-zero element in an array, token_idx_to_char_idx_end is
+        # computed in this way to map each token index to ending char index.
+        # Once the model predict a span over the token index, these to mapping will help to project
+        # the span back to char index, and slice the predicted answer string from the input text.
 
         return DataRow(
             guid=self.guid,
