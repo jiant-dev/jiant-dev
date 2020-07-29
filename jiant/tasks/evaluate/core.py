@@ -124,7 +124,7 @@ class Bucc2018Accumulator(BaseAccumulator):
             "all_embeddings": np.concatenate(self.embeddings_list),
             "is_english_arr": np.concatenate(self.is_english_list).astype(bool),
             "text_hash_list": self.text_hash_list,
-            "guid_list": self.guid_list
+            "guid_list": self.guid_list,
         }
 
 
@@ -726,27 +726,17 @@ class TatoebaEvaluationScheme(BaseEvaluationScheme):
         ).flatten()
         return predictions
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: ConcatenateLogitsAccumulator,
-                                         tokenizer,
-                                         labels: list) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
+    ) -> Metrics:
         preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
-        return self.compute_metrics_from_preds_and_labels(
-            preds=preds,
-            labels=labels,
-        )
+        return self.compute_metrics_from_preds_and_labels(preds=preds, labels=labels,)
 
     @classmethod
     def compute_metrics_from_preds_and_labels(cls, preds, labels):
         # noinspection PyUnresolvedReferences
         acc = (preds == labels).mean()
-        return Metrics(
-            major=acc,
-            minor={
-                "acc": acc,
-            }
-        )
+        return Metrics(major=acc, minor={"acc": acc})
 
 
 class Bucc2018EvaluationScheme(BaseEvaluationScheme):
@@ -768,8 +758,12 @@ class Bucc2018EvaluationScheme(BaseEvaluationScheme):
         other_guids = [x.split("-", 1)[1] for x in np.array(guids)[~is_english_arr]]
 
         n = len(is_english_arr)
-        src_inds, _ = bucc2018_lib.get_unique_lines([text_hash_list[i] for i in np.arange(n) if not is_english_arr[i]])
-        trg_inds, _ = bucc2018_lib.get_unique_lines([text_hash_list[i] for i in np.arange(n) if is_english_arr[i]])
+        src_inds, _ = bucc2018_lib.get_unique_lines(
+            [text_hash_list[i] for i in np.arange(n) if not is_english_arr[i]]
+        )
+        trg_inds, _ = bucc2018_lib.get_unique_lines(
+            [text_hash_list[i] for i in np.arange(n) if is_english_arr[i]]
+        )
         src_ids_map = bucc2018_lib.create_ids_map(src_inds, other_guids)
         trg_ids_map = bucc2018_lib.create_ids_map(trg_inds, english_guids)
 
@@ -788,25 +782,17 @@ class Bucc2018EvaluationScheme(BaseEvaluationScheme):
                 candidates2score[src_key, trg_key] = score
         return candidates2score
 
-    def compute_metrics_from_accumulator(self,
-                                         task,
-                                         accumulator: ConcatenateLogitsAccumulator,
-                                         tokenizer,
-                                         labels: list) -> Metrics:
+    def compute_metrics_from_accumulator(
+        self, task, accumulator: ConcatenateLogitsAccumulator, tokenizer, labels: list
+    ) -> Metrics:
         preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
-        return self.compute_metrics_from_preds_and_labels(
-            preds=preds,
-            labels=labels,
-        )
+        return self.compute_metrics_from_preds_and_labels(preds=preds, labels=labels,)
 
     @classmethod
     def compute_metrics_from_preds_and_labels(cls, preds, labels):
         labels = [tuple(x.split("\t")) for x in labels]
         result = bucc2018_lib.bucc_eval(preds, gold=labels, threshold=None)
-        return Metrics(
-            major=result["F1"],
-            minor=result,
-        )
+        return Metrics(major=result["F1"], minor=result,)
 
 
 def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
