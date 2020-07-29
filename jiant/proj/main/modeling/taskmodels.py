@@ -124,12 +124,15 @@ class SpanPredictionModel(Taskmodel):
     def __init__(self, encoder, span_prediction_head: heads.TokenClassificationHead):
         super().__init__(encoder=encoder)
         self.offset_margin = 1000
+        # 1000 is a big enough number that exp(-1000) will be strict 0 in float32.
+        # So that if we add 1000 to the valid dimensions in the input of softmax,
+        # we can guarantee the output distribution will only be non-zero at those dimensions.
         self.span_prediction_head = span_prediction_head
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
         encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
         logits = self.span_prediction_head(unpooled=encoder_output.unpooled)
-        # ensure logits in valid range is at lease self.offset_margin higher than others
+        # Ensure logits in valid range is at lease self.offset_margin higher than others
         logits_offset = logits.max() - logits.min() + self.offset_margin
         logits = logits + logits_offset * batch.selection_token_mask.unsqueeze(dim=2)
         if compute_loss:
