@@ -98,7 +98,7 @@ class Bucc2018Task(Task):
         self.language = language
 
     def get_train_examples(self):
-        raise NotImplementedError()
+        raise RuntimeError("This task does not support train examples")
 
     def get_val_examples(self):
         return self._get_examples(phase="val")

@@ -91,7 +91,7 @@ class TatoebaTask(Task):
         self.lang_bimap = labels_to_bimap(["en", language])
 
     def get_train_examples(self):
-        raise NotImplementedError()
+        raise RuntimeError("This task does not support train examples")
 
     def get_val_examples(self):
         eng_examples = self._create_examples(
@@ -103,7 +103,7 @@ class TatoebaTask(Task):
         return eng_examples + other_examples
 
     def get_test_examples(self):
-        raise NotImplementedError()
+        raise RuntimeError("This task does not support test examples")
 
     def get_val_labels(self):
         return np.array(
