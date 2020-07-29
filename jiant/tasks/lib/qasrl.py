@@ -36,8 +36,8 @@ class QASRLTask(span_pred_template.AbstractSpanPredictionTask):
                             question: [
                                 [
                                     {
-                                        "tokens": datum["sentenceTokens"][span[0] : span[1] + 1],
-                                        "span": span,
+                                        "tokens": datum["sentenceTokens"][span[0] : span[1]],
+                                        "span": (span[0], span[1] - 1),
                                     }
                                     for span in answer_judgment["spans"]
                                 ]
@@ -79,5 +79,9 @@ class QASRLTask(span_pred_template.AbstractSpanPredictionTask):
                                     answer_char_span=answer_char_span,
                                 )
                             )
+
+            import IPython
+
+            IPython.embed()
 
         return examples
