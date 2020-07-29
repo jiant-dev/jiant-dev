@@ -367,7 +367,6 @@ def knn_gpu(x, y, k, mem=5 * 1024 * 1024 * 1024):
         bsims, binds = [], []
         for yfrom in range(0, y.shape[0], batch_size):
             yto = min(yfrom + batch_size, y.shape[0])
-            print("{}-{}  ->  {}-{}".format(xfrom, xto, yfrom, yto))
             idx = faiss.IndexFlatIP(dim)
             idx = faiss.index_cpu_to_all_gpus(idx)
             idx.add(y[yfrom:yto])
