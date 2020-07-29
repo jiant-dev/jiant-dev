@@ -404,6 +404,18 @@ def knn_cpu(x, y, k, dist="cosine"):
 
 
 def get_unique_lines(text_hashes):
+    """Get the unique lines out of a list of text-hashes
+
+    Args:
+        text_hashes (list): A list of (hashes of) strings
+
+    Returns:
+        unique_indices (List): List (of the same length as text_hashes) indicating, for each
+                               element of text_hash, the index of the corresponding entry in
+                               unique_text_hashes
+                               (i.e. "Which unique text-hash does this correspond to?")
+        unique_text_hashes (List): List of unique elements of text_hashes
+    """
     unique_text_hashes = []
     unique_indices = []
     unique_lookup = {}
