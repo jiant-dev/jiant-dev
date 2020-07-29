@@ -183,8 +183,8 @@ class TokenAligner(object):
             idxs = [idxs]
         return self.source_token_idx_to_target_token_idx[idxs].nonzero()[1]  # column indices
 
-    @classmethod
-    def _project_span(cls, mat, start, end, inclusive):
+    @staticmethod
+    def _project_span(mat, start, end, inclusive):
         if inclusive:
             end = end + 1
         target_matches = mat[start:end].nonzero()[1].tolist()
