@@ -199,8 +199,10 @@ class TokenAligner(object):
         """Project a span from source to target token sequence.
 
         Notes:
-            If inclusive is False, span start is inclusive, while the end exclusive.
-            This affects input and output simultaneously.
+            When param inclusive=False, the end index is interpreted as exclusive,
+            and the end of the span returned by the function will also be exclusive.
+            When param inclusive=True, both start and end indexes are interpreted as inclusive,
+            and the span returned by the function will also be inclusive.
 
         Examples:
             >>> source_tokens = ['abc', 'def', 'ghi', 'jkl']
@@ -224,8 +226,10 @@ class TokenAligner(object):
         """Project a span from source to target token sequence.
 
         Notes:
-            If inclusive is False, span start is inclusive, while the end exclusive.
-            This affects input and output simultaneously.
+            When param inclusive=False, the end index is interpreted as exclusive,
+            and the end of the span returned by the function will also be exclusive.
+            When param inclusive=True, both start and end indexes are interpreted as inclusive,
+            and the span returned by the function will also be inclusive.
 
         Examples:
             >>> source_tokens = ['abc', 'def', 'ghi', 'jkl']
@@ -249,8 +253,10 @@ class TokenAligner(object):
         """Project a span from source to target token sequence.
 
         Notes:
-            If inclusive is False, span start is inclusive, while the end exclusive.
-            This affects input and output simultaneously.
+            When param inclusive=False, the end index is interpreted as exclusive,
+            and the end of the span returned by the function will also be exclusive.
+            When param inclusive=True, both start and end indexes are interpreted as inclusive,
+            and the span returned by the function will also be inclusive.
 
         Examples:
             >>> source_str = 'abc def ghi jkl'
