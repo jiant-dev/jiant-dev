@@ -63,9 +63,12 @@ class QASRLTask(span_pred_template.AbstractSpanPredictionTask):
                 for question, answer_list in entry["questions"].items():
                     for answer in answer_list:
                         for answer_span in answer:
-                            answer_char_span = token_aligner.project_token_to_char_span(
-                                answer_span["span"][0], answer_span["span"][1], inclusive=True
-                            )
+                            try:
+                                answer_char_span = token_aligner.project_token_to_char_span(
+                                    answer_span["span"][0], answer_span["span"][1], inclusive=True
+                                )
+                            except ValueError:
+                                continue
                             answer_str = passage_space_str[
                                 answer_char_span[0] : answer_char_span[1] + 1
                             ]
