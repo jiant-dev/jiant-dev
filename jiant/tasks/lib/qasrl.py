@@ -52,7 +52,9 @@ class QASRLTask(span_pred_template.AbstractSpanPredictionTask):
             }
 
             passage_ptb_tokens = datum["sentence_tokens"]
-            passage_space_tokens = ptb_detokenizer.detokenize(passage_ptb_tokens).split()
+            passage_space_tokens = ptb_detokenizer.detokenize(
+                passage_ptb_tokens, convert_parentheses=True
+            ).split()
             passage_space_str = " ".join(passage_space_tokens)
 
             token_aligner = TokenAligner(source=passage_ptb_tokens, target=passage_space_tokens)

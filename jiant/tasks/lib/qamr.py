@@ -45,7 +45,9 @@ class QAMRTask(span_pred_template.AbstractSpanPredictionTask):
             answer_idxs = list(map(int, row.answer.split()))
             answer_token_start, answer_token_end = min(answer_idxs), max(answer_idxs)
             passage_ptb_tokens = row.sent.split()
-            passage_space_tokens = ptb_detokenizer.detokenize(passage_ptb_tokens).split()
+            passage_space_tokens = ptb_detokenizer.detokenize(
+                passage_ptb_tokens, convert_parentheses=True
+            ).split()
             passage_space_str = " ".join(passage_space_tokens)
 
             token_aligner = TokenAligner(source=passage_ptb_tokens, target=passage_space_tokens)
