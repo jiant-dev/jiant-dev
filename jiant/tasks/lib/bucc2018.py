@@ -271,9 +271,9 @@ def bucc_eval(candidates2score, gold, threshold=None):
         precision = recall = f1 = 0
     return {
         "best-threshold": threshold,
-        "precision": 100 * precision,
-        "recall": 100 * recall,
-        "F1": 100 * f1,
+        "precision": precision,
+        "recall": recall,
+        "F1": f1,
     }
 
 
