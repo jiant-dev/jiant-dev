@@ -80,8 +80,4 @@ class QASRLTask(span_pred_template.AbstractSpanPredictionTask):
                                 )
                             )
 
-            import IPython
-
-            IPython.embed()
-
         return examples
