@@ -264,6 +264,7 @@ def download_bucc2018_data_and_write_config(task_data_base_path: str, task_confi
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
+        shutil.rmtree(bucc2018_temp_path)
 
 
 def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
