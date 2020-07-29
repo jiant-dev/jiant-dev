@@ -559,3 +559,15 @@ def test_project_invalid_span():
     ta = TokenAligner(src_tokens, tgt_tokens)
     with pytest.raises(ValueError):
         ta.project_token_span(0, 0)
+
+
+def test_private_project_token_span():
+    mat = np.eye(5, dtype=int)
+    mat[0][0] = 0
+    mat[3][3] = 0
+    assert TokenAligner._project_span(mat, 1, 3, inclusive=True) == (1, 2)
+    assert TokenAligner._project_span(mat, 1, 3, inclusive=False) == (1, 3)
+    assert TokenAligner._project_span(mat, 1, 2, inclusive=True) == (1, 2)
+    assert TokenAligner._project_span(mat, 1, 2, inclusive=False) == (1, 2)
+    assert TokenAligner._project_span(mat, 1, 4, inclusive=True) == (1, 4)
+    assert TokenAligner._project_span(mat, 1, 4, inclusive=False) == (1, 3)
