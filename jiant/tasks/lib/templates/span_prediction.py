@@ -164,7 +164,7 @@ class Batch(BatchMixin):
     token_idx_to_char_idx_end: torch.LongTensor
 
 
-class AbstractSpanPredicationTask(Task, ABC):
+class AbstractSpanPredictionTask(Task, ABC):
     Example = Example
     TokenizedExample = TokenizedExample
     DataRow = DataRow

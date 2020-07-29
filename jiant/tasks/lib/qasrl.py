@@ -6,7 +6,7 @@ from jiant.tasks.lib.templates import span_prediction as span_pred_template
 from jiant.utils.retokenize import TokenAligner
 
 
-class QASRLTask(span_pred_template.AbstractSpanPredicationTask):
+class QASRLTask(span_pred_template.AbstractSpanPredictionTask):
     def get_train_examples(self):
         return self._create_examples(self.train_path, set_type="train")
 
