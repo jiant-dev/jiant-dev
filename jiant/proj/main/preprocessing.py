@@ -3,7 +3,7 @@ import torch
 
 import jiant.shared.caching as shared_caching
 import jiant.utils.torch_utils as torch_utils
-from jiant.tasks.core import FeaturizationSpec, TaskTypes
+from jiant.tasks.core import FeaturizationSpec, TaskTypes, Task
 from jiant.utils.display import maybe_tqdm, maybe_trange
 
 
@@ -100,7 +100,7 @@ def smart_truncate_datum(datum, max_seq_length, max_valid_length):
 
 
 def convert_examples_to_dataset(
-    task, examples: list, tokenizer, feat_spec: FeaturizationSpec, phase: str, verbose=False
+    task: Task, examples: list, tokenizer, feat_spec: FeaturizationSpec, phase: str, verbose=False
 ):
     """Create ListDataset containing DataRows and metadata.
 
@@ -133,7 +133,7 @@ def convert_examples_to_dataset(
 
 
 def iter_chunk_convert_examples_to_dataset(
-    task, examples: list, tokenizer, feat_spec: FeaturizationSpec, phase: str, verbose=False
+    task: Task, examples: list, tokenizer, feat_spec: FeaturizationSpec, phase: str, verbose=False
 ):
     for i, data_row in enumerate(
         iter_chunk_tokenize_and_featurize(
@@ -150,7 +150,7 @@ def iter_chunk_convert_examples_to_dataset(
 
 
 def tokenize_and_featurize(
-    task, examples: list, tokenizer, feat_spec: FeaturizationSpec, phase, verbose=False
+    task: Task, examples: list, tokenizer, feat_spec: FeaturizationSpec, phase, verbose=False
 ):
     """Create list of DataRows containing tokenized and featurized examples.
 
