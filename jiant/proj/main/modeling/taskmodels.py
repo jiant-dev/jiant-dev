@@ -290,7 +290,7 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
         ModelArchitectures.XLM_ROBERTA,
     ]:
         pooled, unpooled, other = get_output_from_standard_transformer_models(
-            encoder, input_ids, segment_ids, input_mask
+            encoder=encoder, input_ids=input_ids, segment_ids=segment_ids, input_mask=input_mask,
         )
     elif model_arch in [
         ModelArchitectures.XLM,
