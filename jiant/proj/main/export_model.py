@@ -15,9 +15,7 @@ class RunConfiguration(zconf.RunConfig):
     hf_model_name = zconf.attr(type=str, default=None)
 
 
-def lookup_and_export_model(model_type: str,
-                            output_base_path: str,
-                            hf_model_name: str = None):
+def lookup_and_export_model(model_type: str, output_base_path: str, hf_model_name: str = None):
     model_class, tokenizer_class = get_model_and_tokenizer_classes(model_type)
     export_model(
         model_type=model_type,
@@ -28,11 +26,13 @@ def lookup_and_export_model(model_type: str,
     )
 
 
-def export_model(model_type: str,
-                 output_base_path: str,
-                 model_class: Type[transformers.PreTrainedModel],
-                 tokenizer_class: Type[transformers.PreTrainedTokenizer],
-                 hf_model_name: str = None):
+def export_model(
+    model_type: str,
+    output_base_path: str,
+    model_class: Type[transformers.PreTrainedModel],
+    tokenizer_class: Type[transformers.PreTrainedTokenizer],
+    hf_model_name: str = None,
+):
     """Retrieve model and tokenizer from Transformers and save all necessary data
 
     Things saved:
@@ -73,8 +73,9 @@ def export_model(model_type: str,
     py_io.write_json(config, os.path.join(output_base_path, f"config.json"))
 
 
-def get_model_and_tokenizer_classes(model_type: str) -> \
-        Tuple[Type[transformers.PreTrainedModel], Type[transformers.PreTrainedTokenizer]]:
+def get_model_and_tokenizer_classes(
+    model_type: str,
+) -> Tuple[Type[transformers.PreTrainedModel], Type[transformers.PreTrainedTokenizer]]:
     # We want the chosen model to have all the weights from pretraining (if possible)
     class_lookup = {
         "bert": (transformers.BertForPreTraining, transformers.BertTokenizer),

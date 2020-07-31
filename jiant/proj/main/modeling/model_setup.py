@@ -46,9 +46,7 @@ def setup_jiant_model(
     if model_arch == ModelArchitectures.XLM:
         # Need to pass the id2lang and lang2id map to the encoder
         xlm_specific_setup(
-            encoder=encoder,
-            ancestor_model=ancestor_model,
-            model_config_path=model_config_path,
+            encoder=encoder, ancestor_model=ancestor_model, model_config_path=model_config_path,
         )
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
@@ -299,15 +297,13 @@ def create_taskmodel(
     elif task.TASK_TYPE == TaskTypes.REGRESSION:
         assert taskmodel_kwargs is None
         regression_head = heads.RegressionHead(
-            hidden_size=hidden_size,
-            hidden_dropout_prob=hidden_dropout_prob,
+            hidden_size=hidden_size, hidden_dropout_prob=hidden_dropout_prob,
         )
         taskmodel = taskmodels.RegressionModel(encoder=encoder, regression_head=regression_head)
     elif task.TASK_TYPE == TaskTypes.MULTIPLE_CHOICE:
         assert taskmodel_kwargs is None
         choice_scoring_head = heads.RegressionHead(
-            hidden_size=hidden_size,
-            hidden_dropout_prob=hidden_dropout_prob,
+            hidden_size=hidden_size, hidden_dropout_prob=hidden_dropout_prob,
         )
         taskmodel = taskmodels.MultipleChoiceModel(
             encoder=encoder, num_choices=task.NUM_CHOICES, choice_scoring_head=choice_scoring_head,

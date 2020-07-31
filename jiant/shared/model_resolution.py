@@ -108,8 +108,7 @@ class ModelArchitectures(Enum):
         ):
             return cls.BERT
         elif (
-            isinstance(encoder, transformers.XLMModel)
-            and encoder.__class__.__name__ == "XLMModel"
+            isinstance(encoder, transformers.XLMModel) and encoder.__class__.__name__ == "XLMModel"
         ):
             return cls.XLM
         elif (
@@ -298,7 +297,9 @@ def bart_or_mbart_model_heuristic(model_config: transformers.BartConfig) -> Mode
         model_arch = ModelArchitectures.MBART
     else:
         model_arch = ModelArchitectures.BART
-    warnings.warn("No clean way of disambiguating between BART and mBART models based on"
-                  " the transformer class, so we're falling back on a heuristic. "
-                  f"Guessing: {model_arch}")
+    warnings.warn(
+        "No clean way of disambiguating between BART and mBART models based on"
+        " the transformer class, so we're falling back on a heuristic. "
+        f"Guessing: {model_arch}"
+    )
     return model_arch

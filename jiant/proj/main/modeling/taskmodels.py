@@ -296,19 +296,14 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
         ModelArchitectures.XLM,
     ]:
         pooled, unpooled, other = get_output_from_xlm_with_lang_handing(
-            encoder=encoder,
-            input_ids=input_ids,
-            input_mask=input_mask,
-            batch=batch,
+            encoder=encoder, input_ids=input_ids, input_mask=input_mask, batch=batch,
         )
     elif model_arch in [
         ModelArchitectures.BART,
         ModelArchitectures.MBART,
     ]:
         pooled, unpooled, other = get_output_from_bart_models(
-            encoder=encoder,
-            input_ids=input_ids,
-            input_mask=input_mask,
+            encoder=encoder, input_ids=input_ids, input_mask=input_mask,
         )
     else:
         raise KeyError(model_arch)
@@ -334,12 +329,19 @@ def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch)
             " a similar default language code to use to the model_config (from model_config_path)."
         )
         lang_id = encoder.lang2id[encoder.default_lang]
-    langs = input_ids.new(*input_ids.shape).fill_(lang_id)
+
+    if isinstance(lang_id, torch.LongTensor):
+        lang_id_tensor = lang_id
+    elif isinstance(lang_id, int):
+        lang_id_tensor = input_ids.new(*input_ids.shape).fill_(lang_id)
+    else:
+        raise TypeError(lang_id)
+    
     output = encoder(
         input_ids=input_ids,
         token_type_ids=None,
         # ^ Need None, otherwise XLM will use regular embeddings on token_type_ids
-        langs=langs,
+        langs=lang_id_tensor,
         attention_mask=input_mask,
     )
     unpooled, other = output[0], output[1:]
