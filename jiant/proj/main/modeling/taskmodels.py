@@ -75,6 +75,7 @@ class MultipleChoiceModel(Taskmodel):
                 input_ids=input_ids[:, i],
                 segment_ids=segment_ids[:, i],
                 input_mask=input_mask[:, i],
+                batch=batch,
             )
             choice_score = self.choice_scoring_head(pooled=encoder_output.pooled)
             choice_score_list.append(choice_score)
@@ -193,6 +194,7 @@ class MLMModel(Taskmodel):
             input_ids=masked_batch.masked_input_ids,
             segment_ids=masked_batch.segment_ids,
             input_mask=masked_batch.input_mask,
+            batch=batch,
         )
         logits = self.mlm_head(unpooled=encoder_output.unpooled)
         if compute_loss:
@@ -303,18 +305,11 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
         ModelArchitectures.BART,
         ModelArchitectures.MBART,
     ]:
-        # BART and mBART and encoder-decoder architectures.
-        # As described in the BART paper and implemented in Transformers,
-        # for single input tasks, the encoder input is the sequence,
-        # the decode input is 1-shifted sequence, and the resulting
-        # sentence representation is the final decoder state.
-        # That's what we use for `unpooled` here.
-        output = encoder(input_ids=input_ids, attention_mask=input_mask)
-        unpooled, other = output[0], output[1:]
-        bsize, slen = input_ids.shape
-        batch_idx = torch.arange(bsize).to(input_ids.device)
-        # Get last non-pad index
-        pooled = unpooled[batch_idx, slen - input_ids.eq(encoder.config.pad_token_id).sum(1) - 1]
+        pooled, unpooled, other = get_output_from_bart_models(
+            encoder=encoder,
+            input_ids=input_ids,
+            input_mask=input_mask,
+        )
     else:
         raise KeyError(model_arch)
 
@@ -350,6 +345,22 @@ def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch)
     unpooled, other = output[0], output[1:]
     # We take the hidden state for the first token. HF has this configurable, but I'm not sure why
     pooled = unpooled[:, 0]
+    return pooled, unpooled, other
+
+
+def get_output_from_bart_models(encoder, input_ids, input_mask):
+    # BART and mBART and encoder-decoder architectures.
+    # As described in the BART paper and implemented in Transformers,
+    # for single input tasks, the encoder input is the sequence,
+    # the decode input is 1-shifted sequence, and the resulting
+    # sentence representation is the final decoder state.
+    # That's what we use for `unpooled` here.
+    output = encoder(input_ids=input_ids, attention_mask=input_mask)
+    unpooled, other = output[0], output[1:]
+    bsize, slen = input_ids.shape
+    batch_idx = torch.arange(bsize).to(input_ids.device)
+    # Get last non-pad index
+    pooled = unpooled[batch_idx, slen - input_ids.eq(encoder.config.pad_token_id).sum(1) - 1]
     return pooled, unpooled, other
 
 
