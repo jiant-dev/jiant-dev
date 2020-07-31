@@ -6,7 +6,6 @@ import jiant.utils.python.io as py_io
 # Note to future selves: beware of circular imports when refactoring
 from jiant.tasks.retrieval import (
     ColaTask,
-    MnliTask,
     MrpcTask,
     QnliTask,
     QqpTask,
@@ -17,7 +16,8 @@ from jiant.tasks.retrieval import (
     CommitmentBankTask,
     WiCTask,
     WSCTask,
-    SnliTask,
+    SuperglueWinogenderDiagnosticsTask,
+    GlueDiagnosticsTask,
 )
 
 
@@ -32,14 +32,14 @@ NLP_CONVERSION_DICT = {
     "mnli": {
         "path": "glue",
         "name": "mnli",
-        "label_map": MnliTask.ID_TO_LABEL,
+        "label_map": {0: "entailment", 1: "neutral", 2: "contradiction"},
         "phase_map": {"validation_matched": "val", "test_matched": "test"},
         "phase_list": ["train", "val", "test"],
     },
     "mnli_mismatched": {
         "path": "glue",
         "name": "mnli",
-        "label_map": MnliTask.ID_TO_LABEL,
+        "label_map": {0: "entailment", 1: "neutral", 2: "contradiction"},
         "phase_map": {"validation_mismatched": "val", "test_mismatched": "test"},
         "phase_list": ["val", "test"],
         "jiant_task_name": "mnli",
@@ -88,8 +88,9 @@ NLP_CONVERSION_DICT = {
     "glue_diagnostics": {
         "path": "glue",
         "name": "ax",
+        "label_map": GlueDiagnosticsTask.ID_TO_LABEL,
         "phase_map": None,
-        "jiant_task_name": "mnli",
+        "jiant_task_name": "glue_diagnostics",
     },
     # === SuperGLUE === #
     "boolq": {"path": "super_glue", "name": "boolq", "label_map": BoolQTask.ID_TO_LABEL},
@@ -109,13 +110,13 @@ NLP_CONVERSION_DICT = {
     },
     "superglue_winogender_diagnostics": {
         "path": "super_glue",
-        "name": "axg",
-        "label_map": RteTask.ID_TO_LABEL,
+        "name": "superglue_axg",
+        "label_map": SuperglueWinogenderDiagnosticsTask.ID_TO_LABEL,
         "phase_map": None,
-        "jiant_task_name": "rte",
+        "jiant_task_name": "superglue_axg",
     },
     # === Other === #
-    "snli": {"path": "snli", "label_map": SnliTask.ID_TO_LABEL},
+    "snli": {"path": "snli", "label_map": {0: "entailment", 1: "neutral", 2: "contradiction"}},
 }
 
 # NLP uses "validation", we use "val"

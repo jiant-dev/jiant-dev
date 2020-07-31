@@ -29,6 +29,7 @@ def download_xnli_data_and_write_config(task_data_base_path: str, task_config_ba
                 "task": "xnli",
                 "paths": {"val": val_path, "test": test_path},
                 "name": task_name,
+                "kwargs": {"language": lang},
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
@@ -55,7 +56,12 @@ def download_pawsx_data_and_write_config(task_data_base_path: str, task_config_b
             paths_dict["train"] = (os.path.join(task_data_base_path, task_name, "train.tsv"),)
             datastructures.set_dict_keys(paths_dict, ["train", "val", "test"])
         py_io.write_json(
-            data={"task": "pawsx", "paths": paths_dict, "name": task_name},
+            data={
+                "task": "pawsx",
+                "paths": paths_dict,
+                "name": task_name,
+                "kwargs": {"language": lang},
+            },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
     shutil.rmtree(pawsx_temp_path)
@@ -245,7 +251,7 @@ def download_bucc2018_data_and_write_config(task_data_base_path: str, task_confi
         )
         py_io.write_json(
             data={
-                "task": "tatoeba",
+                "task": "bucc2018",
                 "paths": {
                     "val": {
                         "eng": val_eng_path,
@@ -254,10 +260,12 @@ def download_bucc2018_data_and_write_config(task_data_base_path: str, task_confi
                     },
                     "test": {"eng": test_eng_path, "other": test_other_path},
                 },
+                "kwargs": {"language": lang},
                 "name": task_name,
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
+    shutil.rmtree(bucc2018_temp_path)
 
 
 def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
@@ -336,6 +344,7 @@ def download_tatoeba_data_and_write_config(task_data_base_path: str, task_config
             data={
                 "task": "tatoeba",
                 "paths": {"eng": eng_out, "other": other_out, "labels_path": labels_out},
+                "kwargs": {"language": lang},
                 "name": task_name,
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
