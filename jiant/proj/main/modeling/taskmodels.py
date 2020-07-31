@@ -289,8 +289,9 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
         ModelArchitectures.ALBERT,
         ModelArchitectures.XLM_ROBERTA,
     ]:
-        output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
-        pooled, unpooled, other = output[1], output[0], output[2:]
+        pooled, unpooled, other = get_output_from_standard_transformer_models(
+            encoder, input_ids, segment_ids, input_mask
+        )
     elif model_arch in [
         ModelArchitectures.XLM,
     ]:
@@ -312,6 +313,12 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
         return EncoderOutput(pooled=pooled, unpooled=unpooled)
     else:
         return EncoderOutput(pooled=pooled, unpooled=unpooled, other=other)
+
+
+def get_output_from_standard_transformer_models(encoder, input_ids, segment_ids, input_mask):
+    output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+    pooled, unpooled, other = output[1], output[0], output[2:]
+    return pooled, unpooled, other
 
 
 def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch):
