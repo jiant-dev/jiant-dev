@@ -282,7 +282,6 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask, batch) 
         EncoderOutput containing pooled and unpooled model outputs as well as any other outputs.
 
     """
-
     model_arch = ModelArchitectures.from_encoder(encoder)
     if model_arch in [
         ModelArchitectures.BERT,
@@ -336,7 +335,7 @@ def get_output_from_xlm_with_lang_handing(encoder, input_ids, input_mask, batch)
         lang_id_tensor = input_ids.new(*input_ids.shape).fill_(lang_id)
     else:
         raise TypeError(lang_id)
-    
+
     output = encoder(
         input_ids=input_ids,
         token_type_ids=None,
