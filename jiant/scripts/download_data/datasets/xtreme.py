@@ -163,7 +163,7 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
     conll_path = os.path.join(udpos_temp_path, "conll")
 
     # === Convert conllu files to conll === #
-    for input_path in display.tqdm(conllu_path_ls):
+    for input_path in display.tqdm(conllu_path_ls, desc="Convert conllu files to conll format"):
         input_path_fol, input_path_file = os.path.split(input_path)
         lang = input_path_file.split("_")[0]
         os.makedirs(os.path.join(conll_path, lang), exist_ok=True)
@@ -206,7 +206,7 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         )
 
     # === Convert conll to final format === #
-    for lang in languages:
+    for lang in display.tqdm(languages, desc="Convert conll to final format"):
         task_name = f"udpos_{lang}"
         task_data_path = os.path.join(task_data_base_path, task_name)
         os.makedirs(task_data_path, exist_ok=True)
@@ -239,6 +239,68 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
             },
             path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
         )
+    shutil.rmtree(udpos_temp_path)
+
+
+def download_panx_data_and_write_config(task_data_base_path: str, task_config_base_path: str):
+    def _process_one_file(infile, outfile):
+        lines = open(infile, "r").readlines()
+        if lines[-1].strip() == "":
+            lines = lines[:-1]
+        with open(outfile, "w") as fout:
+            for line in lines:
+                items = line.strip().split("\t")
+                if len(items) == 2:
+                    label = items[1].strip()
+                    idx = items[0].find(":")
+                    if idx != -1:
+                        token = items[0][idx + 1 :].strip()
+                        fout.write(f"{token}\t{label}\n")
+                else:
+                    fout.write("\n")
+
+    panx_temp_path = os.path.join(task_data_base_path, "panx_temp")
+    zip_path = os.path.join(panx_temp_path, "AmazonPhotos.zip")
+    assert os.path.exists(zip_path), (
+        "Download AmazonPhotos.zip from"
+        " https://www.amazon.com/clouddrive/share/d3KGCRCIYwhKJF0H3eWA26hjg2ZCRhjpEQtDL70FSBN"
+        f" and save it to {zip_path}"
+    )
+    download_utils.unzip_file(zip_path=zip_path, extract_location=panx_temp_path)
+    languages = (
+        "af ar bg bn de el en es et eu fa fi fr he hi hu id it ja jv ka "
+        "kk ko ml mr ms my nl pt ru sw ta te th tl tr ur vi yo zh"
+    ).split()
+    for lang in languages:
+        task_name = f"panx_{lang}"
+        untar_path = os.path.join(panx_temp_path, "panx_dataset", lang)
+        os.makedirs(untar_path, exist_ok=True)
+        download_utils.untar_file(
+            tar_path=os.path.join(panx_temp_path, "panx_dataset", f"{lang}.tar.gz"),
+            extract_location=untar_path,
+            delete=True,
+        )
+        task_data_path = os.path.join(task_data_base_path, task_name)
+        os.makedirs(task_data_path)
+        filename_dict = {"train": "train", "valid": "dev", "test": "test"}
+        paths_dict = {}
+        for phase, filename in filename_dict.items():
+            in_path = os.path.join(untar_path, filename)
+            out_path = os.path.join(task_data_path, f"{phase}.tsv")
+            if not os.path.exists(in_path):
+                continue
+            _process_one_file(infile=in_path, outfile=out_path)
+            paths_dict[phase] = out_path
+        py_io.write_json(
+            data={
+                "task": "panx",
+                "paths": paths_dict,
+                "name": task_name,
+                "kwargs": {"language": lang},
+            },
+            path=os.path.join(task_config_base_path, f"{task_name}_config.json"),
+        )
+    shutil.rmtree(os.path.join(panx_temp_path, "panx_dataset"))
 
 
 def download_xquad_data_and_write_config(task_data_base_path: str, task_config_base_path: str):

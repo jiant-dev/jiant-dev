@@ -34,9 +34,12 @@ class Example(BaseExample):
         for token, pos in zip_equal(self.tokens, self.pos_list):
             # Tokenize each "token" separately, assign label only to first token
             tokenized = tokenizer.tokenize(token)
+            # If the token can't be tokenized, or is too long, replace with a single <unk>
+            if len(tokenized) == 0 or len(tokenized) > 100:
+                tokenized = [tokenizer.unk_token]
             all_tokenized_tokens += tokenized
             padding_length = len(tokenized) - 1
-            labels += [PanxPreprocTask.LABEL_TO_ID.get(pos, None)] + [None] * padding_length
+            labels += [PanxTask.LABEL_TO_ID.get(pos, None)] + [None] * padding_length
             label_mask += [1] + [0] * padding_length
 
         return TokenizedExample(
@@ -118,8 +121,7 @@ class Batch(BatchMixin):
     tokens: list
 
 
-class PanxPreprocTask(Task):
-    # Update UDPOS, PANX to not use preprocessed versions of data (Issue #90)
+class PanxTask(Task):
 
     Example = Example
     TokenizedExample = Example

@@ -1,6 +1,7 @@
 import os
 import importlib
 import sys
+from contextlib import contextmanager
 
 
 def find_files(base_path, func):
@@ -45,6 +46,7 @@ def get_code_asset_path(*rel_path):
     return os.path.join(get_code_base_path(), *rel_path)
 
 
+@contextmanager
 def temporarily_add_sys_path(path):
     sys.path = [path] + sys.path
     yield

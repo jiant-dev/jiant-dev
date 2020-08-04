@@ -39,7 +39,7 @@ class Example(BaseExample):
                 tokenized = [tokenizer.unk_token]
             all_tokenized_tokens += tokenized
             padding_length = len(tokenized) - 1
-            labels += [UdposPreprocTask.LABEL_TO_ID.a.get(pos, None)] + [None] * padding_length
+            labels += [UdposTask.LABEL_TO_ID.a.get(pos, None)] + [None] * padding_length
             label_mask += [1] + [0] * padding_length
 
         return TokenizedExample(
@@ -121,8 +121,7 @@ class Batch(BatchMixin):
     tokens: list
 
 
-class UdposPreprocTask(Task):
-    # Update UDPOS, PANX to not use preprocessed versions of data (Issue #90)
+class UdposTask(Task):
 
     Example = Example
     TokenizedExample = Example

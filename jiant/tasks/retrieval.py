@@ -25,7 +25,7 @@ from jiant.tasks.lib.mnli import MnliTask
 from jiant.tasks.lib.mrpc import MrpcTask
 from jiant.tasks.lib.multirc import MultiRCTask
 from jiant.tasks.lib.edge_probing.ner import NerTask
-from jiant.tasks.lib.panx import PanxPreprocTask
+from jiant.tasks.lib.panx import PanxTask
 from jiant.tasks.lib.pawsx import PawsXTask
 from jiant.tasks.lib.edge_probing.pos import PosTask
 from jiant.tasks.lib.qqp import QqpTask
@@ -48,7 +48,7 @@ from jiant.tasks.lib.superglue_axb import SuperglueBroadcoverageDiagnosticsTask
 from jiant.tasks.lib.swag import SWAGTask
 from jiant.tasks.lib.tatoeba import TatoebaTask
 from jiant.tasks.lib.tydiqa import TyDiQATask
-from jiant.tasks.lib.udpos import UdposPreprocTask
+from jiant.tasks.lib.udpos import UdposTask
 from jiant.tasks.lib.wic import WiCTask
 from jiant.tasks.lib.wnli import WnliTask
 from jiant.tasks.lib.wsc import WSCTask
@@ -86,7 +86,7 @@ TASK_DICT = {
     "mrpc": MrpcTask,
     "ner": NerTask,
     "pawsx": PawsXTask,
-    "panx": PanxPreprocTask,
+    "panx": PanxTask,
     "pos": PosTask,
     "qnli": QnliTask,
     "qqp": QqpTask,
@@ -107,7 +107,7 @@ TASK_DICT = {
     "swag": SWAGTask,
     "tatoeba": TatoebaTask,
     "tydiqa": TyDiQATask,
-    "udpos": UdposPreprocTask,
+    "udpos": UdposTask,
     "wic": WiCTask,
     "wnli": WnliTask,
     "wsc": WSCTask,
