@@ -141,35 +141,22 @@ class PanxTask(Task):
         return len(self.LABELS)
 
     def get_train_examples(self):
-        return self._create_examples(
-            data_path=self.path_dict["train"]["data"],
-            idx_path=self.path_dict["train"]["idx"],
-            set_type="train",
-        )
+        return self._create_examples(data_path=self.path_dict["train"], set_type="train")
 
     def get_val_examples(self):
-        return self._create_examples(
-            data_path=self.path_dict["val"]["data"],
-            idx_path=self.path_dict["val"]["idx"],
-            set_type="val",
-        )
+        return self._create_examples(data_path=self.path_dict["val"], set_type="val")
 
     def get_test_examples(self):
-        return self._create_examples(
-            data_path=self.path_dict["test"]["data"],
-            idx_path=self.path_dict["test"]["idx"],
-            set_type="test",
-        )
+        return self._create_examples(data_path=self.path_dict["test"], set_type="test")
 
     @classmethod
-    def _create_examples(cls, data_path, idx_path, set_type):
-        curr_token_list, curr_pos_list, idx_ls = [], [], []
+    def _create_examples(cls, data_path, set_type):
+        curr_token_list, curr_pos_list = [], []
         data_lines = read_file_lines(data_path, "r", encoding="utf-8")
-        idx_lines = read_file_lines(idx_path, "r", encoding="utf-8")
         examples = []
-        for data_line, idx_line in zip_equal(data_lines, idx_lines):
-            data_line, idx_line = data_line.strip(), idx_line.strip()
-            assert bool(data_line) == bool(idx_line)
+        idx = 0
+        for data_line in data_lines:
+            data_line = data_line.strip()
             if data_line:
                 if set_type == "test":
                     line_tokens = data_line.split("\t")
@@ -181,9 +168,7 @@ class PanxTask(Task):
                     token, pos = data_line.split("\t")
                 curr_token_list.append(token)
                 curr_pos_list.append(pos)
-                idx_ls.append(int(idx_line))
             else:
-                idx = get_all_same(idx_ls)
                 examples.append(
                     Example(
                         guid="%s-%s" % (set_type, idx),
@@ -191,10 +176,10 @@ class PanxTask(Task):
                         pos_list=curr_pos_list,
                     )
                 )
-                curr_token_list, curr_pos_list, idx_ls = [], [], []
+                idx += 1
+                curr_token_list, curr_pos_list = [], []
         if curr_token_list:
-            idx = get_all_same(idx_ls)
             examples.append(
-                Example(guid="%s-%s" % (idx, idx), tokens=curr_token_list, pos_list=curr_pos_list,)
+                Example(guid="%s-%s" % (idx, idx), tokens=curr_token_list, pos_list=curr_pos_list)
             )
         return examples

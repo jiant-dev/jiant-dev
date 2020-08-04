@@ -526,18 +526,21 @@ class F1TaggingEvaluationScheme(BaseEvaluationScheme):
         return ConcatenateLogitsAccumulator()
 
     @classmethod
-    def get_labels(cls, cache, examples):
-        labels = [
-            {"pos_list": example.pos_list, "label_mask": datum["data_row"].label_mask}
-            for datum, example in zip(cache.iter_all(), examples)
-        ]
-        for label in labels:
-            assert len(label["pos_list"]) == label["label_mask"].sum()
-        return labels
-
-    @classmethod
     def get_labels_from_cache_and_examples(cls, task, cache, examples):
-        return cls.get_labels(cache=cache, examples=examples)
+        labels = []
+        for datum in cache.iter_all():
+            label_mask = datum["data_row"].label_mask.astype(bool)
+            pos_list = [
+                task.ID_TO_LABEL[pos_id]
+                for pos_id in datum["data_row"].label_ids[label_mask]
+            ]
+            label = {
+                "pos_list": pos_list,
+                "label_mask": label_mask,
+            }
+            labels.append(label)
+            assert len(pos_list) == label_mask.sum()
+        return labels
 
     def get_preds_from_accumulator(self, task, accumulator):
         logits = accumulator.get_accumulated()
@@ -555,7 +558,7 @@ class F1TaggingEvaluationScheme(BaseEvaluationScheme):
 
         # Account for smart-truncate
         assert (label_mask[:, preds.shape[-1] :] == 0).all()
-        label_mask = label_mask[:, : preds.shape[-1]].astype(bool)
+        label_mask = label_mask[:, : preds.shape[-1]]
 
         labels_for_eval = [label["pos_list"] for label in labels]
         preds_for_eval = []

@@ -144,7 +144,7 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
                 print(f"finish writing file to {prefix}.{suffix}")
 
     languages = (
-        "af ar bg de el en es et eu fa fi fr he hi hu id it ja"
+        "af ar bg de el en es et eu fa fi fr he hi hu id it ja "
         "kk ko mr nl pt ru ta te th tl tr ur vi yo zh"
     ).split()
     udpos_temp_path = py_io.create_dir(task_data_base_path, "udpos_temp")
@@ -210,13 +210,13 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         task_name = f"udpos_{lang}"
         task_data_path = os.path.join(task_data_base_path, task_name)
         os.makedirs(task_data_path, exist_ok=True)
-        all_examples = {k: [] for k in ["train", "valid", "test"]}
+        all_examples = {k: [] for k in ["train", "val", "test"]}
         for path in glob.glob(os.path.join(conll_path, lang, "*.conll")):
             examples = _read_one_file(path)
             if "train" in path:
                 all_examples["train"] += examples
             elif "dev" in path:
-                all_examples["valid"] += examples
+                all_examples["val"] += examples
             elif "test" in path:
                 all_examples["test"] += examples
             else:
@@ -226,13 +226,13 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
             data=all_examples, output_dir=task_data_path, lang_=lang, suffix="tsv",
         )
         paths_dict = {
-            phase: os.path.join(task_data_path, f"{phase}-{lang}")
+            phase: os.path.join(task_data_path, f"{phase}-{lang}.tsv")
             for phase, phase_data in all_examples.items()
             if len(phase_data) > 0
         }
         py_io.write_json(
             data={
-                "task": task_name,
+                "task": "udpos",
                 "paths": paths_dict,
                 "name": task_name,
                 "kwargs": {"language": lang},
@@ -281,8 +281,8 @@ def download_panx_data_and_write_config(task_data_base_path: str, task_config_ba
             delete=True,
         )
         task_data_path = os.path.join(task_data_base_path, task_name)
-        os.makedirs(task_data_path)
-        filename_dict = {"train": "train", "valid": "dev", "test": "test"}
+        os.makedirs(task_data_path, exist_ok=True)
+        filename_dict = {"train": "train", "val": "dev", "test": "test"}
         paths_dict = {}
         for phase, filename in filename_dict.items():
             in_path = os.path.join(untar_path, filename)
