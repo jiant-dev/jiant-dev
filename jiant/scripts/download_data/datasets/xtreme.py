@@ -79,10 +79,10 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
     def _read_one_file(file):
         data = []
         sent, tag, lines = [], [], []
-        for line in open(file, 'r'):
-            items = line.strip().split('\t')
+        for line in open(file, "r"):
+            items = line.strip().split("\t")
             if len(items) != 10:
-                empty = all(w == '_' for w in sent)
+                empty = all(w == "_" for w in sent)
                 if not empty:
                     data.append((sent, tag, lines))
                 sent, tag, lines = [], [], []
@@ -90,7 +90,9 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
                 sent.append(items[1].strip())
                 tag.append(items[3].strip())
                 lines.append(line.strip())
-                assert len(sent) == int(items[0]), 'line={}, sent={}, tag={}'.format(line, sent, tag)
+                assert len(sent) == int(items[0]), "line={}, sent={}, tag={}".format(
+                    line, sent, tag
+                )
         return data
 
     def _remove_empty_space(data):
@@ -98,42 +100,48 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         for split in data:
             new_data[split] = []
             for sent, tag, lines in data[split]:
-                new_sent = [''.join(w.replace('\u200c', '').split(' ')) for w in sent]
-                lines = [line.replace('\u200c', '') for line in lines]
-                assert len(" ".join(new_sent).split(' ')) == len(tag)
+                new_sent = ["".join(w.replace("\u200c", "").split(" ")) for w in sent]
+                lines = [line.replace("\u200c", "") for line in lines]
+                assert len(" ".join(new_sent).split(" ")) == len(tag)
                 new_data[split].append((new_sent, tag, lines))
         return new_data
 
     def check_file(file):
         for i, l in enumerate(open(file)):
-            items = l.strip().split('\t')
-            assert len(items[0].split(' ')) == len(items[1].split(' ')), 'idx={}, line={}'.format(i, l)
+            items = l.strip().split("\t")
+            assert len(items[0].split(" ")) == len(items[1].split(" ")), "idx={}, line={}".format(
+                i, l
+            )
 
     def _write_files(data, output_dir, lang_, suffix):
         for split in data:
             if len(data[split]) > 0:
-                prefix = os.path.join(output_dir, f'{split}-{lang_}')
-                if suffix == 'mt':
-                    with open(prefix + '.mt.tsv', 'w') as fout:
+                prefix = os.path.join(output_dir, f"{split}-{lang_}")
+                if suffix == "mt":
+                    with open(prefix + ".mt.tsv", "w") as fout:
                         for idx, (sent, tag, _) in enumerate(data[split]):
-                            newline = '\n' if idx != len(data[split]) - 1 else ''
-                            fout.write('{}\t{}{}'.format(' '.join(sent), ' '.join(tag), newline))
-                    check_file(prefix + '.mt.tsv')
-                    print('    - finish checking ' + prefix + '.mt.tsv')
-                elif suffix == 'tsv':
-                    with open(prefix + '.tsv', 'w') as fout:
+                            newline = "\n" if idx != len(data[split]) - 1 else ""
+                            fout.write("{}\t{}{}".format(" ".join(sent), " ".join(tag), newline))
+                    check_file(prefix + ".mt.tsv")
+                    print("    - finish checking " + prefix + ".mt.tsv")
+                elif suffix == "tsv":
+                    with open(prefix + ".tsv", "w") as fout:
                         for sidx, (sent, tag, _) in enumerate(data[split]):
                             for widx, (w, t) in enumerate(zip(sent, tag)):
-                                newline = '' if (sidx == len(data[split]) - 1) and (widx == len(sent) - 1) else '\n'
-                                fout.write('{}\t{}{}'.format(w, t, newline))
-                            fout.write('\n')
-                elif suffix == 'conll':
-                    with open(prefix + '.conll', 'w') as fout:
+                                newline = (
+                                    ""
+                                    if (sidx == len(data[split]) - 1) and (widx == len(sent) - 1)
+                                    else "\n"
+                                )
+                                fout.write("{}\t{}{}".format(w, t, newline))
+                            fout.write("\n")
+                elif suffix == "conll":
+                    with open(prefix + ".conll", "w") as fout:
                         for _, _, lines in data[split]:
                             for line in lines:
-                                fout.write(line.strip() + '\n')
-                            fout.write('\n')
-                print(f'finish writing file to {prefix}.{suffix}')
+                                fout.write(line.strip() + "\n")
+                            fout.write("\n")
+                print(f"finish writing file to {prefix}.{suffix}")
 
     languages = (
         "af ar bg de el en es et eu fa fi fr he hi hu id it ja"
@@ -141,12 +149,14 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
     ).split()
     udpos_temp_path = py_io.create_dir(task_data_base_path, "udpos_temp")
     download_utils.download_and_untar(
-        "https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3105/ud-treebanks-v2.5.tgz",
+        "https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3105/"
+        "ud-treebanks-v2.5.tgz",
         udpos_temp_path,
     )
     download_utils.download_file(
-        "https://raw.githubusercontent.com/google-research/xtreme/master/third_party/ud-conversion-tools/lib/conll.py",
-        os.path.join(udpos_temp_path, "conll.py")
+        "https://raw.githubusercontent.com/google-research/xtreme/master/third_party/"
+        "ud-conversion-tools/lib/conll.py",
+        os.path.join(udpos_temp_path, "conll.py"),
     )
     conll = filesystem.import_from_path(os.path.join(udpos_temp_path, "conll.py"))
     conllu_path_ls = glob.glob(os.path.join(udpos_temp_path, "*", "*", "*.conllu"))
@@ -161,7 +171,9 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
             conll_path, lang, strings.replace_suffix(input_path_file, "conllu", "conll")
         )
         pos_rank_precedence_dict = {
-            "default": "VERB NOUN PROPN PRON ADJ NUM ADV INTJ AUX ADP DET PART CCONJ SCONJ X PUNCT ".split(" "),
+            "default": (
+                "VERB NOUN PROPN PRON ADJ NUM ADV INTJ AUX ADP DET PART CCONJ SCONJ X PUNCT "
+            ).split(" "),
             "es": "VERB AUX PRON ADP DET".split(" "),
             "fr": "VERB AUX PRON NOUN ADJ ADV ADP DET PART SCONJ CONJ".split(" "),
             "it": "VERB AUX ADV PRON ADP DET INTJ".split(" "),
@@ -198,26 +210,23 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         task_name = f"udpos_{lang}"
         task_data_path = os.path.join(task_data_base_path, task_name)
         os.makedirs(task_data_path, exist_ok=True)
-        all_examples = {k: [] for k in ['train', 'valid', 'test']}
+        all_examples = {k: [] for k in ["train", "valid", "test"]}
         for path in glob.glob(os.path.join(conll_path, lang, "*.conll")):
             examples = _read_one_file(path)
-            if 'train' in path:
-                all_examples['train'] += examples
-            elif 'dev' in path:
-                all_examples['valid'] += examples
-            elif 'test' in path:
-                all_examples['test'] += examples
+            if "train" in path:
+                all_examples["train"] += examples
+            elif "dev" in path:
+                all_examples["valid"] += examples
+            elif "test" in path:
+                all_examples["test"] += examples
             else:
                 raise KeyError()
         all_examples = _remove_empty_space(all_examples)
         _write_files(
-            data=all_examples,
-            output_dir=task_data_path,
-            lang_=lang,
-            suffix="tsv",
+            data=all_examples, output_dir=task_data_path, lang_=lang, suffix="tsv",
         )
         paths_dict = {
-            phase: os.path.join(task_data_path, f'{phase}-{lang}')
+            phase: os.path.join(task_data_path, f"{phase}-{lang}")
             for phase, phase_data in all_examples.items()
             if len(phase_data) > 0
         }

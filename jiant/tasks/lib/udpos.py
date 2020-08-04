@@ -160,26 +160,17 @@ class UdposPreprocTask(Task):
         return len(self.LABELS)
 
     def get_train_examples(self):
-        return self._create_examples(
-            data_path=self.path_dict["train"],
-            set_type="train",
-        )
+        return self._create_examples(data_path=self.path_dict["train"], set_type="train",)
 
     def get_val_examples(self):
-        return self._create_examples(
-            data_path=self.path_dict["val"],
-            set_type="val",
-        )
+        return self._create_examples(data_path=self.path_dict["val"], set_type="val",)
 
     def get_test_examples(self):
-        return self._create_examples(
-            data_path=self.path_dict["test"],
-            set_type="test",
-        )
+        return self._create_examples(data_path=self.path_dict["test"], set_type="test",)
 
     @classmethod
     def _create_examples(cls, data_path, set_type):
-        curr_token_list, curr_pos_list, idx_ls = [], [], []
+        curr_token_list, curr_pos_list = [], []
         data_lines = read_file_lines(data_path, "r", encoding="utf-8")
         examples = []
         idx = 0
@@ -199,13 +190,11 @@ class UdposPreprocTask(Task):
             else:
                 examples.append(
                     Example(
-                        guid=f"{set_type}-{idx}",
-                        tokens=curr_token_list,
-                        pos_list=curr_pos_list,
+                        guid=f"{set_type}-{idx}", tokens=curr_token_list, pos_list=curr_pos_list,
                     )
                 )
                 idx += 1
-                curr_token_list, curr_pos_list, idx_ls = [], [], []
+                curr_token_list, curr_pos_list = [], []
         if curr_token_list:
             examples.append(
                 Example(guid=f"{set_type}-{idx}", tokens=curr_token_list, pos_list=curr_pos_list)
