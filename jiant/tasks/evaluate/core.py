@@ -867,7 +867,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
         return PearsonAndSpearmanEvaluationScheme()
     elif isinstance(task, (tasks.MLMWikitext103Task, tasks.MLMCrosslingualWikiTask)):
         return MLMEvaluationScheme()
-    elif isinstance(task, (tasks.UdposPreprocTask, tasks.PanxPreprocTask)):
+    elif isinstance(task, (tasks.UdposTask, tasks.PanxTask)):
         return F1TaggingEvaluationScheme()
     elif isinstance(task, tasks.Bucc2018Task):
         return Bucc2018EvaluationScheme()
