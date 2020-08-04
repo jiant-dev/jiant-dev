@@ -565,7 +565,7 @@ class F1TaggingEvaluationScheme(BaseEvaluationScheme):
         assert len(labels) == preds.shape[0]
         for i in range(len(labels)):
             relevant_preds = preds[i][label_mask[i]]
-            relevant_preds_pos = [task.LABEL_TO_ID[pos_id] for pos_id in relevant_preds]
+            relevant_preds_pos = [task.ID_TO_LABEL[pos_id] for pos_id in relevant_preds]
             preds_for_eval.append(relevant_preds_pos)
 
         minor = {
