@@ -1,7 +1,6 @@
 """Translate raw prediction files for GLUE tasks into format expected by GLUE leaderboard.
-This script translates raw prediction files for GLUE tasks into the jsonl files required
+This script translates raw prediction files for GLUE tasks into the tsv files required
 by the GLUE leaderboard. See https://super.gluebenchmark.com/faq for leaderboard info.
-To use this script, specify one or more raw prediction input filepath in raw_pred_input_filepaths.
 """
 import os
 import csv
@@ -11,7 +10,8 @@ import torch
 from jiant.tasks import retrieval
 from jiant.tasks.constants import GLUE_TASKS
 
-# this maps the GLUE tasks to the filenames expected by the GLUE benchmark (https://gluebenchmark.com/)
+# this maps the GLUE tasks to the filenames expected by the GLUE benchmark
+# (https://gluebenchmark.com/)
 formatted_pred_output_filenames = {
     "cola": "CoLA.tsv",
     "sst": "SST-2.tsv",
