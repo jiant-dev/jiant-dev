@@ -77,6 +77,8 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
     # UDPOS requires networkx==1.11
 
     def _read_one_file(file):
+        # Adapted from https://github.com/google-research/xtreme/blob/
+        #              522434d1aece34131d997a97ce7e9242a51a688a/utils_preprocess.py#L188
         data = []
         sent, tag, lines = [], [], []
         for line in open(file, "r"):
@@ -96,6 +98,8 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         return data
 
     def _remove_empty_space(data):
+        # Adapted from https://github.com/google-research/xtreme/blob/
+        #              522434d1aece34131d997a97ce7e9242a51a688a/utils_preprocess.py#L212
         new_data = {}
         for split in data:
             new_data[split] = []
@@ -107,6 +111,8 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         return new_data
 
     def check_file(file):
+        # Adapted from https://github.com/google-research/xtreme/blob/
+        #              522434d1aece34131d997a97ce7e9242a51a688a/utils_preprocess.py#L223
         for i, l in enumerate(open(file)):
             items = l.strip().split("\t")
             assert len(items[0].split(" ")) == len(items[1].split(" ")), "idx={}, line={}".format(
@@ -114,6 +120,8 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
             )
 
     def _write_files(data, output_dir, lang_, suffix):
+        # Adapted from https://github.com/google-research/xtreme/blob/
+        #              522434d1aece34131d997a97ce7e9242a51a688a/utils_preprocess.py#L228
         for split in data:
             if len(data[split]) > 0:
                 prefix = os.path.join(output_dir, f"{split}-{lang_}")
