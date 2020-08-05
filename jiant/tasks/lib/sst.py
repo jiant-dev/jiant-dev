@@ -8,7 +8,7 @@ from jiant.tasks.core import (
     BaseTokenizedExample,
     BaseDataRow,
     BatchMixin,
-    Task,
+    GlueTask,
     TaskTypes,
 )
 from jiant.tasks.lib.templates.shared import single_sentence_featurize, labels_to_bimap
@@ -65,7 +65,7 @@ class Batch(BatchMixin):
     tokens: list
 
 
-class SstTask(Task):
+class SstTask(GlueTask):
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow

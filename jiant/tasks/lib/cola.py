@@ -8,7 +8,7 @@ from jiant.tasks.core import (
     BaseTokenizedExample,
     BaseDataRow,
     BatchMixin,
-    Task,
+    GlueTask,
     TaskTypes,
 )
 from jiant.tasks.lib.templates.shared import single_sentence_featurize, labels_to_bimap
@@ -65,7 +65,7 @@ class Batch(BatchMixin):
     tokens: list
 
 
-class ColaTask(Task):
+class ColaTask(GlueTask):
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow
@@ -90,6 +90,7 @@ class ColaTask(Task):
         for (i, line) in enumerate(lines):
             examples.append(
                 Example(
+                    # NOTE: get_glue_preds() is dependent on this guid format.
                     guid="%s-%s" % (set_type, i),
                     text=line["text"],
                     label=line["label"] if set_type != "test" else cls.LABELS[-1],

@@ -8,7 +8,7 @@ from jiant.tasks.core import (
     BaseTokenizedExample,
     BaseDataRow,
     BatchMixin,
-    Task,
+    GlueTask,
     TaskTypes,
 )
 from jiant.tasks.lib.templates.shared import (
@@ -84,7 +84,7 @@ class Batch(BatchMixin):
     tokens: list
 
 
-class StsbTask(Task):
+class StsbTask(GlueTask):
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow
@@ -114,3 +114,13 @@ class StsbTask(Task):
                 )
             )
         return examples
+
+    @classmethod
+    def get_glue_preds(cls, pred_dict):
+        """Returns a tuple of (index, prediction) as expected by GLUE."""
+        indexes = []
+        predictions = []
+        for pred, guid in zip(list(pred_dict["preds"]), list(pred_dict["guids"])):
+            indexes.append(int(guid.split("-")[1]))
+            predictions.append(str(round(pred, 3)))
+        return (indexes, predictions)
