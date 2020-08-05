@@ -175,7 +175,7 @@ class Task:
             raise TypeError(f"Unknown type for collate_fn {type(elem)}")
 
 
-class GlueTask(Task):
+class GlueMixin:
     @classmethod
     def get_glue_preds(cls, pred_dict):
         """Returns a tuple of (index, prediction) as expected by GLUE."""
