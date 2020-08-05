@@ -174,3 +174,8 @@ class Task:
             return out_batch, remainder
         else:
             raise TypeError(f"Unknown type for collate_fn {type(elem)}")
+
+class SuperGlueMixin:
+    @classmethod
+    def super_glue_format_preds(cls, pred_dict):
+        raise NotImplementedError()

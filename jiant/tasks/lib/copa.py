@@ -27,7 +27,7 @@ class Batch(mc_template.Batch):
     pass
 
 
-class CopaTask(mc_template.AbstractMultipleChoiceTask):
+class CopaTask(SuperGlueMixin, mc_template.AbstractMultipleChoiceTask):
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow
