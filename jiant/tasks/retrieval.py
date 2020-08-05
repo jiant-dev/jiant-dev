@@ -20,6 +20,7 @@ from jiant.tasks.lib.mlm_crosslingual_wiki import MLMCrosslingualWikiTask
 from jiant.tasks.lib.mlm_wikitext_103 import MLMWikitext103Task
 from jiant.tasks.lib.mlqa import MlqaTask
 from jiant.tasks.lib.mnli import MnliTask
+from jiant.tasks.lib.mnli_mismatched import MnliMismatchedTask
 from jiant.tasks.lib.mrpc import MrpcTask
 from jiant.tasks.lib.multirc import MultiRCTask
 from jiant.tasks.lib.ner import NerTask
@@ -77,6 +78,7 @@ TASK_DICT = {
     "mlm_crosslingual_wiki": MLMCrosslingualWikiTask,
     "mlqa": MlqaTask,
     "mnli": MnliTask,
+    "mnli_mismatched": MnliMismatchedTask,
     "multirc": MultiRCTask,
     "mrpc": MrpcTask,
     "ner": NerTask,
