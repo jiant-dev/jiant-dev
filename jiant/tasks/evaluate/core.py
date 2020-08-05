@@ -531,8 +531,7 @@ class F1TaggingEvaluationScheme(BaseEvaluationScheme):
         for datum in cache.iter_all():
             label_mask = datum["data_row"].label_mask.astype(bool)
             pos_list = [
-                task.ID_TO_LABEL[pos_id]
-                for pos_id in datum["data_row"].label_ids[label_mask]
+                task.ID_TO_LABEL[pos_id] for pos_id in datum["data_row"].label_ids[label_mask]
             ]
             label = {
                 "pos_list": pos_list,

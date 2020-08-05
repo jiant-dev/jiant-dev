@@ -17,7 +17,7 @@ from jiant.tasks.lib.templates.shared import (
     construct_single_input_tokens_and_segment_ids,
     pad_single_with_feat_spec,
 )
-from jiant.utils.python.datastructures import zip_equal, get_all_same
+from jiant.utils.python.datastructures import zip_equal
 from jiant.utils.python.io import read_file_lines
 
 
