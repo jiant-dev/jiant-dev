@@ -86,7 +86,7 @@ class ConcatenateLossAccumulator(BaseAccumulator):
         return all_loss
 
 
-class ConcatnateStringListAccumulator(BaseAccumulator):
+class ConcatenateStringListAccumulator(BaseAccumulator):
     def __init__(self):
         self.str_list = []
 
@@ -111,7 +111,7 @@ class ConcatnateStringListAccumulator(BaseAccumulator):
 
 class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
     def get_accumulator(self):
-        return ConcatnateStringListAccumulator()
+        return ConcatenateStringListAccumulator()
 
     def get_labels_from_cache_and_examples(self, task, cache, examples):
         return [datum["data_row"].gt_span_str for datum in cache.iter_all()]
@@ -126,7 +126,7 @@ class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
         return Metrics(major=scores["avg"], minor=scores)
 
     def compute_metrics_from_accumulator(
-        self, task, accumulator: ConcatnateStringListAccumulator, tokenizer, labels: list
+        self, task, accumulator: ConcatenateStringListAccumulator, tokenizer, labels: list
     ) -> Metrics:
         preds = self.get_preds_from_accumulator(task=task, accumulator=accumulator)
         return self.compute_metrics_from_preds_and_labels(preds=preds, labels=labels)
