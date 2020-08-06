@@ -18,7 +18,7 @@ formatted_pred_output_filepaths = {
     "boolq": "BoolQ.jsonl",
     "cb": "CB.jsonl",
     "copa": "COPA.jsonl",
-    "mrc": "MultiRC.jsonl",
+    "multirc": "MultiRC.jsonl",
     "record": "ReCoRD.jsonl",
     "rte": "RTE.jsonl",
     "wic": "WiC.jsonl",
@@ -39,14 +39,17 @@ for task_name, input_filepath in raw_pred_input_filepaths.items():
                 f.write("\n")
         print(task_name, ":", os.path.abspath(output_filepath))
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Generate formatted output files for SuperGLUE benchmark submission")
-    parser.add_argument(
-        "--input_base_path", required=True, help="base input path of SuperGLUE tasks results output by jiant"
+    parser = argparse.ArgumentParser(
+        description="Generate formatted output files for SuperGLUE benchmark submission"
     )
     parser.add_argument(
-        "--output_path", required=True, help="output path for formatted files"
+        "--input_base_path",
+        required=True,
+        help="base input path of SuperGLUE tasks results output by jiant",
     )
+    parser.add_argument("--output_path", required=True, help="output path for formatted files")
 
     args = parser.parse_args()
 
@@ -64,6 +67,7 @@ def main():
                 json.dump(entry, f)
                 f.write("\n")
         print(task_name, ":", os.path.abspath(output_filepath))
+
 
 if __name__ == "__main__":
     main()
