@@ -20,6 +20,11 @@ from jiant.tasks.lib.templates.shared import (
 from jiant.utils.python.datastructures import zip_equal
 from jiant.utils.python.io import read_file_lines
 
+ARBITRARY_OVERLY_LONG_WORD_CONSTRAINT = 100
+# In a rare number of cases, a single word (usually something like a mis-processed URL)
+#  is overly long, and should not be treated as a real multi-subword-token word.
+# In these cases, we simply replace it with an UNK token.
+
 
 @dataclass
 class Example(BaseExample):
@@ -35,7 +40,7 @@ class Example(BaseExample):
             # Tokenize each "token" separately, assign label only to first token
             tokenized = tokenizer.tokenize(token)
             # If the token can't be tokenized, or is too long, replace with a single <unk>
-            if len(tokenized) == 0 or len(tokenized) > 100:
+            if len(tokenized) == 0 or len(tokenized) > ARBITRARY_OVERLY_LONG_WORD_CONSTRAINT:
                 tokenized = [tokenizer.unk_token]
             all_tokenized_tokens += tokenized
             padding_length = len(tokenized) - 1
