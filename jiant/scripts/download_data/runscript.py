@@ -6,10 +6,10 @@ import jiant.scripts.download_data.datasets.nlp_tasks as nlp_tasks_download
 import jiant.scripts.download_data.datasets.xtreme as xtreme_download
 import jiant.scripts.download_data.datasets.files_tasks as files_tasks_download
 from jiant.tasks.constants import GLUE_TASKS, SUPERGLUE_TASKS, XTREME_TASKS, BENCHMARKS
+from jiant.scripts.download_data.constants import SQUAD_TASKS, INCOMPATIBLE_NLP_TASKS
 
-NLP_DOWNLOADER_TASKS = GLUE_TASKS | SUPERGLUE_TASKS
-SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1", "squad_v2"}
-
+NLP_DOWNLOADER_TASKS = GLUE_TASKS | SUPERGLUE_TASKS - INCOMPATIBLE_NLP_TASKS
+SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | SQUAD_TASKS | INCOMPATIBLE_NLP_TASKS
 
 # noinspection PyUnusedLocal
 def list_supported_tasks_cli(args):
@@ -53,8 +53,14 @@ def download_data(task_names, output_base_path):
                 task_data_base_path=task_data_base_path,
                 task_config_base_path=task_config_base_path,
             )
-        elif task_name in ["squad_v1", "squad_v2"]:
+        elif task_name in SQUAD_TASKS:
             files_tasks_download.download_squad_data_and_write_config(
+                task_name=task_name,
+                task_data_path=task_data_path,
+                task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),
+            )
+        elif task_name in INCOMPATIBLE_NLP_TASKS:
+            files_tasks_download.download_task_data_and_write_config(
                 task_name=task_name,
                 task_data_path=task_data_path,
                 task_config_path=os.path.join(task_config_base_path, f"{task_name}.json"),

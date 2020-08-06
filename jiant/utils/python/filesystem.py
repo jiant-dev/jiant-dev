@@ -41,3 +41,9 @@ def get_code_asset_path(*rel_path):
         Path to file/folder within code base
     """
     return os.path.join(get_code_base_path(), *rel_path)
+
+
+def find_case_insensitve_filename(filename, path):
+    for f in os.listdir(path):
+        if f.lower() == filename.lower():
+            return f
