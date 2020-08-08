@@ -2,7 +2,7 @@
 
 ## GLUE Benchmark Submission Formatter
 
-Jiant supports [GLUE Benchmark](https://gluebenchmark.com/) test prediction generation in the submission format. To generate test predictions, use the `--write_test_preds` flag in [runscript.py](https://github.com/jiant-dev/jiant/blob/master/jiant/proj/main/runscript.py) when running your workflow. This will generate a `test_preds.p` file in the specified output directory. To convert `test_preds.p` to the required GLUE submission format, run the following:
+`jiant` supports generating submission files for [GLUE](https://gluebenchmark.com/). To generate test predictions, use the `--write_test_preds` flag in [`runscript.py`](https://github.com/jiant-dev/jiant/blob/master/jiant/proj/main/runscript.py) when running your workflow. This will generate a `test_preds.p` file in the specified output directory. To convert `test_preds.p` to the required GLUE submission format, use the following command:
 
 ```bash
 python glue_submission_formatter.py --input_base_path $INPUT_BASE_PATH --output_path $OUTPUT_BASE PATH
