@@ -61,8 +61,16 @@ def download_task_data_and_write_config(task_name: str, task_data_path: str, tas
         shutil.move(os.path.join(nested_task_dir, f), os.path.join(task_data_path, f))
     shutil.rmtree(nested_task_dir)
 
+    # Supports datasets with non-standard dev dataset name
+    if os.path.isfile(os.path.join(task_data_path, "dev.jsonl")):
+        dev_data_name = "dev.jsonl"
+    elif os.path.isfile(os.path.join(task_data_path, "val.jsonl")):
+        dev_data_name = "val.jsonl"
+    else:
+        raise RuntimeError("Unsupported dev dataset name in downloaded task.")
+
+    val_path = os.path.join(task_data_path, dev_data_name)
     train_path = os.path.join(task_data_path, "train.jsonl")
-    val_path = os.path.join(task_data_path, "dev.jsonl")
     test_path = os.path.join(task_data_path, "test.jsonl")
     py_io.write_json(
         data={
