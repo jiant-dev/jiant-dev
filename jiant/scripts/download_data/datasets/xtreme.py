@@ -167,7 +167,7 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         os.path.join(udpos_temp_path, "conll.py"),
     )
     conll = filesystem.import_from_path(os.path.join(udpos_temp_path, "conll.py"))
-    conllu_path_ls = glob.glob(os.path.join(udpos_temp_path, "*", "*", "*.conllu"))
+    conllu_path_ls = sorted(glob.glob(os.path.join(udpos_temp_path, "*", "*", "*.conllu")))
     conll_path = os.path.join(udpos_temp_path, "conll")
 
     # === Convert conllu files to conll === #
