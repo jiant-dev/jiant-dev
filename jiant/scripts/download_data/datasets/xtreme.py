@@ -180,7 +180,7 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         )
         pos_rank_precedence_dict = {
             "default": (
-                "VERB NOUN PROPN PRON ADJ NUM ADV INTJ AUX ADP DET PART CCONJ SCONJ X PUNCT "
+                "VERB NOUN PROPN PRON ADJ NUM ADV INTJ AUX ADP DET PART CCONJ SCONJ X PUNCT"
             ).split(" "),
             "es": "VERB AUX PRON ADP DET".split(" "),
             "fr": "VERB AUX PRON NOUN ADJ ADV ADP DET PART SCONJ CONJ".split(" "),
