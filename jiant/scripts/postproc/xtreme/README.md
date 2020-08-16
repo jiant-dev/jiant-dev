@@ -74,7 +74,7 @@ python jiant/proj/main/tokenize_and_cache.py \
     --phases train,val,test \
     --max_seq_length 256 \
     --smart_truncate
-for LG in af ar bg de el en es et eu fa fi fr he hi hu id it ja ko mr nl pt ru ta te tr ur vi zh; do
+for LG in af ar bg de el es et eu fa fi fr he hi hu id it ja ko mr nl pt ru ta te tr ur vi zh; do
     TASK=udpos_${LG}
     python jiant/proj/main/tokenize_and_cache.py \
         --task_config_path ${BASE_PATH}/tasks/configs/${TASK}_config.json \
@@ -98,7 +98,7 @@ for LG in kk th tl yo; do
 done
 ```
 
-### PAN-X
+### PANX
 ```bash
 TASK=panx_en
 python jiant/proj/main/tokenize_and_cache.py \
@@ -226,4 +226,79 @@ python jiant/proj/main/tokenize_and_cache.py \
     --phases train,val \
     --max_seq_length 384 \
     --smart_truncate
+```
+
+## Generate Runconfigs
+```bash
+mkdir -p ${BASE_PATH}/runconfigs
+
+# XNLI
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task xnli \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --epochs 2 --train_batch_size 4 --gradient_accumulation_steps 8 \
+    --output_path ${BASE_PATH}/runconfigs/xnli.json
+
+# PAWS-X
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task pawsx \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --epochs 5 --train_batch_size 4 --gradient_accumulation_steps 8 \
+    --output_path ${BASE_PATH}/runconfigs/pawsx.json
+
+# UDPOS
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task udpos \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --epochs 10 --train_batch_size 4 --gradient_accumulation_steps 8 \
+    --output_path ${BASE_PATH}/runconfigs/udpos.json
+
+# PANX
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task panx \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --epochs 10 --train_batch_size 4 --gradient_accumulation_steps 8 \
+    --output_path ${BASE_PATH}/runconfigs/panx.json
+
+# XQuAD
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task xquad \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --epochs 2 --train_batch_size 4 --gradient_accumulation_steps 4 \
+    --output_path ${BASE_PATH}/runconfigs/mlqa.json
+
+# MLQA
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task mlqa \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --epochs 2 --train_batch_size 4 --gradient_accumulation_steps 4 \
+    --output_path ${BASE_PATH}/runconfigs/mlqa.json
+
+# TyDiQA
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task tydiqa \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --epochs 2 --train_batch_size 4 --gradient_accumulation_steps 4 \
+    --output_path ${BASE_PATH}/runconfigs/tydiqa.json
+
+# Bucc2018
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task bucc2018 \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --output_path ${BASE_PATH}/runconfigs/bucc2018.json
+
+# Tatoeba
+python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
+    --xtreme_task tatoeba \
+    --task_config_base_path ${BASE_PATH}/tasks/configs \
+    --task_cache_base_path ${BASE_PATH}/cache/${MODEL_TYPE} \
+    --output_path ${BASE_PATH}/runconfigs/tatoeba.json
 ```
