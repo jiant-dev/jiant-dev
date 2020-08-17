@@ -8,6 +8,7 @@ GLUE_TASKS = {
     "mnli_mismatched",
     "qnli",
     "rte",
+    "snli",
     "wnli",
     "glue_diagnostics",
 }

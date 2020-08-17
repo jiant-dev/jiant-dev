@@ -8,7 +8,7 @@ import jiant.scripts.download_data.datasets.files_tasks as files_tasks_download
 from jiant.tasks.constants import GLUE_TASKS, SUPERGLUE_TASKS, XTREME_TASKS, BENCHMARKS
 
 NLP_DOWNLOADER_TASKS = GLUE_TASKS | SUPERGLUE_TASKS
-SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1", "squad_v2"}
+SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | {"squad_v1", "squad_v2", "snli"}
 
 
 # noinspection PyUnusedLocal

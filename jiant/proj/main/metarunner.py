@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict
 import torch.nn as nn
-
+import math
 
 import jiant.proj.main.runner as jiant_runner
 import jiant.proj.main.components.task_sampler as jiant_task_sampler
@@ -60,6 +60,7 @@ class JiantMetarunner(AbstractMetarunner):
         save_every_steps,
         eval_every_steps,
         save_checkpoint_every_steps,
+        save_model_every_logscale,
         no_improvements_for_n_evals,
         checkpoint_saver,
         output_dir,
@@ -72,6 +73,7 @@ class JiantMetarunner(AbstractMetarunner):
         self.save_every_steps = save_every_steps
         self.eval_every_steps = eval_every_steps
         self.save_checkpoint_every_steps = save_checkpoint_every_steps
+        self.save_model_every_logscale = save_model_every_logscale
         self.no_improvements_for_n_evals = no_improvements_for_n_evals
         self.checkpoint_saver = checkpoint_saver
         self.output_dir = output_dir
@@ -110,8 +112,11 @@ class JiantMetarunner(AbstractMetarunner):
             yield
 
     def should_save_model(self) -> bool:
-        if self.save_every_steps == 0:
+        if self.save_every_steps == 0 or not self.save_model_every_logscale:
             return False
+        if self.save_model_every_logscale:
+            return math.log(self.train_state.global_steps + 1, 10).is_integer()
+
         return (self.train_state.global_steps + 1) % self.save_every_steps == 0
 
     def save_model(self):
@@ -125,6 +130,7 @@ class JiantMetarunner(AbstractMetarunner):
     def should_save_checkpoint(self) -> bool:
         if self.save_checkpoint_every_steps == 0:
             return False
+
         return (self.train_state.global_steps + 1) % self.save_checkpoint_every_steps == 0
 
     def save_checkpoint(self):
