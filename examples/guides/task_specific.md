@@ -20,7 +20,7 @@ The file should be named `AmazonPhotos.zip`, and it should be placed in `${task_
 
 The Bucc2018 and Tatoeba tasks are sentence retrieval tasks, and require the `faiss` library to run. `faiss-gpu` is recommended for speed reasons.
 
-We recommend running:
+We recommend running (with the appropriate `cudatoolkit` version):
 
 ```bash
 conda install faiss-gpu cudatoolkit=10.1 -c pytorch

@@ -7,7 +7,7 @@ from jiant.utils.python.datastructures import get_unique_list_in_order
 
 LANGS_DICT = {
     "xnli": "ar bg de el en es fr hi ru sw th tr ur vi zh".split(),
-    "pawsx": "ar de en es fr ja ko zh".split(),
+    "pawsx": "de en es fr ja ko zh".split(),
     "udpos": "af ar bg de el en es et eu fa fi fr he hi hu id it ja ko mr"
              " nl pt ru ta te tr ur vi zh".split(),
     "panx": "af ar bg bn de el en es et eu fa fi fr he hi hu id it ja jv ka kk ko ml mr ms my"
@@ -57,7 +57,10 @@ class RunConfiguration(zconf.RunConfig):
 
 def generate_configs(args: RunConfiguration):
     xtreme_task = args.xtreme_task
-    xtreme_task_name_list = [f"{xtreme_task}_{lang}" for lang in LANGS_DICT[xtreme_task]]
+    if xtreme_task == "mlqa":
+        xtreme_task_name_list = [f"{xtreme_task}_{lang}_{lang}" for lang in LANGS_DICT[xtreme_task]]
+    else:
+        xtreme_task_name_list = [f"{xtreme_task}_{lang}" for lang in LANGS_DICT[xtreme_task]]
 
     if xtreme_task in TRAINED_TASKS:
         train_task = TRAIN_TASK_DICT[xtreme_task]
@@ -94,14 +97,22 @@ def generate_configs(args: RunConfiguration):
         warmup_steps_proportion=0.1,
     ).create_config()
 
-    if xtreme_task in TRAINED_TASKS:
-        # Make sure all trained tasks use the same task head
-        config["taskmodels_config"]["task_to_taskmodel_map"] = {
-            k: xtreme_task
-            for k, v in config["taskmodels_config"]["task_to_taskmodel_map"].items()
+    # Make sure all tasks use the same task head
+    config["taskmodels_config"]["task_to_taskmodel_map"] = {
+        k: xtreme_task
+        for k, v in config["taskmodels_config"]["task_to_taskmodel_map"].items()
+    }
+    if not args.no_verbose:
+        print(f"Assigning all tasks to '{xtreme_task}' head")
+    if xtreme_task in UNTRAINED_TASKS:
+        config["taskmodels_config"]["taskmodel_config_map"] = {
+            xtreme_task: {
+                "pooler_type": "mean",
+                "layer": 14,
+            }
         }
-        if not args.no_verbose:
-            print(f"Assigning all tasks to '{xtreme_task}' head")
+
+
     py_io.write_json(config, args.output_path)
 
 
