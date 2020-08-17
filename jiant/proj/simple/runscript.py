@@ -170,6 +170,7 @@ def run_simple(args: RunConfiguration):
     )
     py_io.write_json(jiant_task_container_config, path=jiant_task_container_config_path)
 
+    model_filename = args.model_type.replace("/", "-")
     # === Step 5: Train/Eval! === #
     if args.model_weights_path:
         model_load_mode = "partial"
@@ -181,8 +182,9 @@ def run_simple(args: RunConfiguration):
         else:
             model_load_mode = "from_transformers"
         model_weights_path = os.path.join(
-            model_cache_path, args.model_type, "model", f"{args.model_type}.p"
+            model_cache_path, args.model_type, "model", f"{model_filename}.p"
         )
+   
     runscript.run_loop(
         runscript.RunConfiguration(
             # === Required parameters === #
@@ -192,7 +194,7 @@ def run_simple(args: RunConfiguration):
             model_type=args.model_type,
             model_path=model_weights_path,
             model_config_path=os.path.join(
-                model_cache_path, args.model_type, "model", f"{args.model_type}.json"
+                model_cache_path, args.model_type, "model", f"{model_filename}.json"
             ),
             model_tokenizer_path=os.path.join(model_cache_path, args.model_type, "tokenizer"),
             model_load_mode=model_load_mode,
