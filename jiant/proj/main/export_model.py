@@ -31,7 +31,6 @@ def export_model(model_type, output_base_path, model_class, tokenizer_class):
 
     # nyu_mll/roberta-base creates spurious directory
     model_filename = model_type.replace("/", "-")
-    print(model_filename)
 
     model_path = os.path.join(model_fol_path, f"{model_filename}.p")
     model_config_path = os.path.join(model_fol_path, f"{model_filename}.json")
