@@ -391,7 +391,6 @@ def download_tydiqa_data_and_write_config(task_data_base_path: str, task_config_
     # Split train data
     data = py_io.read_json(full_train_path)
     lang2data = {lang: [] for lang in languages_dict.values()}
-    version = data["version"]
     for doc in data["data"]:
         for par in doc["paragraphs"]:
             context = par["context"]
