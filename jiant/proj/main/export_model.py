@@ -29,8 +29,12 @@ def export_model(model_type, output_base_path, model_class, tokenizer_class):
     os.makedirs(tokenizer_fol_path, exist_ok=True)
     os.makedirs(model_fol_path, exist_ok=True)
 
-    model_path = os.path.join(model_fol_path, f"{model_type}.p")
-    model_config_path = os.path.join(model_fol_path, f"{model_type}.json")
+    # nyu_mll/roberta-base creates spurious directory
+    model_filename = model_type.replace("/", "-")
+    print(model_filename)
+
+    model_path = os.path.join(model_fol_path, f"{model_filename}.p")
+    model_config_path = os.path.join(model_fol_path, f"{model_filename}.json")
     model = model_class.from_pretrained(model_type)
     torch.save(model.state_dict(), model_path)
     py_io.write_json(model.config.to_dict(), model_config_path)
@@ -52,6 +56,8 @@ def get_model_and_tokenizer_classes(model_type):
         "roberta": (transformers.RobertaForMaskedLM, transformers.RobertaTokenizer),
         "albert": (transformers.AlbertForMaskedLM, transformers.AlbertTokenizer),
     }
+    if model_type.split("/")[0] == "nyu-mll":
+        model_type = model_type.split("/")[1]
     if model_type.split("-")[0] in class_lookup:
         return class_lookup[model_type.split("-")[0]]
     elif model_type.startswith("xlm-mlm-") or model_type.startswith("xlm-clm-"):
@@ -59,7 +65,7 @@ def get_model_and_tokenizer_classes(model_type):
     elif model_type.startswith("xlm-roberta-"):
         return transformers.XLMRobertaForMaskedLM, transformers.XLMRobertaTokenizer
     else:
-        raise KeyError()
+        raise KeyError(model_type)
 
 
 def main():
