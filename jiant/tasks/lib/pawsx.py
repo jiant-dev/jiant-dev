@@ -96,6 +96,7 @@ class PawsXTask(Task):
     def _create_examples(cls, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
+            # Skip the first line
             if i == 0:
                 continue
             segments = line.strip().split("\t")
