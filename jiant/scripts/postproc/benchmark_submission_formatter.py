@@ -1,4 +1,5 @@
-"""Translate raw prediction files for benchmark tasks into format expected by benchmark leaderboards.
+"""Translate raw prediction files for benchmark tasks into format expected by
+benchmark leaderboards.
 """
 import os
 import argparse
