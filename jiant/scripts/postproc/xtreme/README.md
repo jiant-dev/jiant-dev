@@ -1,9 +1,26 @@
-## Download Model
+# XTREME Running / Submission Guide
 
+This guide will walk through the full process for evaluating XLM-R on all XTREME tasks. It consists of the following steps:
+
+* [Download Model](#download-model)
+* [Download Data](#download-data)
+* [Tokenize and Cache Data](#tokenize-and-cache-data)
+* [Generate Run Configs](#generate-run-configs)
+* [Train/Run Models](#trainrun-models)
+
+You can also choose to just run one of the tasks, instead of the whole benchmark.
+
+Before we begin, be sure to set the following environment variables:
 ```bash
 BASE_PATH=/home/zp489/scratch/working/v1/2008/15_xtreme
 MODEL_TYPE=xlm-roberta-large
+``` 
 
+## Download Model
+
+First, we download the XLM-R model.
+
+```bash
 # Download XLM-R Large
 python jiant/proj/main/export_model.py \
     --model_type ${MODEL_TYPE} \
@@ -11,6 +28,9 @@ python jiant/proj/main/export_model.py \
 ```
 
 ## Download Data
+
+Next, we download the XTREME data. We also need to download the MNLI and SQuAD datasets as training data for XNLI, XQuAD and MLQA.
+
 ```bash
 python jiant/scripts/download_data/runscript.py \
     download \
@@ -23,6 +43,8 @@ python jiant/scripts/download_data/runscript.py \
 ```
 
 ## Tokenize and Cache Data
+
+Now, we preprocess our data into a tokenized cache. We need to do this across all languages for each XTREME task. Somewhat tediously (and this will come up again), different tasks have slightly different phases (train/val/test) available, so we have slightly different configurations for each.
 
 ### XNLI (uses MNLI for training)
 ```bash
@@ -229,6 +251,14 @@ python jiant/proj/main/tokenize_and_cache.py \
 ```
 
 ## Generate Run configs
+
+Now, we generate the run configurations for each of our XTREME tasks. Each of the 9 XTREME tasks will correspond to one run. It's worth noting here:
+
+* XNLI uses MNLI for training, XQuAD and MLQA use SQuAD v1.1, while PAWS-X, UDPOS, PANX and TyDiQA have their own English training sets.
+* For these tasks, we will train on the training set, and then evaluate the validation set for all available languages.
+* Bucc2018 and Tatoeba, the sentence retrieval tasks, are not trained, and only run in evaluation mode.
+* We need to ensure that all tasks in a single run use the exact same output head. This is prepared for you in the `xtreme_runconfig_writer`. We recommend looking over the resulting run config file to verify how the run is set up.
+
 ```bash
 mkdir -p ${BASE_PATH}/runconfigs
 
@@ -304,6 +334,11 @@ python jiant/scripts/postproc/xtreme/xtreme_runconfig_writer.py \
 ```
 
 ## Train/Run models
+
+Now, we can fine-tune XLM-R on each task (in the cases of Bucc2018 and Tatoeba, we just run evaluation). 
+
+We put this in the format for a bash loop here, but we recommend running these commands in parallel, one job for each task, if you have a cluster available.
+
 ```bash
 for TASK in xnli pawsx udpos panx xquad mlqa tydiqa; do
     python jiant/proj/main/runscript.py \
