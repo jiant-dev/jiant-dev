@@ -1,4 +1,3 @@
-import os
 import jiant.proj.main.scripts.configurator as configurator
 import jiant.utils.zconf as zconf
 import jiant.utils.python.io as py_io
@@ -105,7 +104,7 @@ def generate_configs(args: RunConfiguration):
         print(f"Assigning all tasks to '{xtreme_task}' head")
     if xtreme_task in UNTRAINED_TASKS:
         config["taskmodels_config"]["taskmodel_config_map"] = {
-            xtreme_task: {"pooler_type": "mean", "layer": 14,}
+            xtreme_task: {"pooler_type": "mean", "layer": 14}
         }
 
     py_io.write_json(config, args.output_path)

@@ -183,7 +183,8 @@ def write_preds_for_tagging(
                 f.write("\n")
     torch.save(preds_dict, preds_pickle_path)
     print(
-        f"Wrote {supertask} preds for {len(runner.jiant_task_container.task_run_config.test_task_list)} languages"
+        f"Wrote {supertask} preds for"
+        f" {len(runner.jiant_task_container.task_run_config.test_task_list)} languages"
     )
 
 
