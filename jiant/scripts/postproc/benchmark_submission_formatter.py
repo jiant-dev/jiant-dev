@@ -1,6 +1,4 @@
-"""Translate raw prediction files for GLUE tasks into format expected by GLUE leaderboard.
-This script translates raw prediction files for GLUE tasks into the tsv files required
-by the GLUE leaderboard. See https://gluebenchmark.com/ for leaderboard info.
+"""Translate raw prediction files for benchmark tasks into format expected by benchmark leaderboards.
 """
 import os
 import argparse
@@ -18,7 +16,7 @@ def main():
     parser.add_argument(
         "--input_base_path",
         required=True,
-        help="base input path of GLUE task predictions (contains the task folders)",
+        help="base input path of benchmark task predictions (contains the benchmark task folders)",
     )
     parser.add_argument("--output_path", required=True, help="output path for formatted files")
     parser.add_argument(

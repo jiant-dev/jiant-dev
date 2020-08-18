@@ -16,6 +16,7 @@ class Benchmark:
         raise NotImplementedError
 
 
+# https://gluebenchmark.com/
 class GlueBenchmark(Benchmark):
     TASKS = GLUE_TASKS
     BENCHMARK_SUBMISSION_FILENAMES = {
@@ -43,6 +44,7 @@ class GlueBenchmark(Benchmark):
             writer.writerows(zip(indexes, predictions))
 
 
+# https://super.gluebenchmark.com/
 class SuperglueBenchmark(Benchmark):
     TASKS = SUPERGLUE_TASKS
     BENCHMARK_SUBMISSION_FILENAMES = {
