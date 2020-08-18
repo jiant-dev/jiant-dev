@@ -5,7 +5,7 @@ import jiant.utils.python.filesystem as filesystem
 import jiant.scripts.download_data.utils as download_utils
 import jiant.utils.python.io as py_io
 
-from jiant.scripts.download_data.constants import SQUAD_TASKS, INCOMPATIBLE_NLP_TASKS_TO_DATA_URLS
+from jiant.scripts.download_data.constants import SQUAD_TASKS, DIRECT_DOWNLOAD_TASKS_TO_DATA_URLS
 
 
 def download_squad_data_and_write_config(
@@ -47,9 +47,7 @@ def download_task_data_and_write_config(task_name: str, task_data_path: str, tas
     assert task_name not in SQUAD_TASKS
 
     os.makedirs(task_data_path, exist_ok=True)
-    download_utils.download_and_unzip(
-        INCOMPATIBLE_NLP_TASKS_TO_DATA_URLS[task_name], task_data_path
-    )
+    download_utils.download_and_unzip(DIRECT_DOWNLOAD_TASKS_TO_DATA_URLS[task_name], task_data_path)
 
     # Move task data up one folder (nested under task name when unzipped)
     nested_task_dir = os.path.join(
