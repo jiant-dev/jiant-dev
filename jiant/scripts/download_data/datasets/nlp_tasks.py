@@ -99,7 +99,7 @@ NLP_CONVERSION_DICT = {
     "record": {"path": "super_glue", "name": "record"},
     "wic": {"path": "super_glue", "name": "wic", "label_map": WiCTask.ID_TO_LABEL},
     "wsc": {"path": "super_glue", "name": "wsc.fixed", "label_map": WSCTask.ID_TO_LABEL},
-    "superglue_broadcoverage_diagnostics": {
+    "superglue_axb": {
         "path": "super_glue",
         "name": "axb",
         "field_map": {"sentence1": "premise", "sentence2": "hypothesis"},
@@ -107,7 +107,7 @@ NLP_CONVERSION_DICT = {
         "phase_map": None,
         "jiant_task_name": "rte",
     },
-    "superglue_winogender_diagnostics": {
+    "superglue_axg": {
         "path": "super_glue",
         "name": "axg",
         "label_map": RteTask.ID_TO_LABEL,
