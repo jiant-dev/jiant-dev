@@ -258,6 +258,7 @@ Now, we generate the run configurations for each of our XTREME tasks. Each of th
 * For these tasks, we will train on the training set, and then evaluate the validation set for all available languages.
 * Bucc2018 and Tatoeba, the sentence retrieval tasks, are not trained, and only run in evaluation mode.
 * We need to ensure that all tasks in a single run use the exact same output head. This is prepared for you in the `xtreme_runconfig_writer`. We recommend looking over the resulting run config file to verify how the run is set up.
+* In theory, we could do XQuAD and MLQA in a single run, since they are both trained on SQuAD and evaluated zero-shot. For simplicity, we will treat them as separate runs. You can combine them into a single run config by modifying the runconfig file. 
 
 ```bash
 mkdir -p ${BASE_PATH}/runconfigs

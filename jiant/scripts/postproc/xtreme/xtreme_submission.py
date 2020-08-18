@@ -93,7 +93,7 @@ def run_loop(args: RunConfiguration):
             output_dir=output_dir,
             skip_if_done=args.skip_if_done,
         )
-    elif supertask in ["xquad_and_mlqa"]:
+    elif supertask in ["xquad", "mlqa"]:
         write_preds_for_qa(
             runner=runner,
             supertask=supertask,
@@ -101,7 +101,7 @@ def run_loop(args: RunConfiguration):
             phase="test",
             skip_if_done=args.skip_if_done,
         )
-    elif supertask in ["tydiqa"]:
+    elif supertask == "tydiqa":
         write_preds_for_qa(
             runner=runner,
             supertask="tydiqa",
