@@ -9,15 +9,15 @@ LANGS_DICT = {
     "xnli": "ar bg de el en es fr hi ru sw th tr ur vi zh".split(),
     "pawsx": "de en es fr ja ko zh".split(),
     "udpos": "af ar bg de el en es et eu fa fi fr he hi hu id it ja ko mr"
-             " nl pt ru ta te tr ur vi zh".split(),
+    " nl pt ru ta te tr ur vi zh".split(),
     "panx": "af ar bg bn de el en es et eu fa fi fr he hi hu id it ja jv ka kk ko ml mr ms my"
-            " nl pt ru sw ta te th tl tr ur vi yo zh".split(),
+    " nl pt ru sw ta te th tl tr ur vi yo zh".split(),
     "xquad": "ar de el en es hi ru th tr vi zh".split(),
     "mlqa": "ar de en es hi vi zh".split(),
     "tydiqa": "ar bn en fi id ko ru sw te".split(),
     "bucc2018": "de fr ru zh".split(),
     "tatoeba": "af ar bg bn de el es et eu fa fi fr he hi hu id it ja jv ka kk ko ml mr"
-               " nl pt ru sw ta te th tl tr ur vi zh".split(),
+    " nl pt ru sw ta te th tl tr ur vi zh".split(),
 }
 TRAIN_TASK_DICT = {
     "xnli": "mnli",
@@ -49,8 +49,8 @@ class RunConfiguration(zconf.RunConfig):
     early_stop_on_xtreme_tasks = zconf.attr(
         action="store_true",
         help="False = Do early stopping on train task,"
-             " True = Do early stopping on XTREME tasks in all languages"
-             " (default: False)"
+        " True = Do early stopping on XTREME tasks in all languages"
+        " (default: False)",
     )
     no_verbose = zconf.attr(action="store_true")
 
@@ -99,19 +99,14 @@ def generate_configs(args: RunConfiguration):
 
     # Make sure all tasks use the same task head
     config["taskmodels_config"]["task_to_taskmodel_map"] = {
-        k: xtreme_task
-        for k, v in config["taskmodels_config"]["task_to_taskmodel_map"].items()
+        k: xtreme_task for k, v in config["taskmodels_config"]["task_to_taskmodel_map"].items()
     }
     if not args.no_verbose:
         print(f"Assigning all tasks to '{xtreme_task}' head")
     if xtreme_task in UNTRAINED_TASKS:
         config["taskmodels_config"]["taskmodel_config_map"] = {
-            xtreme_task: {
-                "pooler_type": "mean",
-                "layer": 14,
-            }
+            xtreme_task: {"pooler_type": "mean", "layer": 14,}
         }
-
 
     py_io.write_json(config, args.output_path)
 

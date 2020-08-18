@@ -32,8 +32,10 @@ class RunConfiguration(zconf.RunConfig):
     # === Optional Parameters === #
     skip_if_done = zconf.attr(action="store_true")
     bucc_val_metrics_path = zconf.attr(
-        type=str, default=None, help="Path to val_metrics.json for bucc2018. Contains the optimal threshold,"
-                                     " to be used for generating test predictions."
+        type=str,
+        default=None,
+        help="Path to val_metrics.json for bucc2018. Contains the optimal threshold,"
+        " to be used for generating test predictions.",
     )
 
     # === Model parameters === #
@@ -51,12 +53,12 @@ class RunConfiguration(zconf.RunConfig):
     optimizer_type = zconf.attr(default="adam", type=str)
 
     # Specialized config
-    no_cuda = zconf.attr(action='store_true')
-    fp16 = zconf.attr(action='store_true')
-    fp16_opt_level = zconf.attr(default='O1', type=str)
+    no_cuda = zconf.attr(action="store_true")
+    fp16 = zconf.attr(action="store_true")
+    fp16_opt_level = zconf.attr(default="O1", type=str)
     local_rank = zconf.attr(default=-1, type=int)
-    server_ip = zconf.attr(default='', type=str)
-    server_port = zconf.attr(default='', type=str)
+    server_ip = zconf.attr(default="", type=str)
+    server_port = zconf.attr(default="", type=str)
     force_overwrite = zconf.attr(action="store_true")
     seed = zconf.attr(type=int, default=-1)
 
@@ -65,9 +67,9 @@ def run_loop(args: RunConfiguration):
     quick_init_out = initialization.quick_init(args=args, verbose=True)
     with quick_init_out.log_writer.log_context():
         if args.jiant_task_container_path:
-            jiant_task_container = container_setup.create_jiant_task_container(**py_io.read_json(
-                args.jiant_task_container_path
-            ))
+            jiant_task_container = container_setup.create_jiant_task_container(
+                **py_io.read_json(args.jiant_task_container_path)
+            )
         else:
             raise RuntimeError("Need `jiant_task_container_path` or individual config paths")
         runner = setup_runner(
@@ -79,22 +81,32 @@ def run_loop(args: RunConfiguration):
     supertask, output_dir = args.supertask, args.output_dir
     if supertask in ["xnli", "pawsx"]:
         write_preds_for_classification(
-            runner=runner, supertask=supertask, output_dir=output_dir,
+            runner=runner,
+            supertask=supertask,
+            output_dir=output_dir,
             skip_if_done=args.skip_if_done,
         )
     elif supertask in ["udpos", "panx"]:
         write_preds_for_tagging(
-            runner=runner, supertask=supertask, output_dir=output_dir,
+            runner=runner,
+            supertask=supertask,
+            output_dir=output_dir,
             skip_if_done=args.skip_if_done,
         )
     elif supertask in ["xquad_and_mlqa"]:
         write_preds_for_qa(
-            runner=runner, supertask=supertask, output_dir=output_dir, phase="test",
+            runner=runner,
+            supertask=supertask,
+            output_dir=output_dir,
+            phase="test",
             skip_if_done=args.skip_if_done,
         )
     elif supertask in ["tydiqa"]:
         write_preds_for_qa(
-            runner=runner, supertask="tydiqa", output_dir=output_dir, phase="val",
+            runner=runner,
+            supertask="tydiqa",
+            output_dir=output_dir,
+            phase="val",
             skip_if_done=args.skip_if_done,
         )
     elif supertask == "bucc2018":
@@ -106,15 +118,15 @@ def run_loop(args: RunConfiguration):
         )
     elif supertask == "tatoeba":
         write_preds_for_tatoeba(
-            runner=runner, output_dir=output_dir,
-            skip_if_done=args.skip_if_done,
+            runner=runner, output_dir=output_dir, skip_if_done=args.skip_if_done,
         )
     else:
         raise KeyError(supertask)
 
 
-def write_preds_for_classification(runner: jiant_runner.JiantRunner,
-                                   supertask, output_dir, skip_if_done=False):
+def write_preds_for_classification(
+    runner: jiant_runner.JiantRunner, supertask, output_dir, skip_if_done=False
+):
     preds_pickle_path = os.path.join(output_dir, f"{supertask}_test_preds.p")
     if skip_if_done and os.path.exists(preds_pickle_path):
         print(f"Skipping cause {preds_pickle_path} exists")
@@ -124,8 +136,7 @@ def write_preds_for_classification(runner: jiant_runner.JiantRunner,
         task_name_list=runner.jiant_task_container.task_run_config.test_task_list,
     )
     jiant_evaluate.write_preds(
-        eval_results_dict=test_results_dict,
-        path=preds_pickle_path,
+        eval_results_dict=test_results_dict, path=preds_pickle_path,
     )
     preds_output_dir = os.path.join(output_dir, "preds", supertask)
     os.makedirs(preds_output_dir, exist_ok=True)
@@ -145,8 +156,9 @@ def write_preds_for_classification(runner: jiant_runner.JiantRunner,
     print(f"Wrote {supertask} preds for {len(test_results_dict)} languages")
 
 
-def write_preds_for_tagging(runner: jiant_runner.JiantRunner,
-                            supertask, output_dir, skip_if_done=False):
+def write_preds_for_tagging(
+    runner: jiant_runner.JiantRunner, supertask, output_dir, skip_if_done=False
+):
     preds_pickle_path = os.path.join(output_dir, f"{supertask}_test_preds.p")
     if skip_if_done and os.path.exists(preds_pickle_path):
         print(f"Skipping cause {preds_pickle_path} exists")
@@ -160,9 +172,7 @@ def write_preds_for_tagging(runner: jiant_runner.JiantRunner,
         task = runner.jiant_task_container.task_dict[task_name]
         assert isinstance(task, (tasks.UdposTask, tasks.PanxTask))
         preds_list = get_preds_for_tagging_task(
-            task=task,
-            test_dataloader=test_dataloader_dict[task_name],
-            runner=runner,
+            task=task, test_dataloader=test_dataloader_dict[task_name], runner=runner,
         )
         preds_dict[task_name] = preds_list
         lang = task.language
@@ -172,43 +182,41 @@ def write_preds_for_tagging(runner: jiant_runner.JiantRunner,
                     f.write(f"{label}\n")
                 f.write("\n")
     torch.save(preds_dict, preds_pickle_path)
-    print(f"Wrote {supertask} preds for {len(runner.jiant_task_container.task_run_config.test_task_list)} languages")
+    print(
+        f"Wrote {supertask} preds for {len(runner.jiant_task_container.task_run_config.test_task_list)} languages"
+    )
 
 
-def get_preds_for_tagging_task(task, test_dataloader, runner: jiant_runner.JiantRunner,
-                               verbose=True):
+def get_preds_for_tagging_task(
+    task, test_dataloader, runner: jiant_runner.JiantRunner, verbose=True
+):
     jiant_model, device = runner.model, runner.device
     jiant_model.eval()
     test_examples = task.get_test_examples()
     preds_list = []
     example_i = 0
     for step, (batch, batch_metadata) in enumerate(
-            maybe_tqdm(test_dataloader, desc=f"Eval ({task.name}, Test)", verbose=verbose)):
+        maybe_tqdm(test_dataloader, desc=f"Eval ({task.name}, Test)", verbose=verbose)
+    ):
         batch = batch.to(device)
 
         with torch.no_grad():
             model_output = wrap_jiant_forward(
-                jiant_model=jiant_model,
-                batch=batch,
-                task=task,
-                compute_loss=False,
+                jiant_model=jiant_model, batch=batch, task=task, compute_loss=False,
             )
         batch_logits = model_output.logits.detach().cpu().numpy()
         label_mask_arr = batch.label_mask.cpu().bool().numpy()
         preds_arr = np.argmax(batch_logits, axis=-1)
         for i in range(len(batch)):
             # noinspection PyUnresolvedReferences
-            labels = [
-                task.ID_TO_LABEL[class_i] for class_i in
-                preds_arr[i][label_mask_arr[i]]
-            ]
+            labels = [task.ID_TO_LABEL[class_i] for class_i in preds_arr[i][label_mask_arr[i]]]
             if len(labels) == len(test_examples[example_i].tokens):
                 this_preds = list(zip(test_examples[example_i].tokens, labels))
             elif len(labels) < len(test_examples[example_i].tokens):
                 this_preds = list(zip(test_examples[example_i].tokens, labels))
                 this_preds += [
                     (task.LABELS[-1], token)
-                    for token in test_examples[example_i].tokens[len(labels):]
+                    for token in test_examples[example_i].tokens[len(labels) :]
                 ]
             else:
                 raise RuntimeError
@@ -230,11 +238,7 @@ def write_preds_for_qa(runner, supertask, output_dir, phase, skip_if_done=False)
         task_name_list = runner.jiant_task_container.task_run_config.test_task_list
     else:
         raise KeyError(phase)
-    task_name_list = [
-        task_name
-        for task_name in task_name_list
-        if task_name.startswith(supertask)
-    ]
+    task_name_list = [task_name for task_name in task_name_list if task_name.startswith(supertask)]
     if phase == "val":
         test_results_dict = runner.run_val(task_name_list=task_name_list)
     elif phase == "test":
@@ -260,11 +264,13 @@ def write_preds_for_qa(runner, supertask, output_dir, phase, skip_if_done=False)
         logits = task_results["accumulator"].get_accumulated()
         lang = get_qa_language(supertask=supertask, task=task)
         if phase == "val":
-            cached = runner.get_val_dataloader_dict([task_name])[task_name]. \
-                dataset.chunked_file_data_cache.get_all()
+            cached = runner.get_val_dataloader_dict([task_name])[
+                task_name
+            ].dataset.chunked_file_data_cache.get_all()
         elif phase == "test":
-            cached = runner.get_test_dataloader_dict()[task_name]. \
-                dataset.chunked_file_data_cache.get_all()
+            cached = runner.get_test_dataloader_dict()[
+                task_name
+            ].dataset.chunked_file_data_cache.get_all()
         else:
             raise KeyError(phase)
         data_rows = [row["data_row"] for row in cached]
@@ -282,26 +288,20 @@ def write_preds_for_qa(runner, supertask, output_dir, phase, skip_if_done=False)
         test_results_dict[task_name]["preds"] = predictions
 
     jiant_evaluate.write_preds(
-        eval_results_dict=test_results_dict,
-        path=preds_pickle_path,
+        eval_results_dict=test_results_dict, path=preds_pickle_path,
     )
     preds_output_dir = os.path.join(output_dir, "preds", supertask)
     os.makedirs(preds_output_dir, exist_ok=True)
     for task_name, task_results in test_results_dict.items():
         task = runner.jiant_task_container.task_dict[task_name]
         lang = get_qa_language(supertask=supertask, task=task)
-        py_io.write_json(
-            task_results["preds"],
-            os.path.join(preds_output_dir, f"test-{lang}.json")
-        )
+        py_io.write_json(task_results["preds"], os.path.join(preds_output_dir, f"test-{lang}.json"))
     print(f"Wrote {supertask} preds for {len(test_results_dict)} languages")
 
 
-def mock_qa_run_test(test_dataloader,
-                     jiant_model: JiantModel,
-                     task,
-                     device, local_rank,
-                     verbose=True):
+def mock_qa_run_test(
+    test_dataloader, jiant_model: JiantModel, task, device, local_rank, verbose=True
+):
     if not local_rank == -1:
         return
     jiant_model.eval()
@@ -309,21 +309,16 @@ def mock_qa_run_test(test_dataloader,
     eval_accumulator = evaluation_scheme.get_accumulator()
 
     for step, (batch, batch_metadata) in enumerate(
-            maybe_tqdm(test_dataloader, desc=f"Eval ({task.name}, Test)", verbose=verbose)):
+        maybe_tqdm(test_dataloader, desc=f"Eval ({task.name}, Test)", verbose=verbose)
+    ):
         batch = batch.to(device)
         with torch.no_grad():
             model_output = wrap_jiant_forward(
-                jiant_model=jiant_model,
-                batch=batch,
-                task=task,
-                compute_loss=False,
+                jiant_model=jiant_model, batch=batch, task=task, compute_loss=False,
             )
         batch_logits = model_output.logits.detach().cpu().numpy()
         eval_accumulator.update(
-            batch_logits=batch_logits,
-            batch_loss=0,
-            batch=batch,
-            batch_metadata=batch_metadata,
+            batch_logits=batch_logits, batch_loss=0, batch=batch, batch_metadata=batch_metadata,
         )
     return {
         "accumulator": eval_accumulator,
@@ -356,7 +351,7 @@ def write_preds_for_bucc2018(runner, output_dir, bucc_val_metrics_path, skip_if_
         )
         jiant_evaluate.write_preds(
             eval_results_dict=val_results_dict,
-            path=os.path.join(output_dir, "bucc2018_val_preds.p")
+            path=os.path.join(output_dir, "bucc2018_val_preds.p"),
         )
         thresholds_dict = {
             task_name: task_results["metrics"].minor["best-threshold"]
@@ -375,13 +370,11 @@ def write_preds_for_bucc2018(runner, output_dir, bucc_val_metrics_path, skip_if_
         task_name_list=runner.jiant_task_container.task_run_config.test_task_list,
     )
     jiant_evaluate.write_preds(
-        eval_results_dict=test_results_dict,
-        path=preds_pickle_path,
+        eval_results_dict=test_results_dict, path=preds_pickle_path,
     )
     for task_name, task_results in test_results_dict.items():
         bitext = bucc2018_lib.bucc_extract(
-            cand2score=task_results["preds"],
-            th=thresholds_dict[task_name],
+            cand2score=task_results["preds"], th=thresholds_dict[task_name],
         )
         lang = runner.jiant_task_container.task_dict[task_name].language
         with open(os.path.join(preds_output_dir, f"test-{lang}.tsv"), "w") as f:
@@ -396,12 +389,10 @@ def write_preds_for_tatoeba(runner, output_dir, skip_if_done=False):
         print(f"Skipping cause {preds_pickle_path} exists")
         return
     val_results_dict = runner.run_val(
-        task_name_list=runner.jiant_task_container.task_run_config.val_task_list,
-        return_preds=True,
+        task_name_list=runner.jiant_task_container.task_run_config.val_task_list, return_preds=True,
     )
     jiant_evaluate.write_preds(
-        eval_results_dict=val_results_dict,
-        path=preds_pickle_path,
+        eval_results_dict=val_results_dict, path=preds_pickle_path,
     )
     preds_output_dir = os.path.join(output_dir, "preds", "tatoeba")
     os.makedirs(preds_output_dir, exist_ok=True)
