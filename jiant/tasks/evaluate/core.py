@@ -9,7 +9,6 @@ import torch
 from sklearn.metrics import f1_score, matthews_corrcoef
 from scipy.stats import pearsonr, spearmanr
 from typing import Dict, List
-from collections import defaultdict
 
 import jiant.shared.model_resolution as model_resolution
 import jiant.tasks as tasks
@@ -450,7 +449,7 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
         return preds
 
     def compute_metrics_from_accumulator(
-        self, task, accumulator: RecordAccumulator, tokenizer, labels: list
+        self, task, accumulator: RecordAccumulator, tokenizer, labels: List
     ) -> Metrics:
         predictions_dict, metrics = self.compute_preds_and_metrics_from_logits_and_record_labels(
             task, accumulator

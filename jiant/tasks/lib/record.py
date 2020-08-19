@@ -1,9 +1,7 @@
 import numpy as np
 import torch
-
 from dataclasses import dataclass
 from typing import List
-from collections import defaultdict
 
 from jiant.tasks.core import (
     BaseExample,
