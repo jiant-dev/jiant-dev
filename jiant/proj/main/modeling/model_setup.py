@@ -158,15 +158,16 @@ def load_encoder_from_transformers_weights(
 def load_lm_heads_from_transformers_weights(jiant_model, weights_dict):
     model_arch = get_model_arch_from_jiant_model(jiant_model=jiant_model)
     if model_arch == ModelArchitectures.BERT:
-        mlm_weights_dict = {
+        mlm_weights_map = {
             "bias": "cls.predictions.bias",
             "dense.weight": "cls.predictions.transform.dense.weight",
             "dense.bias": "cls.predictions.transform.dense.bias",
             "LayerNorm.weight": "cls.predictions.transform.LayerNorm.weight",
             "LayerNorm.bias": "cls.predictions.transform.LayerNorm.bias",
             "decoder.weight": "cls.predictions.decoder.weight",
-            # 'decoder.bias' <-- linked directly to bias
+            "decoder.bias": "cls.predictions.bias",  # <-- linked directly to bias
         }
+        mlm_weights_dict = {new_k: weights_dict[old_k] for new_k, old_k in mlm_weights_map.items()}
     elif model_arch in (ModelArchitectures.ROBERTA, ModelArchitectures.XLM_ROBERTA):
         mlm_weights_dict = {
             strings.remove_prefix(k, "lm_head."): v for k, v in weights_dict.items()
@@ -264,6 +265,16 @@ def create_taskmodel(
         )
         taskmodel = taskmodels.MultipleChoiceModel(
             encoder=encoder, num_choices=task.NUM_CHOICES, choice_scoring_head=choice_scoring_head,
+        )
+    elif task.TASK_TYPE == TaskTypes.SPAN_PREDICTION:
+        assert taskmodel_kwargs is None
+        span_prediction_head = heads.TokenClassificationHead(
+            hidden_size=encoder.config.hidden_size,
+            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+            num_labels=2,
+        )
+        taskmodel = taskmodels.SpanPredictionModel(
+            encoder=encoder, span_prediction_head=span_prediction_head,
         )
     elif task.TASK_TYPE == TaskTypes.SPAN_COMPARISON_CLASSIFICATION:
         assert taskmodel_kwargs is None

@@ -95,6 +95,7 @@ class TaskTypes(Enum):
     MASKED_LANGUAGE_MODELING = 8
     EMBEDDING = 9
     MULTI_LABEL_SPAN_CLASSIFICATION = 10
+    SPAN_PREDICTION = 11
     UNDEFINED = -1
 
 
@@ -125,7 +126,6 @@ def flat_collate_fn(batch):
 
 
 class Task:
-
     Example = NotImplemented
     TokenizedExample = NotImplemented
     DataRow = NotImplemented
@@ -179,3 +179,14 @@ class SuperGlueMixin:
     @classmethod
     def super_glue_format_preds(cls, pred_dict):
         raise NotImplementedError()
+
+class GlueMixin:
+    @classmethod
+    def get_glue_preds(cls, pred_dict):
+        """Returns a tuple of (index, prediction) as expected by GLUE."""
+        indexes = []
+        predictions = []
+        for pred, guid in zip(list(pred_dict["preds"]), list(pred_dict["guids"])):
+            indexes.append(int(guid.split("-")[1]))
+            predictions.append(str(cls.LABELS[pred]).lower())
+        return (indexes, predictions)
