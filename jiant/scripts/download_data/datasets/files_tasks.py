@@ -50,6 +50,7 @@ def download_task_data_and_write_config(task_name: str, task_data_path: str, tas
     download_utils.download_and_unzip(DIRECT_DOWNLOAD_TASKS_TO_DATA_URLS[task_name], task_data_path)
 
     # Move task data up one folder (nested under task name when unzipped)
+    # ie: mv ./record/ReCoRD/* ./record
     nested_task_dir = os.path.join(
         task_data_path, filesystem.find_case_insensitive_filename(task_name, task_data_path)
     )
