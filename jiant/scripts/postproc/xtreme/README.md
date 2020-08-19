@@ -1,6 +1,6 @@
 # XTREME Running / Submission Guide
 
-This guide will walk through the full process for evaluating XLM-R on all XTREME tasks. It consists of the following steps:
+This guide will walk through the full process for evaluating XLM-R on all [XTREME](https://sites.research.google/xtreme/) tasks. It consists of the following steps:
 
 * [Download Model](#download-model)
 * [Download Data](#download-data)
@@ -9,6 +9,8 @@ This guide will walk through the full process for evaluating XLM-R on all XTREME
 * [Train/Run Models](#trainrun-models)
 
 You can also choose to just run one of the tasks, instead of the whole benchmark.
+
+This code is largely based on the [reference implementation](https://github.com/google-research/xtreme) for the XTREME benchmark.
 
 Before we begin, be sure to set the following environment variables:
 ```bash
