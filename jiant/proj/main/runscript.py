@@ -198,6 +198,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
             assert not args.write_val_preds
 
         if args.write_test_preds:
+            
             test_results_dict = runner.run_test(
                 task_name_list=runner.jiant_task_container.task_run_config.test_task_list,
             )
