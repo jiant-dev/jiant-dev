@@ -40,6 +40,7 @@ class RunConfiguration(zconf.RunConfig):
 
     # Optional
     epochs = zconf.attr(type=int, default=3)
+    warmup_steps_proportion = zconf.attr(type=float, default=0.1)
     train_batch_size = zconf.attr(type=int, default=4)
     eval_batch_multiplier = zconf.attr(type=int, default=2)
     gradient_accumulation_steps = zconf.attr(type=int, default=1)
@@ -87,13 +88,13 @@ def generate_configs(args: RunConfiguration):
         train_task_name_list=train_task_name_list,
         train_val_task_name_list=train_val_task_name_list,
         val_task_name_list=val_task_name_list,
-        epochs=1,
+        epochs=args.epochs,
         train_batch_size=args.train_batch_size,
         eval_batch_multiplier=args.eval_batch_multiplier,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         eval_subset_num=args.eval_subset_num,
         num_gpus=args.num_gpus,
-        warmup_steps_proportion=0.1,
+        warmup_steps_proportion=args.warmup_steps_proportion,
     ).create_config()
 
     # Make sure all tasks use the same task head
@@ -103,6 +104,8 @@ def generate_configs(args: RunConfiguration):
     if not args.no_verbose:
         print(f"Assigning all tasks to '{xtreme_task}' head")
     if xtreme_task in UNTRAINED_TASKS:
+        # The reference implementation from the XTREME paper uses layer 14 for the
+        #  retrieval representation.
         config["taskmodels_config"]["taskmodel_config_map"] = {
             xtreme_task: {"pooler_type": "mean", "layer": 14}
         }
