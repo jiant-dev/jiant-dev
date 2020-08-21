@@ -10,6 +10,7 @@ import jiant.proj.main.components.container_setup as container_setup
 import jiant.proj.main.modeling.primary as primary
 import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.proj.main.modeling.heads as heads
+import jiant.proj.main.modeling.modules as modules
 import jiant.shared.model_setup as model_setup
 import jiant.utils.python.strings as strings
 from jiant.shared.model_setup import ModelArchitectures
@@ -43,6 +44,8 @@ def setup_jiant_model(
         transformers_class_spec=transformers_class_spec, model_config_path=model_config_path,
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
+    if experimental.module_replacement_transnorm:
+        encoder = modules.replace_layernorm_with_transnorm(encoder)
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
             task=task_dict[task_name_list[0]],  # Take the first task

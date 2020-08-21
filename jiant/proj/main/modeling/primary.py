@@ -5,6 +5,7 @@ import torch.nn as nn
 import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.tasks as tasks
 from jiant.proj.main.components.outputs import construct_output_from_dict
+from shared.task_aware_unit as tau
 
 
 class JiantModel(nn.Module):
@@ -22,6 +23,7 @@ class JiantModel(nn.Module):
         self.taskmodels_dict = nn.ModuleDict(taskmodels_dict)
         self.task_to_taskmodel_map = task_to_taskmodel_map
         self.tokenizer = tokenizer
+        self.model_taus = tau.create_tau_dict(self.named_modules())
 
     def forward(self, batch: tasks.BatchMixin, task: tasks.Task, compute_loss: bool = False):
         """Calls to this forward method are delegated to the forward of the appropriate taskmodel.
@@ -48,9 +50,44 @@ class JiantModel(nn.Module):
             task = task
         taskmodel_key = self.task_to_taskmodel_map[task_name]
         taskmodel = self.taskmodels_dict[taskmodel_key]
+        tau.set_tau_task(self.model_taus, task_name)
         return taskmodel(
             batch=batch, task=task, tokenizer=self.tokenizer, compute_loss=compute_loss,
         ).to_dict()
+
+
+class JiantModelWithAdapterFusion(JiantModel):
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
+        self._modify_architecture()
+        self._set_trainable_parameters()
+        self._load_prerequisite_model_parameters()
+
+    def _modify_architecture(self):
+        raise NotImplementedError
+
+    def _load_prerequisite_model_parameters(self):
+        raise NotImplementedError
+
+    def _set_trainable_parameters(self):
+        raise NotImplementedError
+
+
+class JiantModelWithCrossStitch(JiantModel):
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
+        self._modify_architecture()
+        self._set_trainable_parameters()
+        self._load_prerequisite_model_parameters()
+
+    def _modify_architecture(self):
+        raise NotImplementedError
+
+    def _load_prerequisite_model_parameters(self):
+        raise NotImplementedError
+
+    def _set_trainable_parameters(self):
+        raise NotImplementedError
 
 
 def wrap_jiant_forward(
