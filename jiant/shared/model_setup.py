@@ -90,6 +90,7 @@ def create_optimizer_from_params(
     warmup_proportion,
     optimizer_epsilon=1e-8,
     optimizer_type="adam",
+    scheduler_type="linear"
     verbose=False,
 ):
     # Prepare optimizer
@@ -126,6 +127,9 @@ def create_optimizer_from_params(
         {"params": [p for n, p in weighted_sum_params], "weight_decay": 0.0, "lr": 0.01},
     ]
 
+    # TODO: param group control
+    raise NotImplementedError
+
     if optimizer_type == "adam":
         if verbose:
             print("Using AdamW")
@@ -136,15 +140,26 @@ def create_optimizer_from_params(
         if verbose:
             print("Using RAdam")
         optimizer = RAdam(optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon)
+    elif optimizer_type == "gradsim":
+        if verbose:
+            print("Using GradSimAdamW")
+        raise NotImplementedError
+        optimizer = GradSimAdamW()
     else:
         raise KeyError(optimizer_type)
 
-    warmup_steps = resolve_warmup_steps(
-        t_total=t_total, warmup_steps=warmup_steps, warmup_proportion=warmup_proportion,
-    )
-    scheduler = transformers.get_linear_schedule_with_warmup(
-        optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
-    )
+    if scheduler_type == "linear":
+        warmup_steps = resolve_warmup_steps(
+            t_total=t_total, warmup_steps=warmup_steps, warmup_proportion=warmup_proportion,
+        )
+        scheduler = transformers.get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
+        )
+    elif scheduler_type == "gradsim":
+        raise NotImplementedError
+        scheduler = GradSimLinear()
+    else:
+        raise KeyError(scheduler_type)
     optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
     return optimizer_scheduler
 
