@@ -199,6 +199,10 @@ def create_task_sampler(
             ],
             max_steps=sampler_config["max_steps"],
         )
+    elif sampler_type == "MetaLearningMixSampler":
+        raise NotImplementedError
+    elif sampler_type == "MultiDDSSampler":
+        raise NotImplementedError
     else:
         raise KeyError(sampler_type)
 

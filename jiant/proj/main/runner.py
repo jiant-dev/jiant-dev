@@ -237,6 +237,46 @@ class JiantRunner:
         self.optimizer_scheduler.optimizer.load_state_dict(runner_state["optimizer"])
 
 
+class ReptileRunner(JiantRunner):
+    def __init__(self, **kwarg):
+        super().__init__(**kwarg)
+
+    def run_train_step(self):
+        raise NotImplementedError
+
+
+class MultiDDSRunner(JiantRunner):
+    def __init__(self, **kwarg):
+        super().__init__(**kwarg)
+
+    def run_train_step(self):
+        raise NotImplementedError
+
+
+class EWCRunner(JiantRunner):
+    def __init__(self, **kwarg):
+        super().__init__(**kwarg)
+
+    def run_train_step(self):
+        raise NotImplementedError
+
+
+class DistillationRunner(JiantRunner):
+    def __init__(self, **kwarg):
+        super().__init__(**kwarg)
+
+    def run_train_step(self):
+        raise NotImplementedError
+
+
+class L2TWWRunner(JiantRunner):
+    def __init__(self, **kwarg):
+        super().__init__(**kwarg)
+
+    def run_train_step(self):
+        raise NotImplementedError
+
+
 class CheckpointSaver:
     def __init__(self, metadata, save_path):
         self.metadata = metadata
