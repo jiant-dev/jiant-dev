@@ -1,11 +1,11 @@
 from typing import Dict, Union
-
+import copy
 import torch.nn as nn
 
 import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.tasks as tasks
 from jiant.proj.main.components.outputs import construct_output_from_dict
-from shared.task_aware_unit as tau
+import jiant.shared.task_aware_unit as tau
 
 
 class JiantModel(nn.Module):
@@ -16,6 +16,7 @@ class JiantModel(nn.Module):
         taskmodels_dict: Dict[str, taskmodels.Taskmodel],
         task_to_taskmodel_map: Dict[str, str],
         tokenizer,
+        global_args,
     ):
         super().__init__()
         self.task_dict = task_dict
@@ -24,6 +25,10 @@ class JiantModel(nn.Module):
         self.task_to_taskmodel_map = task_to_taskmodel_map
         self.tokenizer = tokenizer
         self.model_taus = tau.create_tau_dict(self.named_modules())
+        self.weight_regularization_type = global_args.weight_regularization_type
+        self.weight_regularization_coef = global_args.weight_regularization_coef
+        if self.weight_regularization_type == "EWC":
+            self.saved_weights = copy.deepcopy(list(self.encoder.parameters()))
 
     def forward(self, batch: tasks.BatchMixin, task: tasks.Task, compute_loss: bool = False):
         """Calls to this forward method are delegated to the forward of the appropriate taskmodel.
@@ -51,9 +56,21 @@ class JiantModel(nn.Module):
         taskmodel_key = self.task_to_taskmodel_map[task_name]
         taskmodel = self.taskmodels_dict[taskmodel_key]
         tau.set_tau_task(self.model_taus, task_name)
-        return taskmodel(
+        outputs = taskmodel(
             batch=batch, task=task, tokenizer=self.tokenizer, compute_loss=compute_loss,
         ).to_dict()
+        if "loss" in outputs and self.compute_weight_regularization() is not None:
+            outputs["loss"] = outputs["loss"] + self.compute_weight_regularization()
+        return
+
+    def compute_weight_regularization(self):
+        if self.weight_regularization_type == "EWC":
+            diff_norm = [
+                (p - q).pow(2).sum() for p, q in zip(self.encoder.parameters(), self.saved_weights)
+            ]
+            return self.weight_regularization_coef * sum(diff_norm)
+        else:
+            return None
 
 
 class JiantModelWithAdapterFusion(JiantModel):

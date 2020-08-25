@@ -60,10 +60,57 @@ def replace_layernorm_with_transnorm(encoder, task_names):
         )
 
 
+class Swish(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, input):
+        return input * F.sigmoid(input)
+
+
 class BertOutputWithAdapter(nn.Module, tau.TaskAwareUnit):
+    def __init__(
+        self, bert_output_layer, task_names, hidden_size, reduction_factor=16, non_linearity="relu",
+    ):
+        super().__init__()
+        self.dense = bert_output_layer.dense
+        self.LayerNorm = bert_output_layer.LayerNorm
+        self.dropout = bert_output_layer.dropout
+        if non_linearity == "relu":
+            non_linear_module = nn.ReLU()
+            non_linear_module = nn.LeakyReLU()
+        elif non_linearity == "swish":
+            non_linear_module = Swish()
+        self.adapters = nn.ModuleDict(
+            {
+                task_name: nn.Sequential(
+                    nn.Linear(hidden_size, hidden_size // reduction_factor),
+                    non_linear_module,
+                    nn.Linear(hidden_size // reduction_factor, hidden_size),
+                )
+                for task_name in task_names
+            }
+        )
+        for a_module in self.adapters.modules():
+            if isinstance(a_module, nn.Linear):
+                a_module.weight.data.normal_(mean=0.0, std=0.02)
+                a_module.bias.data.zero_()
 
     def __init__(self):
-        raise NotImplementedError
+    def forward(self, hidden_states, input_tensor):
+        hidden_states = self.dense(hidden_states)
+        hidden_states = self.dropout(hidden_states)
+        adapter_inputs = self.LayerNorm(input_tensor + hidden_states)
+        adapter_states = self.adapters[self.tau_task_name](adapter_inputs) + hidden_states
+        hidden_states = self.LayerNorm(input_tensor + adapter_states)
+        return hidden_states
+
+
+class BertOutputWithAdapterFusion(BertOutputWithAdapter):
+    def __init__(self, bert_output_layer, task_names, hidden_size, reduction_factor, non_linearity):
+        super().__init__(
+            bert_output_layer, task_names, hidden_size, reduction_factor, non_linearity
+        # TODO: fusion layer
 
 
     def __init__(self):
