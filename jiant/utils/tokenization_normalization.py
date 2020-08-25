@@ -9,9 +9,10 @@ Notes:
 """
 
 import re
+import transformers
 from typing import Sequence
 
-import transformers
+from jiant.utils.testing import utils as test_utils
 
 
 def normalize_tokenizations(
@@ -67,9 +68,7 @@ def normalize_tokenizations(
         modifed_space_tokenization = bow_tag_tokens(space_tokenization)
         modifed_target_tokenization = _process_sentencepiece_tokens(target_tokenization)
     else:
-        import sys
-
-        if "pytest" in sys.modules:
+        if test_utils.is_pytest():
             from jiant.utils.testing.tokenizer import SimpleSpaceTokenizer
 
             if isinstance(tokenizer, SimpleSpaceTokenizer):
