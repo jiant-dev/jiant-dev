@@ -59,8 +59,6 @@ def replace_layernorm_with_transnorm(encoder, task_names):
             layer_norm_layer=encoder.layer[idx].output.LayerNorm, task_names=task_names
         )
 
-    def __init__(self):
-        raise NotImplementedError
 
 class BertOutputWithAdapter(nn.Module, tau.TaskAwareUnit):
 
