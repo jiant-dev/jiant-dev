@@ -23,6 +23,7 @@ def setup_jiant_model(
     tokenizer_path: str,
     task_dict: Dict[str, Task],
     taskmodels_config: container_setup.TaskmodelsConfig,
+    global_args,
 ):
     """Sets up tokenizer, encoder, and task models, and instantiates and returns a JiantModel.
 
@@ -44,8 +45,8 @@ def setup_jiant_model(
         transformers_class_spec=transformers_class_spec, model_config_path=model_config_path,
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
-    if experimental.module_replacement_transnorm:
-        encoder = modules.replace_layernorm_with_transnorm(encoder)
+    if global_args.transnorm_replacement:
+        encoder = modules.replace_layernorm_with_transnorm(encoder, task_dict.keys())
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
             task=task_dict[task_name_list[0]],  # Take the first task
