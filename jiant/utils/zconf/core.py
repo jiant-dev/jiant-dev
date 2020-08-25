@@ -84,6 +84,7 @@ def read_parser(parser, class_with_attributes: Any, skip_non_class_attributes=No
     kwargs = dict()
     leftover_kwargs = dict()
 
+    vars(parser.parse_args(args)).items()
     for k, v in vars(parser.parse_args(args)).items():
         if k in attribute_name_set:
             kwargs[k] = v
