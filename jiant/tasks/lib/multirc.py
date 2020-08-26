@@ -164,7 +164,8 @@ class MultiRCTask(SuperGlueMixin, Task):
                     answer = answer_dict["text"]
                     examples.append(
                         Example(
-                            # NOTE: MultiRCTask.super_glue_format_preds() is dependent on this guid format.
+                            # NOTE: MultiRCTask.super_glue_format_preds() is
+                            # dependent on this guid format.
                             guid="%s-%s-%s-%s" % (set_type, passage_id, question_id, answer_id),
                             paragraph=passage,
                             question=question,
@@ -177,7 +178,9 @@ class MultiRCTask(SuperGlueMixin, Task):
 
     @staticmethod
     def super_glue_format_preds(pred_dict):
-        """Reformat this task's raw predictions to have the structure expected by SuperGLUE."""
+        """Reformat this task's raw predictions to have the structure expected
+        by SuperGLUE.
+        """
         lines = []
         # formatting code adapted from: https://github.com/nyu-mll/jiant/blob/
         # 14fae87d2ebc5a45dbe7254e9007d1a148dd6b18/jiant/evaluate.py#L427

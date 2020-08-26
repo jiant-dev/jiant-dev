@@ -177,17 +177,16 @@ class Task:
 
 
 class SuperGlueMixin:
-
     """Mixin for :class:`jiant.tasks.core.Task`s in the `SuperGLUE<https://super.gluebenchmark.com/>`_
     benchmark.
     """
 
     @classmethod
     def super_glue_format_preds(cls, pred_dict: Dict):
-        """SuperGLUE tasks must implement this method to return predictions in
-        the expected SuperGLUE format. This function is expect to return a
-        List[Dict] with each Dict value in the format expected by the SuperGLUE
-        benchmark submission grader.
+        """Tasks in the SuperGLUE benchmark must implement this method to return
+        predictions in the expected SuperGLUE format. This function is expect to
+        return a List[Dict] with each Dict value in the format expected by the
+        SuperGLUE benchmark submission grader.
 
         Args:
             pred_dict (Dict): Dictionary mapping "preds" to List of label ids
@@ -201,7 +200,6 @@ class SuperGlueMixin:
 
 
 class GlueMixin:
-
     """Mixin for :class:`jiant.tasks.core.Task`s in the `GLUE<https://gluebenchmark.com/>`_
     benchmark.
     """
