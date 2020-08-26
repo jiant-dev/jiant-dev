@@ -95,7 +95,7 @@ class CommitmentBankTask(SuperGlueMixin, Task):
         for line in lines:
             examples.append(
                 Example(
-                    # NOTE: super_glue_format_preds() is dependent on this guid format.
+                    # NOTE: CommitmentBankTask.super_glue_format_preds() is dependent on this guid format.
                     guid="%s-%s" % (set_type, line["idx"]),
                     input_premise=line["premise"],
                     input_hypothesis=line["hypothesis"],

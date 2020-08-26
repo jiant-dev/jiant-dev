@@ -249,7 +249,7 @@ class WiCTask(SuperGlueMixin, Task):
             #   hence we don't do an assert here.
             examples.append(
                 Example(
-                    # NOTE: super_glue_format_preds() is dependent on this guid format.
+                    # NOTE: WiCTask.super_glue_format_preds() is dependent on this guid format.
                     guid="%s-%s" % (set_type, line["idx"]),
                     sentence1=line["sentence1"],
                     sentence2=line["sentence2"],

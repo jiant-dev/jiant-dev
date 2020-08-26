@@ -164,7 +164,7 @@ class MultiRCTask(SuperGlueMixin, Task):
                     answer = answer_dict["text"]
                     examples.append(
                         Example(
-                            # NOTE: super_glue_format_preds() is dependent on this guid format.
+                            # NOTE: MultiRCTask.super_glue_format_preds() is dependent on this guid format.
                             guid="%s-%s-%s-%s" % (set_type, passage_id, question_id, answer_id),
                             paragraph=passage,
                             question=question,

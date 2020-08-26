@@ -95,7 +95,7 @@ class BoolQTask(SuperGlueMixin, Task):
         for line in lines:
             examples.append(
                 Example(
-                    # NOTE: super_glue_format_preds() is dependent on this guid format.
+                    # NOTE: BoolQTask.super_glue_format_preds() is dependent on this guid format.
                     guid="%s-%s" % (set_type, line["idx"]),
                     input_question=line["question"],
                     input_passage=line["passage"],

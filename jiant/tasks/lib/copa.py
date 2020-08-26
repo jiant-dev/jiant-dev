@@ -59,7 +59,7 @@ class CopaTask(SuperGlueMixin, mc_template.AbstractMultipleChoiceTask):
             question = cls._QUESTION_DICT[line["question"]]
             examples.append(
                 Example(
-                    # NOTE: super_glue_format_preds() is dependent on this guid format.
+                    # NOTE: CopaTask.super_glue_format_preds() is dependent on this guid format.
                     guid="%s-%s" % (set_type, line["idx"]),
                     prompt=line["premise"] + " " + question,
                     choice_list=[line["choice1"], line["choice2"]],
