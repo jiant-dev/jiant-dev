@@ -1,8 +1,8 @@
 import os
 import csv
-import json
 import torch
 
+import jiant.utils.python.io as py_io
 from jiant.tasks import retrieval
 from jiant.tasks.constants import GLUE_TASKS, SUPERGLUE_TASKS
 
@@ -65,12 +65,9 @@ class SuperglueBenchmark(Benchmark):
         task = retrieval.get_task_class(task_name)
         task_preds = torch.load(input_filepath)[task_name]
         formatted_preds = task.super_glue_format_preds(task_preds)
-        with open(
-            os.path.join(
+        py_io.write_jsonl(
+            data=formatted_preds,
+            path=os.path.join(
                 SuperglueBenchmark.BENCHMARK_SUBMISSION_FILENAMES[task_name], output_filepath
             ),
-            "w",
-        ) as f:
-            for entry in formatted_preds:
-                json.dump(entry, f)
-                f.write("\n")
+        )
