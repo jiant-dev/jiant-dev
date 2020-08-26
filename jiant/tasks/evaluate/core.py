@@ -451,13 +451,11 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
     def compute_metrics_from_accumulator(
         self, task, accumulator: RecordAccumulator, tokenizer, labels: List
     ) -> Metrics:
-        predictions_dict, metrics = self.compute_preds_and_metrics_from_logits_and_record_labels(
-            task, accumulator
-        )
+        predictions_dict, metrics = self.compute_preds_and_metrics(task, accumulator)
         return metrics
 
     @classmethod
-    def compute_preds_and_metrics_from_logits_and_record_labels(cls, task, accumulator):
+    def compute_preds_and_metrics(cls, task, accumulator):
         f1_ls = []
         em_ls = []
         predictions_dict = {}

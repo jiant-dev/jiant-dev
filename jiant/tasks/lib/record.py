@@ -151,6 +151,8 @@ class ReCoRDTask(Task):
 
                     examples.append(
                         Example(
+                            # NOTE: ReCoRDTask.super_glue_format_preds() is
+                            # dependent on this guid format.
                             guid="%s-%s-%s" % (set_type, len(examples), qas["idx"]),
                             passage_text=passage_text,
                             query_text=qas["query"],
