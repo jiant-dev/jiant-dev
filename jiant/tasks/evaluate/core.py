@@ -154,7 +154,6 @@ class TatoebaAccumulator(BaseAccumulator):
     def get_guids(cls):
         return None
 
-
     def get_accumulated(self):
         all_embeddings = np.concatenate(self.embeddings_list)
         is_english_arr = np.concatenate(self.is_english_list).astype(bool)
@@ -177,7 +176,6 @@ class Bucc2018Accumulator(BaseAccumulator):
     @classmethod
     def get_guids(cls):
         return None
-
 
     def get_accumulated(self):
         return {

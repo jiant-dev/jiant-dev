@@ -80,8 +80,9 @@ def generate_configs(args: RunConfiguration):
         raise KeyError(xtreme_task)
 
     if xtreme_task == "udpos":
-        test_task_name_list = xtreme_task_name_list + \
-            [f"udpos_{lang}" for lang in EXTRA_UDPOS_TEST_LANGS]
+        test_task_name_list = xtreme_task_name_list + [
+            f"udpos_{lang}" for lang in EXTRA_UDPOS_TEST_LANGS
+        ]
     elif xtreme_task in ["xquad", "tydiqa", "tatoeba"]:
         test_task_name_list = []
     else:

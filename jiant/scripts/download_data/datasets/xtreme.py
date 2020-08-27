@@ -84,7 +84,7 @@ def download_udpos_data_and_write_config(task_data_base_path: str, task_config_b
         for line in open(file, "r"):
             items = line.strip().split("\t")
             if len(items) != 10:
-                num_empty = sum([int(w == '_') for w in sent])
+                num_empty = sum([int(w == "_") for w in sent])
                 if num_empty == 0 or num_empty < len(sent) - 1:
                     data.append((sent, tag, lines))
                 sent, tag, lines = [], [], []
