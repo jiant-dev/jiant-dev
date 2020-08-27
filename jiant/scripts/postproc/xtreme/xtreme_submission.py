@@ -10,12 +10,10 @@ import jiant.shared.initialization as initialization
 import jiant.shared.model_resolution as model_resolution
 import jiant.proj.main.components.container_setup as container_setup
 import jiant.proj.main.runner as jiant_runner
-from jiant.proj.main.modeling.primary import JiantModel
 from jiant.proj.main.runscript import setup_runner
 import jiant.tasks.lib.templates.squad_style.core as squad_lib
 import jiant.tasks.lib.bucc2018 as bucc2018_lib
 import jiant.tasks as tasks
-import jiant.tasks.evaluate as evaluate
 import jiant.proj.main.components.evaluate as jiant_evaluate
 from jiant.proj.main.modeling.primary import wrap_jiant_forward
 
@@ -44,9 +42,10 @@ class RunConfiguration(zconf.RunConfig):
     model_config_path = zconf.attr(default=None, type=str)
     model_tokenizer_path = zconf.attr(default=None, type=str)
     model_load_mode = zconf.attr(default="from_ptt", type=str)
-    model_save_mode = zconf.attr(default="all", type=str)
 
-    # === Training Learning Parameters === #
+    # === Nuisance Parameters === #
+    # Required for quickly setting up runner
+    # Remove/refactor with config refactor (Issue #66)
     learning_rate = zconf.attr(default=1e-5, type=float)
     adam_epsilon = zconf.attr(default=1e-8, type=float)
     max_grad_norm = zconf.attr(default=1.0, type=float)
@@ -80,21 +79,21 @@ def run_loop(args: RunConfiguration):
         )
     supertask, output_dir = args.supertask, args.output_dir
     if supertask in ["xnli", "pawsx"]:
-        write_preds_for_classification(
+        generate_and_write_preds_for_classification(
             runner=runner,
             supertask=supertask,
             output_dir=output_dir,
             skip_if_done=args.skip_if_done,
         )
     elif supertask in ["udpos", "panx"]:
-        write_preds_for_tagging(
+        generate_and_write_preds_for_tagging(
             runner=runner,
             supertask=supertask,
             output_dir=output_dir,
             skip_if_done=args.skip_if_done,
         )
     elif supertask in ["xquad", "mlqa"]:
-        write_preds_for_qa(
+        generate_and_write_preds_for_qa(
             runner=runner,
             supertask=supertask,
             output_dir=output_dir,
@@ -102,7 +101,7 @@ def run_loop(args: RunConfiguration):
             skip_if_done=args.skip_if_done,
         )
     elif supertask == "tydiqa":
-        write_preds_for_qa(
+        generate_and_write_preds_for_qa(
             runner=runner,
             supertask="tydiqa",
             output_dir=output_dir,
@@ -110,23 +109,24 @@ def run_loop(args: RunConfiguration):
             skip_if_done=args.skip_if_done,
         )
     elif supertask == "bucc2018":
-        write_preds_for_bucc2018(
+        generate_and_write_preds_for_bucc2018(
             runner=runner,
             output_dir=output_dir,
             bucc_val_metrics_path=args.bucc_val_metrics_path,
             skip_if_done=args.skip_if_done,
         )
     elif supertask == "tatoeba":
-        write_preds_for_tatoeba(
+        generate_and_write_preds_for_tatoeba(
             runner=runner, output_dir=output_dir, skip_if_done=args.skip_if_done,
         )
     else:
         raise KeyError(supertask)
 
 
-def write_preds_for_classification(
-    runner: jiant_runner.JiantRunner, supertask, output_dir, skip_if_done=False
+def generate_and_write_preds_for_classification(
+    runner: jiant_runner.JiantRunner, supertask: str, output_dir: str, skip_if_done: bool = False
 ):
+    """Write test predictions for classification tasks in XTREME submission format"""
     preds_pickle_path = os.path.join(output_dir, f"{supertask}_test_preds.p")
     if skip_if_done and os.path.exists(preds_pickle_path):
         print(f"Skipping cause {preds_pickle_path} exists")
@@ -156,9 +156,10 @@ def write_preds_for_classification(
     print(f"Wrote {supertask} preds for {len(test_results_dict)} languages")
 
 
-def write_preds_for_tagging(
-    runner: jiant_runner.JiantRunner, supertask, output_dir, skip_if_done=False
+def generate_and_write_preds_for_tagging(
+    runner: jiant_runner.JiantRunner, supertask: str, output_dir: str, skip_if_done: bool = False
 ):
+    """Generate and write test predictions for tagging tasks in XTREME submission format"""
     preds_pickle_path = os.path.join(output_dir, f"{supertask}_test_preds.p")
     if skip_if_done and os.path.exists(preds_pickle_path):
         print(f"Skipping cause {preds_pickle_path} exists")
@@ -171,7 +172,7 @@ def write_preds_for_tagging(
     for task_name in runner.jiant_task_container.task_run_config.test_task_list:
         task = runner.jiant_task_container.task_dict[task_name]
         assert isinstance(task, (tasks.UdposTask, tasks.PanxTask))
-        preds_list = get_preds_for_tagging_task(
+        preds_list = get_preds_for_single_tagging_task(
             task=task, test_dataloader=test_dataloader_dict[task_name], runner=runner,
         )
         preds_dict[task_name] = preds_list
@@ -188,9 +189,10 @@ def write_preds_for_tagging(
     )
 
 
-def get_preds_for_tagging_task(
-    task, test_dataloader, runner: jiant_runner.JiantRunner, verbose=True
+def get_preds_for_single_tagging_task(
+    task, test_dataloader, runner: jiant_runner.JiantRunner, verbose: str = True
 ):
+    """Generate predictions for a single tagging task"""
     jiant_model, device = runner.model, runner.device
     jiant_model.eval()
     test_examples = task.get_test_examples()
@@ -227,7 +229,10 @@ def get_preds_for_tagging_task(
     return preds_list
 
 
-def write_preds_for_qa(runner, supertask, output_dir, phase, skip_if_done=False):
+def generate_and_write_preds_for_qa(
+    runner, supertask: str, output_dir: str, phase: str, skip_if_done: bool = False
+):
+    """Generate predictions (test) for QA tasks and write them in XTREME submission format"""
     preds_pickle_path = os.path.join(output_dir, f"{supertask}_test_preds.p")
     if skip_if_done and os.path.exists(preds_pickle_path):
         print(f"Skipping cause {preds_pickle_path} exists")
@@ -246,12 +251,13 @@ def write_preds_for_qa(runner, supertask, output_dir, phase, skip_if_done=False)
         test_results_dict = {}
         test_dataloader_dict = runner.get_test_dataloader_dict()
         for task_name in task_name_list:
-            test_results_dict[task_name] = mock_qa_run_test(
+            test_results_dict[task_name] = jiant_runner.run_test(
                 test_dataloader=test_dataloader_dict[task_name],
                 jiant_model=runner.jiant_model,
                 task=runner.jiant_task_container.task_dict[task_name],
                 device=runner.device,
                 local_rank=runner.rparams.local_rank,
+                return_preds=False,
                 verbose=True,
             )
     else:
@@ -300,33 +306,8 @@ def write_preds_for_qa(runner, supertask, output_dir, phase, skip_if_done=False)
     print(f"Wrote {supertask} preds for {len(test_results_dict)} languages")
 
 
-def mock_qa_run_test(
-    test_dataloader, jiant_model: JiantModel, task, device, local_rank, verbose=True
-):
-    if not local_rank == -1:
-        return
-    jiant_model.eval()
-    evaluation_scheme = evaluate.get_evaluation_scheme_for_task(task=task)
-    eval_accumulator = evaluation_scheme.get_accumulator()
-
-    for step, (batch, batch_metadata) in enumerate(
-        maybe_tqdm(test_dataloader, desc=f"Eval ({task.name}, Test)", verbose=verbose)
-    ):
-        batch = batch.to(device)
-        with torch.no_grad():
-            model_output = wrap_jiant_forward(
-                jiant_model=jiant_model, batch=batch, task=task, compute_loss=False,
-            )
-        batch_logits = model_output.logits.detach().cpu().numpy()
-        eval_accumulator.update(
-            batch_logits=batch_logits, batch_loss=0, batch=batch, batch_metadata=batch_metadata,
-        )
-    return {
-        "accumulator": eval_accumulator,
-    }
-
-
-def get_qa_language(supertask, task):
+def get_qa_language(supertask: str, task):
+    """Identify language from QA task"""
     if supertask == "mlqa":
         assert task.context_language == task.question_language
         lang = task.context_language
@@ -337,7 +318,10 @@ def get_qa_language(supertask, task):
     return lang
 
 
-def write_preds_for_bucc2018(runner, output_dir, bucc_val_metrics_path, skip_if_done=False):
+def generate_and_write_preds_for_bucc2018(
+    runner, output_dir: str, bucc_val_metrics_path: str, skip_if_done: bool = False
+):
+    """Generate predictions (test) for Bucc2018 and write them in XTREME submission format"""
     preds_pickle_path = os.path.join(output_dir, "bucc2018_test_preds.p")
     if skip_if_done and os.path.exists(preds_pickle_path):
         print(f"Skipping cause {preds_pickle_path} exists")
@@ -384,7 +368,8 @@ def write_preds_for_bucc2018(runner, output_dir, bucc_val_metrics_path, skip_if_
     print(f"Wrote Bucc2018 preds for {len(test_results_dict)} languages")
 
 
-def write_preds_for_tatoeba(runner, output_dir, skip_if_done=False):
+def generate_and_write_preds_for_tatoeba(runner, output_dir: str, skip_if_done: bool = False):
+    """Generate predictions (val) for Tateoba and write them in XTREME submission format"""
     preds_pickle_path = os.path.join(output_dir, "tatoeba_val_preds.p")
     if skip_if_done and os.path.exists(preds_pickle_path):
         print(f"Skipping cause {preds_pickle_path} exists")
