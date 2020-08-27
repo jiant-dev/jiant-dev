@@ -480,11 +480,11 @@ class ReCordEvaluationScheme(BaseEvaluationScheme):
             pred_ans = pred["label"]
 
             # F1
-            f1 = cls.metric_max_over_ground_truths(cls.f1_score, pred_ans, gold_label_set)
+            f1 = cls.metric_max_over_ground_truths(string_f1_score, pred_ans, gold_label_set)
             f1_ls.append(f1)
 
             # EM
-            em = cls.metric_max_over_ground_truths(cls.exact_match_score, pred_ans, gold_label_set)
+            em = cls.metric_max_over_ground_truths(exact_match_score, pred_ans, gold_label_set)
             em_ls.append(em)
 
         em = sum(em_ls) / len(em_ls)
