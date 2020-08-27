@@ -6,7 +6,6 @@
 #     This tokenizes and saves caches for all tasks (XTREME, MNLI, SQuAD)
 
 ### XNLI (uses MNLI for training)
-```bash
 for LG in ar bg de el en es fr hi ru sw th tr ur vi zh; do
     TASK=xnli_${LG}
     python jiant/proj/main/tokenize_and_cache.py \
@@ -18,10 +17,8 @@ for LG in ar bg de el en es fr hi ru sw th tr ur vi zh; do
         --max_seq_length 256 \
         --smart_truncate
 done
-```
 
 ### PAWS-X
-```bash
 TASK=pawsx_en
 python jiant/proj/main/tokenize_and_cache.py \
     --task_config_path ${BASE_PATH}/tasks/configs/${TASK}_config.json \
@@ -42,10 +39,8 @@ for LG in ar de es fr ja ko zh; do
         --max_seq_length 256 \
         --smart_truncate
 done
-```
 
 ### UDPos
-```bash
 TASK=udpos_en
 python jiant/proj/main/tokenize_and_cache.py \
     --task_config_path ${BASE_PATH}/tasks/configs/${TASK}_config.json \
@@ -77,10 +72,8 @@ for LG in kk th tl yo; do
         --max_seq_length 256 \
         --smart_truncate
 done
-```
 
 ### PANX
-```bash
 TASK=panx_en
 python jiant/proj/main/tokenize_and_cache.py \
     --task_config_path ${BASE_PATH}/tasks/configs/${TASK}_config.json \
@@ -101,10 +94,8 @@ for LG in af ar bg bn de el es et eu fa fi fr he hi hu id it ja jv ka kk ko ml m
         --max_seq_length 256 \
         --smart_truncate
 done
-```
 
 ### XQuAD (uses SQuAD for training)
-```bash
 for LG in ar de el en es hi ru th tr vi zh; do
     TASK=xquad_${LG}
     python jiant/proj/main/tokenize_and_cache.py \
@@ -116,10 +107,8 @@ for LG in ar de el en es hi ru th tr vi zh; do
         --max_seq_length 384 \
         --smart_truncate
 done
-```
 
 ### MLQA (uses SQuAD for training)
-```bash
 for LG in ar de en es hi vi zh; do
     TASK=mlqa_${LG}_${LG}
     python jiant/proj/main/tokenize_and_cache.py \
@@ -131,10 +120,8 @@ for LG in ar de en es hi vi zh; do
         --max_seq_length 384 \
         --smart_truncate
 done
-```
 
 ### TyDiQA
-```bash
 TASK=tydiqa_en
 python jiant/proj/main/tokenize_and_cache.py \
     --task_config_path ${BASE_PATH}/tasks/configs/${TASK}_config.json \
@@ -155,10 +142,8 @@ for LG in ar bn fi id ko ru sw te; do
         --max_seq_length 384 \
         --smart_truncate
 done
-```
 
 ### Bucc2018
-```bash
 for LG in de fr ru zh; do
     TASK=bucc2018_${LG}
     python jiant/proj/main/tokenize_and_cache.py \
@@ -170,10 +155,8 @@ for LG in de fr ru zh; do
         --max_seq_length 512 \
         --smart_truncate
 done
-```
 
 ### Tatoeba
-```bash
 for LG in af ar bg bn de el es et eu fa fi fr he hi hu id it ja jv ka kk ko ml mr nl pt ru sw ta te th tl tr ur vi zh; do
     TASK=tatoeba_${LG}
     python jiant/proj/main/tokenize_and_cache.py \
@@ -185,10 +168,8 @@ for LG in af ar bg bn de el es et eu fa fi fr he hi hu id it ja jv ka kk ko ml m
         --max_seq_length 512 \
         --smart_truncate
 done
-```
 
 ### MNLI and SQuAD
-```bash
 TASK=mnli
 python jiant/proj/main/tokenize_and_cache.py \
     --task_config_path ${BASE_PATH}/tasks/configs/${TASK}_config.json \
