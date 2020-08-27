@@ -18,6 +18,7 @@ LANGS_DICT = {
     "tatoeba": "af ar bg bn de el es et eu fa fi fr he hi hu id it ja jv ka kk ko ml mr"
     " nl pt ru sw ta te th tl tr ur vi zh".split(),
 }
+EXTRA_UDPOS_TEST_LANGS = "kk th tl yo".split()
 TRAIN_TASK_DICT = {
     "xnli": "mnli",
     "pawsx": "pawsx_en",
@@ -52,6 +53,7 @@ class RunConfiguration(zconf.RunConfig):
         " True = Do early stopping on XTREME tasks in all languages"
         " (default: False)",
     )
+    retrieval_layer = zconf.attr(type=int, default=14)
     no_verbose = zconf.attr(action="store_true")
 
 
@@ -77,10 +79,19 @@ def generate_configs(args: RunConfiguration):
     else:
         raise KeyError(xtreme_task)
 
+    if xtreme_task == "udpos":
+        test_task_name_list = xtreme_task_name_list + \
+            [f"udpos_{lang}" for lang in EXTRA_UDPOS_TEST_LANGS]
+    elif xtreme_task in ["xquad", "tydiqa", "tatoeba"]:
+        test_task_name_list = []
+    else:
+        test_task_name_list = xtreme_task_name_list
+
     if not args.no_verbose:
         print("Training on:", ", ".join(train_task_name_list))
         print("Validation on:", ", ".join(val_task_name_list))
         print("Early stopping on:", ", ".join(train_val_task_name_list))
+        print("Testing on:", ",".join(test_task_name_list))
 
     config = configurator.SimpleAPIMultiTaskConfigurator(
         task_config_base_path=args.task_config_base_path,
@@ -88,6 +99,7 @@ def generate_configs(args: RunConfiguration):
         train_task_name_list=train_task_name_list,
         train_val_task_name_list=train_val_task_name_list,
         val_task_name_list=val_task_name_list,
+        test_task_name_list=test_task_name_list,
         epochs=args.epochs,
         train_batch_size=args.train_batch_size,
         eval_batch_multiplier=args.eval_batch_multiplier,
@@ -107,7 +119,7 @@ def generate_configs(args: RunConfiguration):
         # The reference implementation from the XTREME paper uses layer 14 for the
         #  retrieval representation.
         config["taskmodels_config"]["taskmodel_config_map"] = {
-            xtreme_task: {"pooler_type": "mean", "layer": 14}
+            xtreme_task: {"pooler_type": "mean", "layer": args.retrieval_layer}
         }
 
     py_io.write_json(config, args.output_path)
