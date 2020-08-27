@@ -54,7 +54,7 @@ class RunConfiguration(zconf.RunConfig):
         " (default: False)",
     )
     retrieval_layer = zconf.attr(type=int, default=14)
-    no_verbose = zconf.attr(action="store_true")
+    suppress_print = zconf.attr(action="store_true")
 
 
 def generate_configs(args: RunConfiguration):
@@ -88,7 +88,7 @@ def generate_configs(args: RunConfiguration):
     else:
         test_task_name_list = xtreme_task_name_list
 
-    if not args.no_verbose:
+    if not args.suppress_print:
         print("Training on:", ", ".join(train_task_name_list))
         print("Validation on:", ", ".join(val_task_name_list))
         print("Early stopping on:", ", ".join(train_val_task_name_list))
@@ -114,7 +114,7 @@ def generate_configs(args: RunConfiguration):
     config["taskmodels_config"]["task_to_taskmodel_map"] = {
         k: xtreme_task for k, v in config["taskmodels_config"]["task_to_taskmodel_map"].items()
     }
-    if not args.no_verbose:
+    if not args.suppress_print:
         print(f"Assigning all tasks to '{xtreme_task}' head")
     if xtreme_task in UNTRAINED_TASKS:
         # The reference implementation from the XTREME paper uses layer 14 for the
