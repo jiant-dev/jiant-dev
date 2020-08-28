@@ -3,7 +3,6 @@ import argparse
 
 from jiant.proj.simple import runscript as run
 import jiant.scripts.download_data.runscript as downloader
-import jiant.utils.zconf as zconf
 
 @pytest.mark.parametrize("task_name", ["copa"])
 @pytest.mark.parametrize("model_type", ["bert-base-cased"])
