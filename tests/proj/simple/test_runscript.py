@@ -1,24 +1,31 @@
+import os
 import pytest
 
+import jiant.utils.python.io as py_io
 from jiant.proj.simple import runscript as run
 import jiant.scripts.download_data.runscript as downloader
+
 
 @pytest.mark.parametrize("task_name", ["copa"])
 @pytest.mark.parametrize("model_type", ["bert-base-cased"])
 def test_simple_runscript(tmpdir, task_name, model_type):
-	data_dir = str(tmpdir.mkdir('data'))
-	exp_dir = str(tmpdir.mkdir('exp'))
+    RUN_NAME = f"{test_simple_runscript.__name__}_{task_name}_{model_type}"
+    data_dir = str(tmpdir.mkdir("data"))
+    exp_dir = str(tmpdir.mkdir("exp"))
 
-	downloader.download_data([task_name], data_dir)
+    downloader.download_data([task_name], data_dir)
 
-	cl_args = ["--run_name", task_name,
-	           "--exp_dir", exp_dir,
-	           "--data_dir", data_dir,
-	           "--model_type", model_type,
-	           "--tasks", task_name,
-	           "--train_examples_cap", "32",
-	           "--train_batch_size", "32",
-	           "--no_cuda"]
+    args = run.RunConfiguration(
+        run_name=RUN_NAME,
+        exp_dir=exp_dir,
+        data_dir=data_dir,
+        model_type=model_type,
+        tasks=task_name,
+        train_examples_cap=16,
+        train_batch_size=16,
+        no_cuda=True,
+    )
+    run.run_simple(args)
 
-	run_args = run.RunConfiguration.default_run_cli(cl_args=cl_args)
-	run.run_simple(run_args)
+    val_metrics = py_io.read_json(os.path.join(exp_dir, "runs", RUN_NAME, "val_metrics.json"))
+    assert val_metrics["aggregated"] > 0

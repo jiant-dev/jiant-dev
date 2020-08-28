@@ -202,7 +202,7 @@ class SimpleAPIMultiTaskConfigurator(zconf.RunConfig):
                     self.train_batch_size * self.gradient_accumulation_steps * self.num_gpus
                 )
             else:
-                effective_batch_size = (self.train_batch_size * self.gradient_accumulation_steps)
+                effective_batch_size = self.train_batch_size * self.gradient_accumulation_steps
             num_examples = get_num_examples_from_cache(
                 cache_path=os.path.expandvars(task_cache_config_dict[task_name]["train"]),
             )
