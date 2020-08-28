@@ -1,5 +1,4 @@
 import pytest
-import argparse
 
 from jiant.proj.simple import runscript as run
 import jiant.scripts.download_data.runscript as downloader
