@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import transformers
+import copy
 
 import jiant.shared.task_aware_unit as tau
 
@@ -78,6 +79,7 @@ class BertOutputWithAdapter(nn.Module, tau.TaskAwareUnit):
         self.dropout = bert_output_layer.dropout
         if non_linearity == "relu":
             non_linear_module = nn.ReLU()
+        elif non_linearity == "leaky_relu":
             non_linear_module = nn.LeakyReLU()
         elif non_linearity == "swish":
             non_linear_module = Swish()
@@ -96,7 +98,6 @@ class BertOutputWithAdapter(nn.Module, tau.TaskAwareUnit):
                 a_module.weight.data.normal_(mean=0.0, std=0.02)
                 a_module.bias.data.zero_()
 
-    def __init__(self):
     def forward(self, hidden_states, input_tensor):
         hidden_states = self.dense(hidden_states)
         hidden_states = self.dropout(hidden_states)
@@ -107,21 +108,146 @@ class BertOutputWithAdapter(nn.Module, tau.TaskAwareUnit):
 
 
 class BertOutputWithAdapterFusion(BertOutputWithAdapter):
-    def __init__(self, bert_output_layer, task_names, hidden_size, reduction_factor, non_linearity):
+    def __init__(
+        self, bert_output_layer, task_names, hidden_size, reduction_factor=16, non_linearity="relu",
+    ):
         super().__init__(
             bert_output_layer, task_names, hidden_size, reduction_factor, non_linearity
-        # TODO: fusion layer
+        )
+        self.key_layer = nn.Linear(hidden_size, hidden_size)
+        self.key_layer.weight.data.normal_(0, 0.02)
+        self.query_layer = nn.Linear(hidden_size, hidden_size)
+        self.query_layer.weight.data.normal_(0, 0.02)
+        self.value_layer = nn.Linear(hidden_size, hidden_size, bias=False)
+        self.value.weight.data = (
+            torch.zeros(int(hidden_size), int(hidden_size)) + 0.000001
+        ).fill_diagonal_(1.0)
+        self.dropout = nn.Dropout(0.1)
+
+    def forward(self, hidden_states, input_tensor, attention_mask=None):
+        hidden_states = self.dense(hidden_states)
+        hidden_states = self.dropout(hidden_states)
+        prenorm_adapter_inputs = input_tensor + hidden_states
+        adapter_inputs = self.LayerNorm(prenorm_adapter_inputs)
+        adapter_outputs = torch.cat(
+            [adapter(adapter_inputs) for adapter in self.adapters.values()], dim=0
+        )
+        key = self.key_layer(adapter_outputs)
+        value = self.value_layer(adapter_outputs + hidden_states)
+        query = self.query_layer(prenorm_adapter_inputs)
+        attention_scores = self.dropout(
+            torch.sum(query.unsqueeze(dim=0) * key, dim=-1, keepdim=True)
+        )
+        attention_probs = F.softmax(attention_scores, dim=0)
+        fusion_outputs = torch.sum(attention_probs * value, dim=0)
+        hidden_states = self.LayerNorm(input_tensor + fusion_outputs)
+        return hidden_states
 
 
-    def __init__(self):
-        raise NotImplementedError
+class SluiceEncoder(nn.Module, tau.TaskAwareUnit):
+    def __init__(self, bert_encoder, task_a, task_b):
+        self.config = bert_encoder.config
+        self.layer_a = bert_encoder.layer
+        self.layer_b = copy.deepcopy(self.layer_a)
+        self.task_sharing = nn.ModuleList(
+            [
+                SluiceTaskSharingUnit(self.config.hidden_size, self.config.num_attention_heads)
+                for i in range(self.config.num_hidden_layers)
+            ]
+        )
+        self.layer_sharing_a = SluiceLayerSharingUnit(
+            self.config.num_hidden_layers, self.config.hidden_size, self.config.num_attention_heads
+        )
+        self.layer_sharing_b = SluiceLayerSharingUnit(
+            self.config.num_hidden_layers, self.config.hidden_size, self.config.num_attention_heads
+        )
+        self.task_a = task_a
+        self.task_b = task_b
+
+    def forward(
+        self,
+        hidden_states,
+        attention_mask=None,
+        head_mask=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        output_attentions=False,
+        output_hidden_states=False,
+        return_dict=False,
+    ):
+        assert not output_attentions
+        hidden_states_a, hidden_states_b = hidden_states
+        all_hidden_states = hidden_states
+        all_attentions = ()
+        for i, (layer_module_a, layer_module_b) in enumerate(zip(self.layer_a, self.layer_b)):
+
+            layer_outputs_a = layer_module_a(
+                hidden_states,
+                attention_mask,
+                head_mask[i],
+                encoder_hidden_states,
+                encoder_attention_mask,
+                output_attentions,
+            )
+            layer_outputs_b = layer_module_a(
+                hidden_states,
+                attention_mask,
+                head_mask[i],
+                encoder_hidden_states,
+                encoder_attention_mask,
+                output_attentions,
+            )
+            hidden_states_a, hidden_states_b = layer_outputs_a[0], layer_outputs_b[0]
+
+            if self.tau_task_name == self.task_a:
+                all_hidden_states = all_hidden_states + (hidden_states_a,)
+            elif self.tau_task_name == self.task_b:
+                all_hidden_states = all_hidden_states + (hidden_states_b,)
+
+            hidden_states_a, hidden_states_b = self.task_sharing[i](
+                layer_outputs_a[0], layer_outputs_b[0]
+            )
+
+        if self.tau_task_name == self.task_a:
+            hidden_states = self.layer_sharing_a(all_hidden_states)
+        elif self.tau_task_name == self.task_b:
+            hidden_states = self.layer_sharing_b(all_hidden_states)
+
+        if not return_dict:
+            return tuple(
+                v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None
+            )
+
+        return transformers.modeling_bert.BaseModelOutput(
+            last_hidden_state=hidden_states,
+            hidden_states=all_hidden_states,
+            attentions=all_attentions,
+        )
 
 
-class CrossStitchUnit(nn.Module):
-    def __init__(self):
-        raise NotImplementedError
+class SluiceTaskSharingUnit(nn.Module):
+    def __init__(self, hidden_size, num_subspaces):
+        self.subspace_size = hidden_size // num_subspaces
+        self.exchange_matrix = nn.Parameter(torch.eyes(num_subspaces * 2))
+        self.exchange_matrix.data.normal_(0, 0.02).fill_diagonal_(1)
+
+    def forward(self, input_a, input_b):
+        full_exchange_matrix = self.exchange_matrix.repeat_interleave(
+            self.subspace_size, dim=0
+        ).repeat_interleave(self.subspace_size, dim=1)
+        input_ab = torch.cat(input_a, input_b, dim=-1)
+        output_ab = torch.mm(input_ab, full_exchange_matrix)
+        output_a, output_b = torch.chunk(output_ab, chunks=2, dim=-1)
+        return output_a, output_b
 
 
-class SluiceUnit(nn.Module):
-    def __init__(self):
-        raise NotImplementedError
+class SluiceLayerSharingUnit(nn.Module):
+    def __init__(self, num_layers, hidden_size, num_subspaces):
+        self.subspace_size = self.hidden_size // self.num_subspaces
+        self.mix_matrix = nn.ModuleDict({nn.Parameter(torch.zeros(num_layers, num_subspaces))})
+        self.mix_matrix.data[-1] += 1
+
+    def forward(self, all_layer_states):
+        full_mix_matrix = self.mix_matrix.repeat_interleave(self.subspace_size, dim=1)
+        output = torch.sum(torch.stack(all_layer_states, dim=-2) * full_mix_matrix, dim=-2)
+        return output

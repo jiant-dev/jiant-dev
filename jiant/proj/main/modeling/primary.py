@@ -6,6 +6,7 @@ import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.tasks as tasks
 from jiant.proj.main.components.outputs import construct_output_from_dict
 import jiant.shared.task_aware_unit as tau
+import jiant.proj.main.modules as jiantmodules
 
 
 class JiantModel(nn.Module):
@@ -74,37 +75,61 @@ class JiantModel(nn.Module):
 
 
 class JiantModelWithAdapterFusion(JiantModel):
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        attention_fusion,
+        freeze_transformer=False,
+        freeze_adapters=False,
+        checkpoint_dict=None,
+        **kwargs
+    ):
         super().__init__(kwargs)
-        self._modify_architecture()
-        self._set_trainable_parameters()
-        self._load_prerequisite_model_parameters()
+        for i, layer in enumerate(self.encoder.layer):
+            if attention_fusion:
+                self.encoder.layer[i].output = jiantmodules.BertOutputWithAdapterFusion(
+                    layer,
+                    self.task_dict.keys(),
+                    self.config.hidden_size,
+                    reduction_factor=16,
+                    non_linearity="relu",
+                )
+            else:
+                self.encoder.layer[i] = jiantmodules.BertOutputWithAdapter(
+                    layer,
+                    self.task_dict.keys(),
+                    self.config.hidden_size,
+                    reduction_factor=16,
+                    non_linearity="relu",
+                )
 
-    def _modify_architecture(self):
-        raise NotImplementedError
+        if checkpoint_dict is not None:
+            raise NotImplementedError
 
-    def _load_prerequisite_model_parameters(self):
-        raise NotImplementedError
+        if freeze_transformer:
+            for p in self.parameters():
+                p.requires_grad = False
+        if not freeze_adapters:
+            for layer in self.encoder.layer:
+                for p in layer.output.adapters.parameters():
+                    p.requires_grad = True
+        if attention_fusion:
+            for layer in self.encoder.layer:
+                for p in (
+                    layer.output.key_layer.parameters()
+                    + layer.output.value_layer.parameters()
+                    + layer.output.query_layer.parameters()
+                ):
+                    p.requires_grad = True
 
-    def _set_trainable_parameters(self):
-        raise NotImplementedError
 
-
-class JiantModelWithCrossStitch(JiantModel):
-    def __init__(self, **kwargs):
+class JiantModelWithSluice(JiantModel):
+    def __init__(self, task_a, task_b, checkpoint_dict=None, **kwargs):
         super().__init__(kwargs)
-        self._modify_architecture()
-        self._set_trainable_parameters()
-        self._load_prerequisite_model_parameters()
-
-    def _modify_architecture(self):
-        raise NotImplementedError
-
-    def _load_prerequisite_model_parameters(self):
-        raise NotImplementedError
-
-    def _set_trainable_parameters(self):
-        raise NotImplementedError
+        self.task_a = task_a
+        self.task_b = task_b
+        self.encoder = jiantmodules.SluiceEncoder(self.encoder, self.task_a, self.task_b)
+        if self.checkpoint_dict is not None:
+            raise NotImplementedError
 
 
 def wrap_jiant_forward(
