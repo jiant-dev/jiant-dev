@@ -56,6 +56,20 @@ class RunConfiguration(zconf.RunConfig):
     server_ip = zconf.attr(default="", type=str)
     server_port = zconf.attr(default="", type=str)
 
+    # global args
+    architecture = zconf.attr(default="default", type=str)
+    source_task = zconf.attr(default="", type=str)
+    target_task = zconf.attr(default="", type=str)
+    adapter_fusion_attention_fusion = zconf.attr(action="store_true")
+    adapter_fusion_freeze_transformer = zconf.attr(action="store_true")
+    adapter_fusion_freeze_adapters = zconf.attr(action="store_true")
+    checkpoint_dict = zconf.attr(default="none", type=str)
+    transnorm_replacement = zconf.attr(action="store_true")
+    weight_regularization_type = zconf.attr(default="", type=str)
+    weight_regularization_coef = zconf.attr(default=0.0, type=float)
+    # optimizer settings
+    # trainer settings
+
 
 @zconf.run_config
 class ResumeConfiguration(zconf.RunConfig):
@@ -89,6 +103,7 @@ def setup_runner(
             tokenizer_path=args.model_tokenizer_path,
             task_dict=jiant_task_container.task_dict,
             taskmodels_config=jiant_task_container.taskmodels_config,
+            global_args=args,
         )
         jiant_model_setup.delegate_load_from_path(
             jiant_model=jiant_model, weights_path=args.model_path, load_mode=args.model_load_mode

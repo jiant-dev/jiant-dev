@@ -430,7 +430,13 @@ class L2TWWRunner(JiantRunner):
                 self.what_network = nn.Linear(self.hidden_size, self.num_layers * self.hidden_size)
                 self.where_network = nn.Linear(self.hidden_size, self.num_layers)
 
+            def forward(self, teacher_states, student_states):
+                # TODO: compute L_wfm
+                raise NotImplementedError
+
     def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
+
+        # TODO: modify this to
         self.jiant_model.train()
         task_name, task = self.jiant_task_container.task_sampler.pop()
         task_specific_config = self.jiant_task_container.task_specific_configs[task_name]

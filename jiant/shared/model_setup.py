@@ -3,6 +3,7 @@ import torch
 
 from jiant.ext.radam import RAdam
 from jiant.shared.model_resolution import ModelArchitectures, resolve_tokenizer_class
+import jiant.shared.task_aware_unit as tau
 
 
 def get_tokenizer(model_type, tokenizer_path):
@@ -60,6 +61,14 @@ class OptimizerScheduler:
         self.scheduler.load_state_dict(state_dict["scheduler"], strict=strict)
 
 
+class OptimizerSchedulerWithGradSim(OptimizerScheduler, tau.TaskAwareUnit):
+    def __init__(self, **kwargs):
+        super.__init__(**kwargs)
+
+    def step(self):
+        raise NotImplementedError
+
+
 def create_optimizer(
     model,
     learning_rate,
@@ -90,7 +99,7 @@ def create_optimizer_from_params(
     warmup_proportion,
     optimizer_epsilon=1e-8,
     optimizer_type="adam",
-    scheduler_type="linear"
+    scheduler_type="linear",
     verbose=False,
 ):
     # Prepare optimizer
@@ -117,18 +126,42 @@ def create_optimizer_from_params(
 
     optimizer_grouped_parameters = [
         {
-            "params": [p for n, p in used_named_parameters if not any(nd in n for nd in no_decay)],
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if n.startswith("encoder.e") and (not any(nd in n for nd in no_decay))
+            ],
             "weight_decay": 0.01,
+            "shared": True,
         },
         {
-            "params": [p for n, p in used_named_parameters if any(nd in n for nd in no_decay)],
-            "weight_decay": 0.0,
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if (not n.startswith("encoder.e")) and (not any(nd in n for nd in no_decay))
+            ],
+            "weight_decay": 0.005,
+            "shared": False,
         },
-        {"params": [p for n, p in weighted_sum_params], "weight_decay": 0.0, "lr": 0.01},
+        {
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if n.startswith("encoder.e") and any(nd in n for nd in no_decay)
+            ],
+            "weight_decay": 0.0,
+            "shared": True,
+        },
+        {
+            "params": [
+                p
+                for n, p in used_named_parameters
+                if (not n.startswith("encoder.e")) and any(nd in n for nd in no_decay)
+            ],
+            "weight_decay": 0.0,
+            "shared": False,
+        },
     ]
-
-    # TODO: param group control
-    raise NotImplementedError
 
     if optimizer_type == "adam":
         if verbose:

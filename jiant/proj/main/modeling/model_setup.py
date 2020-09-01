@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 import torch
 import torch.nn as nn
 import transformers
+import json
 
 
 import jiant.proj.main.components.container_setup as container_setup
@@ -58,13 +59,47 @@ def setup_jiant_model(
             taskmodels_config.task_to_taskmodel_map
         ).items()
     }
-    return primary.JiantModel(
-        task_dict=task_dict,
-        encoder=encoder,
-        taskmodels_dict=taskmodels_dict,
-        task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
-        tokenizer=tokenizer,
-    )
+
+    def maybe_load_json(json_string):
+        if json_string != "none":
+            return json.loads(json_string)
+        else:
+            return None
+
+    if global_args.architecture == "default":
+        return primary.JiantModel(
+            task_dict=task_dict,
+            encoder=encoder,
+            taskmodels_dict=taskmodels_dict,
+            task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
+            tokenizer=tokenizer,
+            global_args=global_args,
+        )
+    elif global_args.architecture == "adapterfusion":
+        return primary.JiantModelWithAdapterFusion(
+            task_dict=task_dict,
+            encoder=encoder,
+            taskmodels_dict=taskmodels_dict,
+            task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
+            tokenizer=tokenizer,
+            global_args=global_args,
+            attention_fusion=global_args.adapter_fusion_attention_fusion,
+            freeze_transformer=global_args.adapter_fusion_freeze_transformer,
+            freeze_adapters=global_args.adapter_fusion_freeze_adapters,
+            checkpoint_dict=maybe_load_json(global_args.checkpoint_dict),
+        )
+    elif global_args.architecture == "sluice":
+        return primary.JiantModelWithAdapterFusion(
+            task_dict=task_dict,
+            encoder=encoder,
+            taskmodels_dict=taskmodels_dict,
+            task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
+            tokenizer=tokenizer,
+            global_args=global_args,
+            task_a=global_args.source_task,
+            task_b=global_args.target_task,
+            checkpoint_dict=maybe_load_json(global_args.checkpoint_dict),
+        )
 
 
 def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, load_mode: str):
