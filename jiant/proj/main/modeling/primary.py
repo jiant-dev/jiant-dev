@@ -129,6 +129,7 @@ class JiantModelWithSluice(JiantModel):
         self.task_b = task_b
         self.encoder = jiantmodules.SluiceEncoder(self.encoder, self.task_a, self.task_b)
         if self.checkpoint_dict is not None:
+            # Optional, adopting this from cross stitch
             raise NotImplementedError
 
 
