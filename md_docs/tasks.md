@@ -7,9 +7,9 @@
 | Abductive NLI | abductive_nli | ✅ |  | abductive_nli |  |
 | SuperGLUE Winogender Diagnostic | superglue_axg | ✅ | ✅ | superglue_axg | SuperGLUE |
 | Acceptability Definiteness | acceptability_definiteness | ✅ |  | acceptability_definiteness | Function Words |
-| Adversarial NLI | adversarial_nli_{round} | ✅ |  | adversarial_nli | 3 rounds |
+| Adversarial NLI | `adversarial_nli_{round}` | ✅ |  | adversarial_nli | 3 rounds |
 | BoolQ | boolq | ✅ | ✅ | boolq | SuperGLUE |
-| BUCC2018 | bucc2018_{lang} | ✅ | ✅ | bucc2018 | XTREME, multi-lang |
+| BUCC2018 | `bucc2018_{lang}` | ✅ | ✅ | bucc2018 | XTREME, multi-lang |
 | CommitmentBank | cb | ✅ | ✅ | cb | SuperGLUE |
 | CCG | ccg | ✅ |  | ccg |  |
 | CoLA | cola | ✅ | ✅ | cola | GLUE |
@@ -22,16 +22,16 @@
 | EP-DPR | dpr | ✅ |  | dpr | Edge-Probing |
 | GLUE Diagnostic | glue_diagnostics | ✅ | ✅ | glue_diagnostics | GLUE |
 | HellaSwag | hellaswag | ✅ |  | hellaswag |  |
-| MLQA | mlqa_{lang1}_{lang2} | ✅ | ✅ | mlqa | XTREME, multi-lang |
+| MLQA | `mlqa_{lang1}_{lang2}` | ✅ | ✅ | mlqa | XTREME, multi-lang |
 | MNLI | mnli | ✅ | ✅ | mnli | GLUE, MNLI-matched |
-| MNLI-mismatched | mnli_mismatched | ✅ | ✅ mnli_mismatched | GLUE |
-| MultiRC | multirc | ✅ | ✅ multirc | SuperGLUE |
+| MNLI-mismatched | mnli_mismatched | ✅ | ✅ | mnli_mismatched | GLUE |
+| MultiRC | multirc | ✅ | ✅ | multirc | SuperGLUE |
 | MRPC | mrpc | ✅ | ✅ | mrpc | GLUE |
 | QAMR | qamr | ✅ | ✅ | qamr |  |
 | QA-SRL | qa-srl | ✅ | ✅ | qa-srl |  |
 | EP-NER | ner | ✅ |  | ner | Edge-Probing |
-| PAWS-X | pawsx_{lang} | ✅ | ✅ | pawsx | XTREME, multi-lang |
-| WikiAnn | panx_{lang} | ✅ | ✅ | panx | XTREME, multi-lang |
+| PAWS-X | `pawsx_{lang}` | ✅ | ✅ | pawsx | XTREME, multi-lang |
+| WikiAnn | `panx_{lang}` | ✅ | ✅ | panx | XTREME, multi-lang |
 | EP-POS | pos | ✅ |  | pos | Edge-Probing |
 | QNLI | qnli | ✅ | ✅ | qnli | GLUE |
 | QQP | qqp | ✅ | ✅ | qqp | GLUE |
@@ -51,14 +51,14 @@
 | STS-B | stsb | ✅ | ✅ | stsb | GLUE |
 | SuperGLUE Broad Coverage Diagnostic | superglue_axg | ✅ | ✅ | superglue_axg | SuperGLUE |
 | SWAG | swag | ✅ |  | swag |  |
-| Tatoeba | tatoeba_{lang} | ✅ | ✅ | tatoeba | XTREME, multi-lang |
-| TyDiQA | tydiqa_{lang} | ✅ | ✅ | tydiqa | XTREME, multi-lang |
-| UDPOS | udpos_{lang} | ✅ | ✅ | udpos | XTREME, multi-lang |
+| Tatoeba | `tatoeba_{lang}` | ✅ | ✅ | tatoeba | XTREME, multi-lang |
+| TyDiQA | `tydiqa_{lang}` | ✅ | ✅ | tydiqa | XTREME, multi-lang |
+| UDPOS | `udpos_{lang}` | ✅ | ✅ | udpos | XTREME, multi-lang |
 | WiC | wic | ✅ | ✅ | wic | SuperGLUE |
 | WNLI | wnli | ✅ | ✅ | wnli | GLUE |
 | WSC | wsc | ✅ | ✅ | wsc | SuperGLUE |
-| XNLI | xnli_{lang} | ✅ | ✅ | xnli | XTREME, multi-lang |
-| XQuAD | xquad_{lang} | ✅ | ✅ | xquad | XTREME, multi-lang |
+| XNLI | `xnli_{lang}` | ✅ | ✅ | xnli | XTREME, multi-lang |
+| XQuAD | `xquad_{lang}` | ✅ | ✅ | xquad | XTREME, multi-lang |
 
 
 ## Task-specific Notes
