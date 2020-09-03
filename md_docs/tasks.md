@@ -3,7 +3,7 @@
 ## Supported Tasks
 
 | Name | `task_name` | `jiant` | Downloader | `jiant_task_name` | Misc | 
-|---|---|---|---|---|---|
+|---|---|:---:|:---:|---|---|
 | Abductive NLI | abductive_nli | ✅ |  | abductive_nli |  |
 | SuperGLUE Winogender Diagnostic | superglue_axg | ✅ | ✅ | superglue_axg | SuperGLUE |
 | Acceptability Definiteness | acceptability_definiteness | ✅ |  | acceptability_definiteness | Function Words |
