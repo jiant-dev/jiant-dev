@@ -1,5 +1,6 @@
 from typing import Dict, Union
 import copy
+import torch
 import torch.nn as nn
 
 import jiant.proj.main.modeling.taskmodels as taskmodels
@@ -25,11 +26,11 @@ class JiantModel(nn.Module):
         self.taskmodels_dict = nn.ModuleDict(taskmodels_dict)
         self.task_to_taskmodel_map = task_to_taskmodel_map
         self.tokenizer = tokenizer
-        self.model_taus = tau.create_tau_dict(self.named_modules())
         self.weight_regularization_type = global_args.weight_regularization_type
         self.weight_regularization_coef = global_args.weight_regularization_coef
         if self.weight_regularization_type == "EWC":
             self.saved_weights = copy.deepcopy(list(self.encoder.encoder.parameters()))
+        self.model_taus = tau.create_tau_dict(list(self.named_modules()))
 
     def forward(self, batch: tasks.BatchMixin, task: tasks.Task, compute_loss: bool = False):
         """Calls to this forward method are delegated to the forward of the appropriate taskmodel.
@@ -104,7 +105,13 @@ class JiantModelWithAdapterFusion(JiantModel):
                 )
 
         if checkpoint_dict is not None:
-            raise NotImplementedError
+            from jiant.proj.main.modeling.model_setup import delegate_load
+
+            for key, checkpoint_path in checkpoint_dict:
+                weights_dict = torch.load(checkpoint_path)
+                delegate_load(
+                    jiant_model=self, weights_dict=weights_dict, load_mode="from_adapters"
+                )
 
         if freeze_transformer:
             for p in self.parameters():
@@ -121,6 +128,8 @@ class JiantModelWithAdapterFusion(JiantModel):
                     + layer.output.query_layer.parameters()
                 ):
                     p.requires_grad = True
+
+        self.model_taus = tau.create_tau_dict(list(self.named_modules()))
 
 
 class JiantModelWithSluice(JiantModel):

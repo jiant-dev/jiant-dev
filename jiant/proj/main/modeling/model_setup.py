@@ -142,6 +142,9 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
             jiant_model=jiant_model, weights_dict=remainder,
         )
         return
+    elif load_mode == "from_adapters":
+        adapter_weights = {key: weight for key, weight in weights_dict.items() if "adapters" in key}
+        jiant_model.load_state_dict(adapter_weights, strict=False)
     elif load_mode == "all":
         jiant_model.load_state_dict(weights_dict)
     elif load_mode == "partial_weights":
@@ -189,7 +192,7 @@ def load_encoder_from_transformers_weights(
             load_weights_dict[strings.remove_prefix(k, encoder_prefix)] = v
         else:
             remainder_weights_dict[k] = v
-    encoder.load_state_dict(load_weights_dict)
+    encoder.load_state_dict(load_weights_dict, strict=False)
     if return_remainder:
         return remainder_weights_dict
 

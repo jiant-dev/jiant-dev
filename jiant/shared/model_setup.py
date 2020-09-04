@@ -61,7 +61,7 @@ class OptimizerScheduler:
         self.scheduler.load_state_dict(state_dict["scheduler"], strict=strict)
 
 
-class OptimizerSchedulerWithGradSim(OptimizerScheduler, tau.TaskAwareUnit):
+class OptimizerSchedulerWithGradSim(tau.TauMixin, OptimizerScheduler):
     def __init__(self, **kwargs):
         super.__init__(**kwargs)
 

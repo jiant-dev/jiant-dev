@@ -7,7 +7,9 @@ import copy
 import jiant.shared.task_aware_unit as tau
 
 
-class TransNorm(nn.Module, tau.TaskAwareUnit):
+class TransNorm(
+    tau.TauMixin, nn.Module,
+):
     def __init__(self, layer_norm_layer, task_names, momentum=0.1):
         super().__init__()
         self.normalized_shape = layer_norm_layer.normalized_shape
@@ -69,7 +71,7 @@ class Swish(nn.Module):
         return input * F.sigmoid(input)
 
 
-class BertOutputWithAdapter(nn.Module, tau.TaskAwareUnit):
+class BertOutputWithAdapter(tau.TauMixin, nn.Module):
     def __init__(
         self, bert_output_layer, task_names, hidden_size, reduction_factor=16, non_linearity="relu",
     ):
@@ -144,7 +146,7 @@ class BertOutputWithAdapterFusion(BertOutputWithAdapter):
         return hidden_states
 
 
-class SluiceEncoder(nn.Module, tau.TaskAwareUnit):
+class SluiceEncoder(tau.TauMixin, nn.Module):
     def __init__(self, bert_encoder, task_a, task_b):
         self.config = bert_encoder.config
         self.layer_a = bert_encoder.layer

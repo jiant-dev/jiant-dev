@@ -1,21 +1,20 @@
 from typing import Any, Dict, List, Optional, Union
 
 
-class TaskAwareUnit(object):
-    def __init__(self):
+class TauMixin(object):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.tau_task_name = None
 
     def set_task(self, task_name: str):
         self.tau_task_name = task_name
 
 
-def create_tau_dict(named_objects: Union[Dict, List[tuple]]):
-    if isinstance(named_objects, dict):
-        named_objects = named_objects.items()
+def create_tau_dict(named_objects: List[tuple]):
     tau_dict = {
         object_name: one_object
         for object_name, one_object in named_objects
-        if isinstance(one_object, TaskAwareUnit)
+        if isinstance(one_object, TauMixin)
     }
     return tau_dict
 
