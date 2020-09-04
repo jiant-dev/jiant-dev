@@ -114,7 +114,15 @@ def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, 
         TODO: return behavior is not consistent between load_mode options, clarify as needed here.
 
     """
-    weights_dict = torch.load(weights_path)
+    if ";" in weights_path:
+        weights_paths = weights_path.split(";")
+    else:
+        weights_paths = [weights_path]
+
+    weights_dict = {}
+    for path in weights_paths:
+        weights = torch.load(path)
+        weights_dict.update(weights)
     return delegate_load(jiant_model=jiant_model, weights_dict=weights_dict, load_mode=load_mode)
 
 

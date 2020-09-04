@@ -77,14 +77,7 @@ class JiantModel(nn.Module):
 
 
 class JiantModelWithAdapterFusion(JiantModel):
-    def __init__(
-        self,
-        attention_fusion,
-        freeze_transformer=False,
-        freeze_adapters=False,
-        checkpoint_dict=None,
-        **kwargs
-    ):
+    def __init__(self, attention_fusion, freeze_transformer=False, freeze_adapters=False, **kwargs):
         super().__init__(**kwargs)
         for i, layer in enumerate(self.encoder.encoder.layer):
             if attention_fusion:
@@ -102,15 +95,6 @@ class JiantModelWithAdapterFusion(JiantModel):
                     self.encoder.config.hidden_size,
                     reduction_factor=16,
                     non_linearity="relu",
-                )
-
-        if checkpoint_dict is not None:
-            from jiant.proj.main.modeling.model_setup import delegate_load
-
-            for key, checkpoint_path in checkpoint_dict:
-                weights_dict = torch.load(checkpoint_path)
-                delegate_load(
-                    jiant_model=self, weights_dict=weights_dict, load_mode="from_adapters"
                 )
 
         if freeze_transformer:
@@ -133,16 +117,13 @@ class JiantModelWithAdapterFusion(JiantModel):
 
 
 class JiantModelWithSluice(JiantModel):
-    def __init__(self, task_a, task_b, checkpoint_dict=None, **kwargs):
+    def __init__(self, task_a, task_b, **kwargs):
         super().__init__(**kwargs)
         self.task_a = task_a
         self.task_b = task_b
         self.encoder.encoder = jiantmodules.SluiceEncoder(
             self.encoder.encoder, self.task_a, self.task_b
         )
-        if self.checkpoint_dict is not None:
-            # Optional, adopting this from cross stitch
-            raise NotImplementedError
 
 
 def wrap_jiant_forward(
