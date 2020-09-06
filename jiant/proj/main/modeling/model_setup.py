@@ -116,14 +116,14 @@ def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, 
     """
     if ";" in weights_path:
         weights_paths = weights_path.split(";")
+        load_modes = load_mode.split(";")
+        assert len(weights_paths) == len(load_modes)
     else:
         weights_paths = [weights_path]
-
-    weights_dict = {}
-    for path in weights_paths:
-        weights = torch.load(path)
-        weights_dict.update(weights)
-    return delegate_load(jiant_model=jiant_model, weights_dict=weights_dict, load_mode=load_mode)
+        load_modes = [load_mode]
+    for weights_path, load_mode in zip(weights_paths, load_modes):
+        weights_dict = torch.load(weights_path)
+        delegate_load(jiant_model=jiant_model, weights_dict=weights_dict, load_mode=load_mode)
 
 
 def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
@@ -153,6 +153,15 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
     elif load_mode == "from_adapters":
         adapter_weights = {key: weight for key, weight in weights_dict.items() if "adapters" in key}
         jiant_model.load_state_dict(adapter_weights, strict=False)
+    elif load_mode == "sluice":
+        weights_dict_dup = {
+            key.replace("encoder.encoder.layer", f"encoder.encoder.layer_{side}"): weight
+            for key, weight in weights_dict.items()
+            if "encoder.encoder.layer" in key
+            for side in ["a", "b"]
+        }
+        weights_dict.update(weights_dict_dup)
+        jiant_model.load_state_dict(weights_dict)
     elif load_mode == "all":
         jiant_model.load_state_dict(weights_dict)
     elif load_mode == "partial_weights":

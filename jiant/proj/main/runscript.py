@@ -18,8 +18,22 @@ import jiant.utils.zconf as zconf
 @zconf.run_config
 class RunConfiguration(zconf.RunConfig):
     # === Required parameters === #
-    jiant_task_container_config_path = zconf.attr(type=str, required=True)
     output_dir = zconf.attr(type=str, required=True)
+
+    # === Task container parameters === #
+    task_config_base_path = zconf.attr(type=str, default=None)
+    task_cache_base_path = zconf.attr(type=str, default=None)
+    train_tasks = zconf.attr(type=str, default=None)
+    train_val_tasks = zconf.attr(type=str, default=None)
+    val_tasks = zconf.attr(type=str, default=None)
+    test_tasks = zconf.attr(type=str, default=None)
+    batch_size_set = zconf.attr(type=str, default="base")
+    effective_batch_size = zconf.attr(type=int, default=16)
+    eval_batch_multiplier = zconf.attr(type=int, default=2)
+    epochs = zconf.attr(type=int, default=None)
+    max_steps = zconf.attr(type=int, default=None)
+    warmup_steps_proportion = zconf.attr(type=float, default=0.1)
+    sampler_type = zconf.attr(type=str, default="ProportionalMultiTaskSampler")
 
     # === Model parameters === #
     model_type = zconf.attr(type=str, required=True)
@@ -56,7 +70,7 @@ class RunConfiguration(zconf.RunConfig):
     server_ip = zconf.attr(default="", type=str)
     server_port = zconf.attr(default="", type=str)
 
-    # global args
+    #
     architecture = zconf.attr(default="default", type=str)
     source_task = zconf.attr(default="", type=str)
     target_task = zconf.attr(default="", type=str)
@@ -150,9 +164,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
     quick_init_out = initialization.quick_init(args=args, verbose=True)
     print(quick_init_out.n_gpu)
     with quick_init_out.log_writer.log_context():
-        jiant_task_container = container_setup.create_jiant_task_container_from_json(
-            jiant_task_container_config_path=args.jiant_task_container_config_path, verbose=True,
-        )
+        jiant_task_container = container_setup.create_jiant_task_container_from_args(args)
         runner = setup_runner(
             args=args,
             jiant_task_container=jiant_task_container,
