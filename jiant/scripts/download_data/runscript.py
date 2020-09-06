@@ -23,7 +23,7 @@ SUPPORTED_TASKS = NLP_DOWNLOADER_TASKS | XTREME_TASKS | SQUAD_TASKS | DIRECT_DOW
 # noinspection PyUnusedLocal
 def list_supported_tasks_cli(args):
     print("Supported tasks:")
-    for task in SUPPORTED_TASKS:
+    for task in sorted(list(SUPPORTED_TASKS)):
         print(task)
 
 
