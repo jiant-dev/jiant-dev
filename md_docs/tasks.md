@@ -21,14 +21,14 @@
 | EP-UD | dep | ✅ |  | dep | Edge-Probing |
 | EP-DPR | dpr | ✅ |  | dpr | Edge-Probing |
 | GLUE Diagnostic | glue_diagnostics | ✅ | ✅ | glue_diagnostics | GLUE |
-| HellaSwag | hellaswag | ✅ |  | hellaswag |  |
+| HellaSwag | hellaswag | ✅ | ✅ | hellaswag |  |
 | MLQA | `mlqa_{lang1}_{lang2}` | ✅ | ✅ | mlqa | XTREME, multi-lang |
 | MNLI | mnli | ✅ | ✅ | mnli | GLUE, MNLI-matched |
 | MNLI-mismatched | mnli_mismatched | ✅ | ✅ | mnli_mismatched | GLUE |
 | MultiRC | multirc | ✅ | ✅ | multirc | SuperGLUE |
 | MRPC | mrpc | ✅ | ✅ | mrpc | GLUE |
-| QAMR | qamr | ✅ | ✅ | qamr |  |
-| QA-SRL | qa-srl | ✅ | ✅ | qa-srl |  |
+| QAMR | qamr | ✅ |  | qamr |  |
+| QA-SRL | qa-srl | ✅ |  | qa-srl |  |
 | EP-NER | ner | ✅ |  | ner | Edge-Probing |
 | PAWS-X | `pawsx_{lang}` | ✅ | ✅ | pawsx | XTREME, multi-lang |
 | WikiAnn | `panx_{lang}` | ✅ | ✅ | panx | XTREME, multi-lang |
@@ -60,9 +60,13 @@
 | XNLI | `xnli_{lang}` | ✅ | ✅ | xnli | XTREME, multi-lang |
 | XQuAD | `xquad_{lang}` | ✅ | ✅ | xquad | XTREME, multi-lang |
 
+* `task_name`: Name-by-convention, used by downloader, and used in `JiantModel` to map from task names to task-models. You can change this as long as your settings are internally consistent. 
+* `jiant`: Whether it's supported in `jiant` (i.e. you can train/eval on it)
+* Downloader: Whether you can download using the downloader.
+* `jiant_task_name`: Used to determine the programmatic behavior for the task (how to tokenize, what *kind* of task-model is compatible). Is tied directly to the code. See: `jiant.tasks.retrieval`. 
 
 ## Task-specific Notes
 
 ### Adversarial NLI
 
-
+[Adversarial NLI](https://arxiv.org/pdf/1910.14599.pdf) has 3 rounds of adversarial data creation. A1/A2/A3 are expanding supersets of the previous round.

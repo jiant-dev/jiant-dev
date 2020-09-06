@@ -28,6 +28,7 @@ SUPERGLUE_TASKS = {
 OTHER_NLP_TASKS = {
     "commonsenseqa",
     "hellaswag",
+    "cosmosqa",
 }
 
 XTREME_TASKS = {
