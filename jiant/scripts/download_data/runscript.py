@@ -5,7 +5,13 @@ import jiant.utils.python.io as py_io
 import jiant.scripts.download_data.datasets.nlp_tasks as nlp_tasks_download
 import jiant.scripts.download_data.datasets.xtreme as xtreme_download
 import jiant.scripts.download_data.datasets.files_tasks as files_tasks_download
-from jiant.tasks.constants import GLUE_TASKS, SUPERGLUE_TASKS, OTHER_NLP_TASKS, XTREME_TASKS, BENCHMARKS
+from jiant.tasks.constants import (
+    GLUE_TASKS,
+    SUPERGLUE_TASKS,
+    OTHER_NLP_TASKS,
+    XTREME_TASKS,
+    BENCHMARKS,
+)
 from jiant.scripts.download_data.constants import SQUAD_TASKS, DIRECT_DOWNLOAD_TASKS
 
 # DIRECT_DOWNLOAD_TASKS need to be directly downloaded because the nlp

@@ -50,11 +50,7 @@ class CommonsenseQATask(mc_template.AbstractMultipleChoiceTask):
     def _create_examples(cls, lines, set_type):
         examples = []
         for i, line in enumerate(lines):
-            examples.append(cls._create_example(
-                raw_example=line,
-                set_type=set_type,
-                i=i,
-            ))
+            examples.append(cls._create_example(raw_example=line, set_type=set_type, i=i,))
         return examples
 
     @classmethod
@@ -92,4 +88,3 @@ class CommonsenseQATask(mc_template.AbstractMultipleChoiceTask):
             choice_list=raw_example["choices"]["text"],
             label=raw_example["answerKey"] if set_type != "test" else cls.CHOICE_KEYS[-1],
         )
-
