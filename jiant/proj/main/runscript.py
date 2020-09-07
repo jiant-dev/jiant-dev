@@ -70,15 +70,18 @@ class RunConfiguration(zconf.RunConfig):
     server_ip = zconf.attr(default="", type=str)
     server_port = zconf.attr(default="", type=str)
 
-    #
+    # New args in transfer methods
     architecture = zconf.attr(default="default", type=str)
     source_task = zconf.attr(default="", type=str)
     target_task = zconf.attr(default="", type=str)
     adapter_fusion_attention_fusion = zconf.attr(action="store_true")
     adapter_fusion_freeze_transformer = zconf.attr(action="store_true")
     adapter_fusion_freeze_adapters = zconf.attr(action="store_true")
-    checkpoint_dict = zconf.attr(default="none", type=str)
+    sluice_task_a = zconf.attr(default="", type=str)
+    sluice_task_b = zconf.attr(default="", type=str)
     transnorm_replacement = zconf.attr(action="store_true")
+    transnorm_update_rate = zconf.attr(default=0.1, type=float)
+    transnorm_skip = zconf.attr(action="store_true")
     weight_regularization_type = zconf.attr(default="", type=str)
     weight_regularization_coef = zconf.attr(default=0.0, type=float)
     # optimizer settings

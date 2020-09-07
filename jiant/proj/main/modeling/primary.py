@@ -122,7 +122,7 @@ class JiantModelWithSluice(JiantModel):
         self.task_a = task_a
         self.task_b = task_b
         self.encoder.encoder = jiantmodules.SluiceEncoder(
-            self.encoder.encoder, self.task_a, self.task_b
+            self.encoder.encoder, self.encoder.config, self.task_a, self.task_b
         )
 
 

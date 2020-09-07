@@ -47,7 +47,13 @@ def setup_jiant_model(
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
     if global_args.transnorm_replacement:
-        encoder = modules.replace_layernorm_with_transnorm(encoder, task_dict.keys())
+        modules.replace_layernorm_with_transnorm(
+            encoder=encoder.encoder,
+            num_layers=encoder.config.num_hidden_layers,
+            task_names=task_dict.keys(),
+            transnorm_update_rate=global_args.transnorm_update_rate,
+            transnorm_skip=global_args.transnorm_skip,
+        )
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
             task=task_dict[task_name_list[0]],  # Take the first task
@@ -86,10 +92,9 @@ def setup_jiant_model(
             attention_fusion=global_args.adapter_fusion_attention_fusion,
             freeze_transformer=global_args.adapter_fusion_freeze_transformer,
             freeze_adapters=global_args.adapter_fusion_freeze_adapters,
-            checkpoint_dict=maybe_load_json(global_args.checkpoint_dict),
         )
     elif global_args.architecture == "sluice":
-        return primary.JiantModelWithAdapterFusion(
+        return primary.JiantModelWithSluice(
             task_dict=task_dict,
             encoder=encoder,
             taskmodels_dict=taskmodels_dict,
@@ -98,7 +103,6 @@ def setup_jiant_model(
             global_args=global_args,
             task_a=global_args.source_task,
             task_b=global_args.target_task,
-            checkpoint_dict=maybe_load_json(global_args.checkpoint_dict),
         )
 
 
@@ -114,9 +118,9 @@ def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, 
         TODO: return behavior is not consistent between load_mode options, clarify as needed here.
 
     """
-    if ";" in weights_path:
-        weights_paths = weights_path.split(";")
-        load_modes = load_mode.split(";")
+    if "," in weights_path:
+        weights_paths = weights_path.split(",")
+        load_modes = load_mode.split(",")
         assert len(weights_paths) == len(load_modes)
     else:
         weights_paths = [weights_path]
@@ -153,7 +157,7 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
     elif load_mode == "from_adapters":
         adapter_weights = {key: weight for key, weight in weights_dict.items() if "adapters" in key}
         jiant_model.load_state_dict(adapter_weights, strict=False)
-    elif load_mode == "sluice":
+    elif load_mode == "encoder_for_sluice":
         weights_dict_dup = {
             key.replace("encoder.encoder.layer", f"encoder.encoder.layer_{side}"): weight
             for key, weight in weights_dict.items()
@@ -161,7 +165,7 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
             for side in ["a", "b"]
         }
         weights_dict.update(weights_dict_dup)
-        jiant_model.load_state_dict(weights_dict)
+        jiant_model.load_state_dict(weights_dict, strict=False)
     elif load_mode == "all":
         jiant_model.load_state_dict(weights_dict)
     elif load_mode == "partial_weights":

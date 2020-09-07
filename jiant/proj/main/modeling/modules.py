@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import transformers
 import copy
+import math
 
 import jiant.shared.task_aware_unit as tau
 
@@ -10,11 +11,13 @@ import jiant.shared.task_aware_unit as tau
 class TransNorm(
     tau.TauMixin, nn.Module,
 ):
-    def __init__(self, layer_norm_layer, task_names, momentum=0.1):
+    def __init__(self, layer_norm_layer, task_names, momentum, transnorm_skip):
         super().__init__()
         self.normalized_shape = layer_norm_layer.normalized_shape
         self.eps = layer_norm_layer.eps
         self.elementwise_affine = layer_norm_layer.elementwise_affine
+        self.task_names = task_names
+        self.transnorm_skip = transnorm_skip
         if self.elementwise_affine:
             self.weight = layer_norm_layer.weight
             self.bias = layer_norm_layer.bias
@@ -28,13 +31,16 @@ class TransNorm(
 
     def forward(self, input):
         if self.training:
-            reshaped_input = input.flatten(dim_end=-len(self.normalized_shape) - 1)
-            self._buffers[f"{self.tau_task_name}_mean"] *= 1 - self.momentum
-            self._buffers[f"{self.tau_task_name}_mean"] += self.momentum * reshaped_input.mean(
-                dim=0
-            )
-            self._buffers[f"{self.tau_task_name}_var"] *= 1 - self.momentum
-            self._buffers[f"{self.tau_task_name}_var"] += self.momentum * reshaped_input.var(dim=0)
+            with torch.no_grad():
+                reshaped_input = input.flatten(end_dim=-len(self.normalized_shape) - 1)
+                self._buffers[f"{self.tau_task_name}_mean"] *= 1 - self.momentum
+                self._buffers[f"{self.tau_task_name}_mean"] += self.momentum * reshaped_input.mean(
+                    dim=0
+                )
+                self._buffers[f"{self.tau_task_name}_var"] *= 1 - self.momentum
+                self._buffers[f"{self.tau_task_name}_var"] += self.momentum * reshaped_input.var(
+                    dim=0
+                )
         layer_norm_output = F.layer_norm(
             input, self.normalized_shape, self.weight, self.bias, self.eps
         )
@@ -47,19 +53,31 @@ class TransNorm(
             dim=0,
         )
         alpha = 1 / (1 + discrepency.max(dim=0)[0] - discrepency.min(dim=0)[0])
-        alpha = alpha / torch.sum(alpha) * self.normalized_shape.numel()
-        target_shape = [-1] * (len(layer_norm_output.size()) - alpha.size()) + alpha.size().tolist()
-        output = layer_norm_output * (1 + alpha).view(*target_shape)
+        alpha = alpha / torch.sum(alpha) * math.prod(self.normalized_shape)
+        if self.transnorm_skip:
+            alpha = 1 + alpha
+        target_shape = [1] * (len(layer_norm_output.size()) - len(alpha.size())) + list(
+            alpha.size()
+        )
+        output = layer_norm_output * alpha.view(*target_shape)
         return output
 
 
-def replace_layernorm_with_transnorm(encoder, task_names):
-    for idx in len(encoder.layer):
+def replace_layernorm_with_transnorm(
+    encoder, num_layers, task_names, transnorm_update_rate, transnorm_skip
+):
+    for idx in range(num_layers):
         encoder.layer[idx].attention.output.LayerNorm = TransNorm(
-            layer_norm_layer=encoder.layer[idx].attention.output.LayerNorm, task_names=task_names
+            layer_norm_layer=encoder.layer[idx].attention.output.LayerNorm,
+            task_names=task_names,
+            momentum=transnorm_update_rate,
+            transnorm_skip=transnorm_skip,
         )
         encoder.layer[idx].output.LayerNorm = TransNorm(
-            layer_norm_layer=encoder.layer[idx].output.LayerNorm, task_names=task_names
+            layer_norm_layer=encoder.layer[idx].output.LayerNorm,
+            task_names=task_names,
+            momentum=transnorm_update_rate,
+            transnorm_skip=transnorm_skip,
         )
 
 
@@ -147,21 +165,21 @@ class BertOutputWithAdapterFusion(BertOutputWithAdapter):
 
 
 class SluiceEncoder(tau.TauMixin, nn.Module):
-    def __init__(self, bert_encoder, task_a, task_b):
-        self.config = bert_encoder.config
+    def __init__(self, bert_encoder, bert_config, task_a, task_b):
+        super().__init__()
         self.layer_a = bert_encoder.layer
         self.layer_b = copy.deepcopy(self.layer_a)
         self.task_sharing = nn.ModuleList(
             [
-                SluiceTaskSharingUnit(self.config.hidden_size, self.config.num_attention_heads)
-                for i in range(self.config.num_hidden_layers)
+                SluiceTaskSharingUnit(bert_config.hidden_size, bert_config.num_attention_heads)
+                for i in range(bert_config.num_hidden_layers)
             ]
         )
         self.layer_sharing_a = SluiceLayerSharingUnit(
-            self.config.num_hidden_layers, self.config.hidden_size, self.config.num_attention_heads
+            bert_config.num_hidden_layers, bert_config.hidden_size, bert_config.num_attention_heads
         )
         self.layer_sharing_b = SluiceLayerSharingUnit(
-            self.config.num_hidden_layers, self.config.hidden_size, self.config.num_attention_heads
+            bert_config.num_hidden_layers, bert_config.hidden_size, bert_config.num_attention_heads
         )
         self.task_a = task_a
         self.task_b = task_b
@@ -178,26 +196,24 @@ class SluiceEncoder(tau.TauMixin, nn.Module):
         return_dict=False,
     ):
         assert not output_attentions
-        hidden_states_a, hidden_states_b = hidden_states
-        all_hidden_states = hidden_states
+        hidden_states_a = hidden_states_b = hidden_states
+        all_hidden_states = (hidden_states,)
         all_attentions = ()
         for i, (layer_module_a, layer_module_b) in enumerate(zip(self.layer_a, self.layer_b)):
 
             layer_outputs_a = layer_module_a(
-                hidden_states,
+                hidden_states_a,
                 attention_mask,
                 head_mask[i],
                 encoder_hidden_states,
                 encoder_attention_mask,
-                output_attentions,
             )
-            layer_outputs_b = layer_module_a(
-                hidden_states,
+            layer_outputs_b = layer_module_b(
+                hidden_states_b,
                 attention_mask,
                 head_mask[i],
                 encoder_hidden_states,
                 encoder_attention_mask,
-                output_attentions,
             )
             hidden_states_a, hidden_states_b = layer_outputs_a[0], layer_outputs_b[0]
 
@@ -229,24 +245,33 @@ class SluiceEncoder(tau.TauMixin, nn.Module):
 
 class SluiceTaskSharingUnit(nn.Module):
     def __init__(self, hidden_size, num_subspaces):
+        super().__init__()
         self.subspace_size = hidden_size // num_subspaces
-        self.exchange_matrix = nn.Parameter(torch.eyes(num_subspaces * 2))
+        self.exchange_matrix = nn.Parameter(torch.eye(num_subspaces * 2))
         self.exchange_matrix.data.normal_(0, 0.02).fill_diagonal_(1)
+        self.register_buffer(
+            "channel_mask",
+            torch.eye(self.subspace_size).repeat(2 * num_subspaces, 2 * num_subspaces),
+        )
 
     def forward(self, input_a, input_b):
-        full_exchange_matrix = self.exchange_matrix.repeat_interleave(
-            self.subspace_size, dim=0
-        ).repeat_interleave(self.subspace_size, dim=1)
-        input_ab = torch.cat(input_a, input_b, dim=-1)
-        output_ab = torch.mm(input_ab, full_exchange_matrix)
+        full_exchange_matrix = (
+            self.exchange_matrix.repeat_interleave(self.subspace_size, dim=0).repeat_interleave(
+                self.subspace_size, dim=1
+            )
+            * self.channel_mask
+        )
+        input_ab = torch.cat([input_a, input_b], dim=-1)
+        output_ab = torch.matmul(input_ab, full_exchange_matrix)
         output_a, output_b = torch.chunk(output_ab, chunks=2, dim=-1)
         return output_a, output_b
 
 
 class SluiceLayerSharingUnit(nn.Module):
     def __init__(self, num_layers, hidden_size, num_subspaces):
-        self.subspace_size = self.hidden_size // self.num_subspaces
-        self.mix_matrix = nn.ModuleDict({nn.Parameter(torch.zeros(num_layers, num_subspaces))})
+        super().__init__()
+        self.subspace_size = hidden_size // num_subspaces
+        self.mix_matrix = nn.Parameter(torch.zeros(num_layers + 1, num_subspaces))
         self.mix_matrix.data[-1] += 1
 
     def forward(self, all_layer_states):

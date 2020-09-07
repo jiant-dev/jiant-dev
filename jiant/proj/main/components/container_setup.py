@@ -260,12 +260,8 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
         "train_val_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(
             args.train_val_tasks
         ),
-        "val_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(
-            args.val_task_name_list
-        ),
-        "test_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(
-            args.test_task_name_list
-        ),
+        "val_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(args.val_tasks),
+        "test_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(args.test_tasks),
     }
     task_run_config = TaskRunConfig.from_dict(task_run_dict)
 
@@ -295,7 +291,7 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
             task_cache_config_dict[task_name]["val_labels"] = os.path.join(
                 args.task_cache_base_path, task_name, "val_labels",
             )
-        if task_name in task_run_dict["test"]:
+        if task_name in task_run_config.test_task_list:
             task_cache_config_dict[task_name]["test"] = os.path.join(
                 args.task_cache_base_path, task_name, "test",
             )
@@ -316,7 +312,7 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
     max_steps = 0
     num_examples_dict = {}
     task_specific_configs_dict = {}
-    for task_name in task_run_config.train_task_list["train"]:
+    for task_name in task_run_config.train_task_list:
         batch_size = batch_size_set_dict[args.batch_size_set][task_name]
         assert args.effective_batch_size % batch_size == 0
         gradient_accumulation_steps = args.effective_batch_size // batch_size
@@ -327,7 +323,7 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
         max_steps += args.epochs * math.ceil(num_examples / args.effective_batch_size)
         task_specific_configs_dict[task_name] = {
             "train_batch_size": batch_size,
-            "eval_batch_size": batch_size * args.eval_eval_batch_multiplier,
+            "eval_batch_size": batch_size * args.eval_batch_multiplier,
             "gradient_accumulation_steps": gradient_accumulation_steps,
             "eval_subset_num": 500,
         }
@@ -356,7 +352,7 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
         sampler_config = {
             "sampler_type": args.sampler_type,
         }
-    jiant_task_sampler.create_task_sampler(
+    task_sampler = jiant_task_sampler.create_task_sampler(
         sampler_config=sampler_config,
         task_dict={
             task_name: task_dict[task_name] for task_name in task_run_config.train_task_list
@@ -367,7 +363,7 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
     return JiantTaskContainer(
         task_dict=task_dict,
         task_cache_dict=task_cache_dict,
-        task_sampler=sampler_config,
+        task_sampler=task_sampler,
         global_train_config=global_train_config,
         task_specific_configs=task_specific_config,
         taskmodels_config=taskmodels_config,
