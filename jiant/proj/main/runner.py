@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 import jiant.tasks.evaluate as evaluate
 import jiant.utils.torch_utils as torch_utils
@@ -422,17 +423,77 @@ class L2TWWRunner(JiantRunner):
         for p in self.teacher_jiant_model.parameters():
             p.requires_grad = False
 
-        class MetaWhatAndWhere(nn.Module):
-            def __init__(self, hidden_size, num_layers):
+        class WhatNetwork(nn.Module):
+            def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
                 super().__init__()
                 self.hidden_size = hidden_size
-                self.num_layers = num_layers
-                self.what_network = nn.Linear(self.hidden_size, self.num_layers * self.hidden_size)
-                self.where_network = nn.Linear(self.hidden_size, self.num_layers)
+                self.teacher_num_layers = teacher_num_layers
+                self.student_num_layers = student_num_layers
 
-            def forward(self, teacher_states, student_states):
+                # WeightNet (l, hidden* num_target_layers) for all l in source
+                # outputs = softmax across hidden for all pairs
+                self.what_network = []
+                for i in range(teacher_num_layers):
+                    self.where_network.append(nn.Linear(self.hidden_size, self.student_num_layers*self.hidden_size))
+
+
+            def forward(self, teacher_states):
                 # TODO: compute L_wfm
-                raise NotImplementedError
+                outputs = []
+                for i in range(self.teacher_num_layers):
+                    out = self.what_network[i](teacher_states[i])
+                    out = out.reshape(self.student_num_layers, self.hidden_size)
+                    out = F.softmax(out, 1)
+                    outputs.extend(out)
+
+                return outputs
+
+        class WhereNetwork(nn.Module):
+            def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+                super().__init__()
+                self.hidden_size = hidden_size
+                self.teacher_num_layers = teacher_num_layers
+                self.student_num_layers = student_num_layers
+
+                # LossWeightNet (l, num_target_layers) for all l in source
+                # outputs => lambdas[0,..., num_pairs]
+                self.where_network = []
+                for i in range(teacher_num_layers):
+                    self.where_network.append(nn.Linear(self.hidden_size, self.student_num_layers))
+
+            def forward(self, teacher_states):
+                # TODO: compute L_wfm
+                outputs = []
+                for i in range(self.teacher_num_layers):
+                    out = F.relu(self.where_network[i](teacher_states[i])).squeeze()
+                    outputs.extend(out)
+                return outputs
+
+        class MetaWhatAndWhere(nn.Module):
+            def __init__(self, teacher_num_layers, student_num_layers):
+                super().__init__()
+                self.hidden_size = hidden_size
+                self.teacher_num_layers = teacher_num_layers
+                self.student_num_layers = student_num_layers
+                #self.gammas = []
+                #for i in range(student_num_layers):
+                #    self.gammas.append(nn.Linear(self.hidden_size, 1))
+
+
+            def forward(self, teacher_states, student_states, weights, loss_weights, betas):
+                # TODO: compute L_wfm
+                matching_loss = 0.0
+                for m in range(len(teacher_states)):
+                    for n in range(len(student_states)):
+                        #diff = teacher_states[m] - self.gammas[n](student_states[n])
+                        diff = (teacher_states[m] - student_states[n]).pow(2) # BSZ * Hidden * SEQ_LEN
+                        diff = diff.mean(3).mean(2)
+                        diff = (diff.mul(weights[m][n]).sum(1) * loss_weights[m][n].mean(0).mul(beta[m][n]))
+                    matching_loss += diff
+                return matching_loss
+
+    def run_inner_loop(self):
+        raise NotImplementedError
 
     def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
 
