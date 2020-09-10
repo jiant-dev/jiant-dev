@@ -29,7 +29,12 @@ class MaskedBatch(mlm_template.MaskedBatch):
     pass
 
 
-class MLMWikitext103Task(mlm_template.MLMTask):
+class MLMSimpleTask(mlm_template.MLMTask):
+    """
+    - Reads from a single file per phase
+    - One example per line (examples that are too long will be truncated)
+    - Empty lines are skipped.
+    """
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow
@@ -53,8 +58,11 @@ class MLMWikitext103Task(mlm_template.MLMTask):
     def _get_examples_generator(cls, path, set_type):
         with open(path, "r") as f:
             for (i, line) in enumerate(f):
+                line = line.strip()
+                if not line:
+                    continue
                 yield Example(
-                    guid="%s-%s" % (set_type, i), text=line.strip(),
+                    guid="%s-%s" % (set_type, i), text=line,
                 )
 
     @classmethod
