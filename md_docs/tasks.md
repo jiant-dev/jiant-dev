@@ -77,7 +77,7 @@
 
 MLM is a generic task, implemented with the `jiant_task_name` "`mlm_simple`". In other words, it is meant to be used with any appropriately formatted file. 
 
-`mlm_simple` expects input data files to be a single text file per phase, where each line corresponds to one example, and empty lines are ignored. This means that if a line corresponds to more than the `max_seq_length` of tokens during tokenization, everything past the first 256 tokens per line will be ignored. We plan to add more complex implementations in the future.
+`mlm_simple` expects input data files to be a single text file per phase, where each line corresponds to one example, and empty lines are ignored. This means that if a line corresponds to more than the `max_seq_length` of tokens during tokenization, everything past the first `max_seq_length` tokens per line will be ignored. We plan to add more complex implementations in the future.
 
 You can structure your MLM task config file as follow:
 
