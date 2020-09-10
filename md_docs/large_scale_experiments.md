@@ -22,8 +22,8 @@ A quick was to pick up the results across the range of experiments is to run cod
 
 ```python
 import pandas as pd
-import pyutils.io as io
-import pyutils.path_parse as path_parse
+import jiant.utils.python.io as io
+import jiant.utils.path_parse as path_parse
 
 matches = path_parse.match_paths("/path/to/experiments/{model}/{task}/val_metrics.json")
 for match in matches:

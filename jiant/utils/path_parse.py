@@ -3,7 +3,7 @@ import re
 
 
 def tags_to_regex(tag_pattern, format_dict=None, default_format="\\w+"):
-    """Converts a string with tags to regex.
+    r"""Converts a string with tags to regex.
 
     E.g. converts
         '/path/to/experiments/{model}/{task}'
@@ -86,15 +86,13 @@ def match_path_ls(path_ls, path_pattern, format_dict=None, default_format="\\w+"
     Returns: List[dict]
         List of matches
     """
-    regex = re.compile(tags_to_regex(
-        path_pattern,
-        format_dict=format_dict,
-        default_format=default_format,
-    ))
+    regex = re.compile(
+        tags_to_regex(path_pattern, format_dict=format_dict, default_format=default_format,)
+    )
     result_ls = []
     for path in path_ls:
         result = next(regex.finditer(path)).groupdict()
-        assert "path" not in result, "keyword clash: \"path\""
+        assert "path" not in result, 'keyword clash: "path"'
         result["path"] = path
         result_ls.append(result)
     return result_ls
