@@ -30,11 +30,12 @@ class MaskedBatch(mlm_template.MaskedBatch):
 
 
 class MLMSimpleTask(mlm_template.MLMTask):
-    """
+    """Simple implementation of MLM task
     - Reads from a single file per phase
     - One example per line (examples that are too long will be truncated)
     - Empty lines are skipped.
     """
+
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow
