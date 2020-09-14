@@ -245,3 +245,128 @@ def create_jiant_task_container_from_json(
         jiant_task_container_config_dict=py_io.read_json(jiant_task_container_config_path),
         verbose=verbose,
     )
+
+
+def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
+    from jiant.proj.main.scripts.configurator import (
+        SimpleAPIMultiTaskConfigurator,
+        get_num_examples_from_cache,
+    )
+    import os
+    import math
+
+    task_run_dict = {
+        "train_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(args.train_tasks),
+        "train_val_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(
+            args.train_val_tasks
+        ),
+        "val_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(args.val_tasks),
+        "test_task_list": SimpleAPIMultiTaskConfigurator.parse_task_name_list(args.test_tasks),
+    }
+    task_run_config = TaskRunConfig.from_dict(task_run_dict)
+
+    full_task_name_list = list(
+        {task_name for task_list in task_run_dict.values() for task_name in task_list}
+    )
+    task_config_path_dict = {
+        task_name: os.path.join(args.task_config_base_path, f"{task_name}_config.json")
+        for task_name in full_task_name_list
+    }
+    task_dict = create_task_dict(task_config_dict=task_config_path_dict, verbose=True)
+
+    task_cache_config_dict = {}
+    for task_name in full_task_name_list:
+        task_cache_config_dict[task_name] = {}
+        if task_name in task_run_config.train_task_list:
+            task_cache_config_dict[task_name]["train"] = os.path.join(
+                args.task_cache_base_path, task_name, "train",
+            )
+        if (
+            task_name in task_run_config.train_val_task_list
+            or task_name in task_run_config.val_task_list
+        ):
+            task_cache_config_dict[task_name]["val"] = os.path.join(
+                args.task_cache_base_path, task_name, "val",
+            )
+            task_cache_config_dict[task_name]["val_labels"] = os.path.join(
+                args.task_cache_base_path, task_name, "val_labels",
+            )
+        if task_name in task_run_config.test_task_list:
+            task_cache_config_dict[task_name]["test"] = os.path.join(
+                args.task_cache_base_path, task_name, "test",
+            )
+    task_cache_dict = create_task_cache_dict(task_cache_config_dict=task_cache_config_dict)
+
+    batch_size_set_dict = {
+        "base": {
+            "mnli": 16,
+            "ccg": 16,
+            "squadv1": 16,
+            "cosmosqa": 8,
+            "rte": 16,
+            "cola": 16,
+            "boolq": 1,
+            "wic": 1,
+        }
+    }
+    max_steps = 0
+    num_examples_dict = {}
+    task_specific_configs_dict = {}
+    for task_name in task_run_config.train_task_list:
+        batch_size = batch_size_set_dict[args.batch_size_set][task_name]
+        assert args.effective_batch_size % batch_size == 0
+        gradient_accumulation_steps = args.effective_batch_size // batch_size
+        num_examples = get_num_examples_from_cache(
+            cache_path=os.path.expandvars(task_cache_config_dict[task_name]["train"]),
+        )
+        num_examples_dict[task_name] = num_examples
+        max_steps += args.epochs * math.ceil(num_examples / args.effective_batch_size)
+        task_specific_configs_dict[task_name] = {
+            "train_batch_size": batch_size,
+            "eval_batch_size": batch_size * args.eval_batch_multiplier,
+            "gradient_accumulation_steps": gradient_accumulation_steps,
+            "eval_subset_num": 500,
+        }
+
+    task_specific_config = create_task_specific_configs(
+        task_specific_configs_dict=task_specific_configs_dict,
+    )
+    if args.max_steps is not None:
+        max_steps = args.max_steps
+    global_train_config = GlobalTrainConfig.from_dict(
+        {"max_steps": int(max_steps), "warmup_steps": int(max_steps * args.warmup_steps_proportion)}
+    )
+
+    taskmodels_config = TaskmodelsConfig.from_dict(
+        {
+            "task_to_taskmodel_map": {task_name: task_name for task_name in full_task_name_list},
+            "taskmodel_config_map": {task_name: None for task_name in full_task_name_list},
+        }
+    )
+
+    metric_aggregator = jiant_task_sampler.create_metric_aggregator(
+        {"metric_aggregator_type": "EqualMetricAggregator"}
+    )
+
+    if args.sampler_type == "ProportionalMultiTaskSampler":
+        sampler_config = {
+            "sampler_type": args.sampler_type,
+        }
+    task_sampler = jiant_task_sampler.create_task_sampler(
+        sampler_config=sampler_config,
+        task_dict={
+            task_name: task_dict[task_name] for task_name in task_run_config.train_task_list
+        },
+        task_to_num_examples_dict=num_examples_dict,
+    )
+
+    return JiantTaskContainer(
+        task_dict=task_dict,
+        task_cache_dict=task_cache_dict,
+        task_sampler=task_sampler,
+        global_train_config=global_train_config,
+        task_specific_configs=task_specific_config,
+        taskmodels_config=taskmodels_config,
+        task_run_config=task_run_config,
+        metrics_aggregator=metric_aggregator,
+    )

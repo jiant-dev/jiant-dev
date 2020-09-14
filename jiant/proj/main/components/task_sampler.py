@@ -1,6 +1,8 @@
 import abc
 import numexpr
 import numpy as np
+import torch.nn as nn
+import torch
 
 from typing import Union, Optional, Dict
 
@@ -85,6 +87,71 @@ class TemperatureMultiTaskSampler(BaseMultiTaskSampler):
     def pop(self):
         task_name = self.rng.choice(self.task_names, p=self.task_p)
         return task_name, self.task_dict[task_name]
+
+
+class MetaLearningMixSampler(BaseMultiTaskSampler):
+    def __init__(
+        self,
+        task_dict: dict,
+        rng: Union[int, np.random.RandomState],
+        target_task: str,
+        mix_ratio: float,
+        exclude_target: True,
+    ):
+        super().__init__(task_dict=task_dict, rng=rng)
+        self.target_task = target_task
+        self.mix_ratio = mix_ratio
+        self.task_names = [
+            key for key in task_dict.keys() if not exclude_target or key != self.target_task
+        ]
+
+    def pop(self):
+        task_name = self.rng.choice(self.task_names)
+        return task_name, self.task_dict[task_name]
+
+
+class MultiDDSSampler(BaseMultiTaskSampler):
+    def __init__(
+        self,
+        task_dict: dict,
+        rng: Union[int, np.random.RandomState],
+        task_to_num_examples_dict: dict,
+        target_task: str,
+        sampler_lr: float,
+        sampler_update_steps: int,
+    ):
+        super().__init__(task_dict=task_dict, rng=rng)
+        self.sampler_weight = nn.Parameter(torch.zeros(len(task_dict)))
+        try:
+            self.sampler_weight = self.sampler_weight.cuda()
+        except Exception:
+            pass
+        raw_n = torch.FloatTensor([task_to_num_examples_dict[k] for k in self.task_names])
+        self.sampler_weight.data = torch.log(raw_n)
+        self.sampler_weight.data -= torch.mean(self.sampler_weight.data)
+        self.sampler_optimizer = torch.optim.Adam([self.sampler_weight], self.sampler_lr)
+        self.sampler_update_steps = sampler_update_steps
+
+    def task_p(self):
+        return torch.softmax(self.sampler_weight, dim=0)
+
+    def pop(self):
+        task_name = self.rng.choice(self.task_names, p=self.task_p.numpy())
+        return task_name, self.task_dict[task_name]
+
+    def update_sampler(self, choice: torch.LongTensor, reward: torch.FloatTensor):
+        try:
+            choice = choice.cuda()
+        except Exception:
+            pass
+        mean_reward = reward.mean()
+        for step in range(self.sampler_update_steps):
+            rl_loss = -(self.task_p()[choice] * (reward - mean_reward)).mean()
+            mean_reward = self.task_p()[choice] * reward
+            rl_loss.backward()
+            self.sampler_optimizer.step()
+            self.sampler_optimizer.zero_grad()
+        return
 
 
 class TimeDependentProbMultiTaskSampler(BaseMultiTaskSampler):
@@ -198,6 +265,24 @@ def create_task_sampler(
                 "task_to_unnormalized_prob_funcs_dict"
             ],
             max_steps=sampler_config["max_steps"],
+        )
+    elif sampler_type == "MetaLearningMixSampler":
+        assert len(sampler_config) == 3
+        return MetaLearningMixSampler(
+            task_dict=task_dict,
+            rng=rng,
+            target_task=sampler_config["target_task"],
+            mix_ratio=sampler_config["mix_ratio"],
+        )
+    elif sampler_type == "MultiDDSSampler":
+        assert len(sampler_config) == 3
+        return MultiDDSSampler(
+            task_dict=task_dict,
+            rng=rng,
+            task_to_num_examples_dict=task_to_num_examples_dict,
+            target_task=sampler_config["target_task"],
+            sampler_lr=1e-4,
+            sampler_update_steps=1000,
         )
     else:
         raise KeyError(sampler_type)

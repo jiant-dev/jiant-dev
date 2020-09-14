@@ -2,6 +2,8 @@ from typing import Dict
 from dataclasses import dataclass
 
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 import jiant.tasks.evaluate as evaluate
 import jiant.utils.torch_utils as torch_utils
@@ -16,6 +18,7 @@ from jiant.shared.runner import (
 from jiant.utils.display import maybe_tqdm
 from jiant.utils.python.datastructures import InfiniteYield, ExtendedDataClassMixin
 
+import higher
 
 @dataclass
 class RunnerParameters(ExtendedDataClassMixin):
@@ -235,6 +238,326 @@ class JiantRunner:
     def load_state(self, runner_state):
         torch_utils.get_model_for_saving(self.jiant_model).load_state_dict(runner_state["model"])
         self.optimizer_scheduler.optimizer.load_state_dict(runner_state["optimizer"])
+
+
+class ReptileRunner(JiantRunner):
+    def __init__(self, inner_steps, num_sampled_tasks, **kwarg):
+        super().__init__(**kwarg)
+        self.inner_steps = inner_steps
+        self.num_sampled_tasks = num_sampled_tasks
+
+    def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
+        self.jiant_model.train()
+        task_name, task = self.jiant_task_container.task_sampler.pop()
+        task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
+
+        self.optimizer_scheduler.optimizer.inner_begin()
+
+        loss_val = 0
+        for step in range(self.inner_steps):
+            for idx_task in range(self.num_sampled_tasks):
+                for i in range(task_specific_config.gradient_accumulation_steps):
+                    batch, batch_metadata = train_dataloader_dict[task_name].pop()
+                    batch = batch.to(self.device)
+                    model_output = wrap_jiant_forward(
+                        jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
+                    )
+                    loss = self.complex_backpropagate(
+                        loss=model_output.loss,
+                        gradient_accumulation_steps=task_specific_config.gradient_accumulation_steps,
+                    )
+                    loss_val += loss.item()
+
+            self.optimizer_scheduler.optimizer.inner_step()
+        self.optimizer_scheduler.optimizer.inner_end()
+
+        self.optimizer_scheduler.step()
+        self.optimizer_scheduler.optimizer.zero_grad()
+
+        train_state.step(task_name=task_name)
+        self.log_writer.write_entry(
+            "loss_train",
+            {
+                "task": task_name,
+                "task_step": train_state.task_steps[task_name],
+                "global_step": train_state.global_steps,
+                "loss_val": loss_val
+                / task_specific_config.gradient_accumulation_steps
+                / self.num_sampled_tasks
+                / self.inner_steps,
+            },
+        )
+
+
+class MultiDDSRunner(JiantRunner):
+    def __init__(self, sampler_update_freq, target_task, **kwarg):
+        super().__init__(**kwarg)
+        self.sampler_update_freq = sampler_update_freq
+        self.target_task
+
+    def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
+        self.jiant_model.train()
+        task_name, task = self.jiant_task_container.task_sampler.pop()
+        task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
+
+        def run_one_batch(task_name, task):
+            task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
+            loss_val = 0
+            for i in range(task_specific_config.gradient_accumulation_steps):
+                batch, batch_metadata = train_dataloader_dict[task_name].pop()
+                batch = batch.to(self.device)
+                model_output = wrap_jiant_forward(
+                    jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
+                )
+                loss = self.complex_backpropagate(
+                    loss=model_output.loss,
+                    gradient_accumulation_steps=task_specific_config.gradient_accumulation_steps,
+                )
+                loss_val += loss.item()
+            return loss_val
+
+        loss_val = run_one_batch(task_name, task)
+        self.optimizer_scheduler.step()
+        self.optimizer_scheduler.optimizer.zero_grad()
+
+        train_state.step(task_name=task_name)
+        if train_state.global_steps % self.sampler_update_freq == 0:
+            _ = run_one_batch(
+                self.target_task,
+                self.jiant_task_container.task_sampler.task_dict[self.target_task],
+            )
+            target_grad = self.optimizer_scheduler.optimizer.get_shared_grad(copy=True)
+            self.optimizer_scheduler.optimizer.zero_grad()
+
+            task_choice = []
+            task_grad_sim = []
+            for task_idx, (task_name, task) in enumerate(
+                self.jiant_task_container.task_sampler.task_dict.items()
+            ):
+                _ = run_one_batch(task_name, task,)
+                auxillary_grad = self.optimizer_scheduler.optimizer.get_shared_grad(copy=False)
+                task_choice.append(task_idx)
+                task_grad_sim = self.optimizer_scheduler.optimizer.grad_sim(
+                    target_grad, auxillary_grad, reduce=True
+                )
+                self.optimizer_scheduler.optimizer.zero_grad()
+            self.task_sampler.update_sampler(
+                torch.LongTensor(task_choice), torch.cat(task_grad_sim, dim=0)
+            )
+        self.log_writer.write_entry(
+            "loss_train",
+            {
+                "task": task_name,
+                "task_step": train_state.task_steps[task_name],
+                "global_step": train_state.global_steps,
+                "loss_val": loss_val / task_specific_config.gradient_accumulation_steps,
+            },
+        )
+
+
+class DistillationRunner(JiantRunner):
+    def __init__(self, t_total, teacher_jiant_model, **kwarg):
+        super().__init__(**kwarg)
+        self.teacher_jiant_model = teacher_jiant_model
+        for p in self.teacher_jiant_model.parameters():
+            p.requires_grad = False
+        self.t_total = t_total
+
+    def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
+        self.jiant_model.train()
+        task_name, task = self.jiant_task_container.task_sampler.pop()
+        task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
+
+        loss_val = 0
+        for i in range(task_specific_config.gradient_accumulation_steps):
+            batch, batch_metadata = train_dataloader_dict[task_name].pop()
+            batch = batch.to(self.device)
+            model_output = wrap_jiant_forward(
+                jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
+            )
+            teacher_model_output = wrap_jiant_forward(
+                jiant_model=self.teacher_jiant_model, batch=batch, task=task, compute_loss=True,
+            )
+            teacher_prediction = torch.softmax(teacher_model_output.logits)
+            mixing_weight = train_state.global_steps / self.t_total
+            from jiant.tasks.core import TaskTypes
+
+            gt_prediction = torch.zeros_like(teacher_prediction)
+            if task.TASK_TYPE == TaskTypes.SPAN_COMPARISON_CLASSIFICATION:
+                # TODO: run the program, print tensor shapes
+                raise NotImplementedError
+            elif task.TASK_TYPE == TaskTypes.CLASSIFICATION:
+                raise NotImplementedError
+            elif task.TASK_TYPE == TaskTypes.SQUAD_STYLE_QA:
+                raise NotImplementedError
+            elif task.TASK_TYPE == TaskTypes.TAGGING:
+                raise NotImplementedError
+
+            mixed_prediction = (
+                1 - mixing_weight
+            ) * teacher_prediction + mixing_weight * gt_prediction
+            loss = self.complex_backpropagate(
+                loss=torch.sum(mixed_prediction * torch.logsoftmax(model_output.logits, dim=-1)),
+                gradient_accumulation_steps=task_specific_config.gradient_accumulation_steps,
+            )
+            loss_val += loss.item()
+
+        self.optimizer_scheduler.step()
+        self.optimizer_scheduler.optimizer.zero_grad()
+
+        train_state.step(task_name=task_name)
+        self.log_writer.write_entry(
+            "loss_train",
+            {
+                "task": task_name,
+                "task_step": train_state.task_steps[task_name],
+                "global_step": train_state.global_steps,
+                "loss_val": loss_val / task_specific_config.gradient_accumulation_steps,
+            },
+        )
+
+
+class L2TWWRunner(JiantRunner):
+    def __init__(self, teacher_jiant_model,
+                 hidden_size, teacher_num_layers, student_num_layers, meta_optim_params, **kwarg):
+        super().__init__(**kwarg)
+        self.teacher_jiant_model = teacher_jiant_model
+        for p in self.teacher_jiant_model.parameters():
+            p.requires_grad = False
+        self.what_where_net = self.MetaWhatAndWhere(hidden_size, teacher_num_layers, student_num_layers)
+        self.meta_optimizer = torch.optim.Adam(self.what_where_net.parameters(), lr=meta_optim_params['lr'])
+
+    class WhatNetwork(nn.Module):
+        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+            super().__init__()
+            self.hidden_size = hidden_size
+            self.teacher_num_layers = teacher_num_layers
+            self.student_num_layers = student_num_layers
+
+            # WeightNet (l, hidden* num_target_layers) for all l in source
+            # outputs = softmax across hidden for all pairs
+            self.what_network_linear = []
+            for i in range(teacher_num_layers):
+                self.what_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers * self.hidden_size))
+
+        def forward(self, teacher_states):
+            # TODO: compute L_wfm
+            outputs = []
+            for i in range(len(teacher_states)):
+                out = self.what_network_linear[i](teacher_states[i])
+                out = out.reshape(self.student_num_layers, self.hidden_size)
+                out = F.softmax(out, 1)
+                outputs.extend(out)
+
+            return outputs
+
+    class WhereNetwork(nn.Module):
+        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+            super().__init__()
+            self.hidden_size = hidden_size
+            self.teacher_num_layers = teacher_num_layers
+            self.student_num_layers = student_num_layers
+
+            # LossWeightNet (l, num_target_layers) for all l in source
+            # outputs => lambdas[0,..., num_pairs]
+            self.where_network_linear = []
+            for i in range(teacher_num_layers):
+                self.where_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers))
+
+        def forward(self, teacher_states):
+            # TODO: compute L_wfm
+            outputs = []
+            for i in range(self.teacher_num_layers):
+                out = F.relu(self.where_network_linear[i](teacher_states[i])).squeeze()
+                outputs.extend(out)
+            return outputs
+
+    class MetaWhatAndWhere(nn.Module):
+        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+            super().__init__()
+            self.what_network = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
+            self.where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
+
+        def forward(self, teacher_states, student_states):
+            # TODO: compute L_wfm
+            weights = self.what_network(teacher_states)
+            loss_weights = self.where_network(teacher_states)
+            matching_loss = self.what_where_net(teacher_states, student_states, weights,
+                                                loss_weights)
+
+            matching_loss = 0.0
+            for m in range(len(teacher_states)):
+                for n in range(len(student_states)):
+                    # diff = teacher_states[m] - self.gammas[n](student_states[n])
+                    diff = (teacher_states[m] - student_states[n]).pow(2)  # BSZ * Hidden * SEQ_LEN
+                    diff = diff.mean(3).mean(2)
+                    diff = (diff.mul(weights[m][n]).sum(1) * loss_weights[m][n]).mean(0)
+                matching_loss += diff
+            return matching_loss
+
+    def run_inner_loop(self,  meta_batches, task, inner_steps=1):
+        self.teacher_jiant_model.eval()
+        with higher.innerloop_ctx(self.jiant_model, self.optimizer_scheduler.optimizer) as (fmodel, diffopt):
+            for batch in meta_batches:
+                for inner_idx in range(inner_steps):
+                    model_output = wrap_jiant_forward(
+                        jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
+                    )
+
+                    teacher_model_output = wrap_jiant_forward(
+                        jiant_model=self.teacher_jiant_model, batch=batch, task=task, compute_loss=True,
+                    )
+
+                    beta = 0.5
+                    matching_loss = self.what_where_net(teacher_model_output.other[0], model_output.other[0])
+                    total_inner_loss = model_output.loss + matching_loss * beta
+                    diffopt.step(total_inner_loss)
+                outer_model_output = wrap_jiant_forward(
+                        jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
+                    )
+                outer_loss = outer_model_output.loss
+                outer_loss.backward()
+                self.meta_optimizer.step()
+
+
+    def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
+
+        # TODO: modify this to
+        self.jiant_model.train()
+        task_name, task = self.jiant_task_container.task_sampler.pop()
+        task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
+
+        loss_val = 0
+
+        meta_batches = []
+        for i in range(task_specific_config.gradient_accumulation_steps):
+            batch, batch_metadata = train_dataloader_dict[task_name].pop()
+            batch = batch.to(self.device)
+            meta_batches.append(batch_metadata.to(self.device))
+            model_output = wrap_jiant_forward(
+                jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
+            )
+            loss = self.complex_backpropagate(
+                loss=model_output.loss,
+                gradient_accumulation_steps=task_specific_config.gradient_accumulation_steps,
+            )
+            loss_val += loss.item()
+
+        self.optimizer_scheduler.step()
+        self.optimizer_scheduler.optimizer.zero_grad()
+
+        run_inner_loop(meta_batches, task)
+
+        train_state.step(task_name=task_name)
+        self.log_writer.write_entry(
+            "loss_train",
+            {
+                "task": task_name,
+                "task_step": train_state.task_steps[task_name],
+                "global_step": train_state.global_steps,
+                "loss_val": loss_val / task_specific_config.gradient_accumulation_steps,
+            },
+        )
 
 
 class CheckpointSaver:

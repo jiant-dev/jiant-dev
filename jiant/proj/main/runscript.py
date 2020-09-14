@@ -18,8 +18,22 @@ import jiant.utils.zconf as zconf
 @zconf.run_config
 class RunConfiguration(zconf.RunConfig):
     # === Required parameters === #
-    jiant_task_container_config_path = zconf.attr(type=str, required=True)
     output_dir = zconf.attr(type=str, required=True)
+
+    # === Task container parameters === #
+    task_config_base_path = zconf.attr(type=str, default=None)
+    task_cache_base_path = zconf.attr(type=str, default=None)
+    train_tasks = zconf.attr(type=str, default=None)
+    train_val_tasks = zconf.attr(type=str, default=None)
+    val_tasks = zconf.attr(type=str, default=None)
+    test_tasks = zconf.attr(type=str, default=None)
+    batch_size_set = zconf.attr(type=str, default="base")
+    effective_batch_size = zconf.attr(type=int, default=16)
+    eval_batch_multiplier = zconf.attr(type=int, default=2)
+    epochs = zconf.attr(type=int, default=None)
+    max_steps = zconf.attr(type=int, default=None)
+    warmup_steps_proportion = zconf.attr(type=float, default=0.1)
+    sampler_type = zconf.attr(type=str, default="ProportionalMultiTaskSampler")
 
     # === Model parameters === #
     model_type = zconf.attr(type=str, required=True)
@@ -56,6 +70,23 @@ class RunConfiguration(zconf.RunConfig):
     server_ip = zconf.attr(default="", type=str)
     server_port = zconf.attr(default="", type=str)
 
+    # New args in transfer methods
+    architecture = zconf.attr(default="default", type=str)
+    source_task = zconf.attr(default="", type=str)
+    target_task = zconf.attr(default="", type=str)
+    adapter_fusion_attention_fusion = zconf.attr(action="store_true")
+    adapter_fusion_freeze_transformer = zconf.attr(action="store_true")
+    adapter_fusion_freeze_adapters = zconf.attr(action="store_true")
+    sluice_task_a = zconf.attr(default="", type=str)
+    sluice_task_b = zconf.attr(default="", type=str)
+    transnorm_replacement = zconf.attr(action="store_true")
+    transnorm_update_rate = zconf.attr(default=0.1, type=float)
+    transnorm_skip = zconf.attr(action="store_true")
+    weight_regularization_type = zconf.attr(default="", type=str)
+    weight_regularization_coef = zconf.attr(default=0.0, type=float)
+    # optimizer settings
+    # trainer settings
+
 
 @zconf.run_config
 class ResumeConfiguration(zconf.RunConfig):
@@ -67,6 +98,7 @@ def setup_runner(
     jiant_task_container: container_setup.JiantTaskContainer,
     quick_init_out,
     verbose: bool = True,
+    type: str = "l2tww",
 ) -> jiant_runner.JiantRunner:
     """Setup jiant model, optimizer, and runner, and return runner.
 
@@ -75,6 +107,7 @@ def setup_runner(
         jiant_task_container (container_setup.JiantTaskContainer): task and sampler configs.
         quick_init_out (QuickInitContainer): device (GPU/CPU) and logging configuration.
         verbose: If True, enables printing configuration info (to standard out).
+        type (str): Jiant model type
 
     Returns:
         jiant_runner.JiantRunner
@@ -89,11 +122,14 @@ def setup_runner(
             tokenizer_path=args.model_tokenizer_path,
             task_dict=jiant_task_container.task_dict,
             taskmodels_config=jiant_task_container.taskmodels_config,
+            global_args=args,
         )
         jiant_model_setup.delegate_load_from_path(
             jiant_model=jiant_model, weights_path=args.model_path, load_mode=args.model_load_mode
         )
         jiant_model.to(quick_init_out.device)
+
+    teacher_jiant_model = copy.deepcopy(jiant_model)
 
     optimizer_scheduler = model_setup.create_optimizer(
         model=jiant_model,
@@ -119,14 +155,34 @@ def setup_runner(
         fp16=args.fp16,
         max_grad_norm=args.max_grad_norm,
     )
-    runner = jiant_runner.JiantRunner(
-        jiant_task_container=jiant_task_container,
-        jiant_model=jiant_model,
-        optimizer_scheduler=optimizer_scheduler,
-        device=quick_init_out.device,
-        rparams=rparams,
-        log_writer=quick_init_out.log_writer,
-    )
+
+    if type == "l2tww":
+        hidden_size=jiant_model.encoder.hidden_size
+        student_num_layers=jiant_model.encoder.num_hidden_layers
+        teacher_num_layers=teacher_jiant_model.encoder.num_hidden_layers
+
+        runner = jiant_runner.JiantRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+            teacher_jiant_model=teacher_jiant_model,
+            hidden_size=hidden_size,
+            teacher_num_layers=teacher_num_layers,
+            student_num_layers=student_num_layers,
+            meta_optim_params={"lr":args.learning_rate},
+        )
+    else:
+        runner = jiant_runner.JiantRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+        )
     return runner
 
 
@@ -135,9 +191,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
     quick_init_out = initialization.quick_init(args=args, verbose=True)
     print(quick_init_out.n_gpu)
     with quick_init_out.log_writer.log_context():
-        jiant_task_container = container_setup.create_jiant_task_container_from_json(
-            jiant_task_container_config_path=args.jiant_task_container_config_path, verbose=True,
-        )
+        jiant_task_container = container_setup.create_jiant_task_container_from_args(args)
         runner = setup_runner(
             args=args,
             jiant_task_container=jiant_task_container,

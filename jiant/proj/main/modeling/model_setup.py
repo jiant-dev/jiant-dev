@@ -4,12 +4,14 @@ from typing import Any, Dict, List, Optional
 import torch
 import torch.nn as nn
 import transformers
+import json
 
 
 import jiant.proj.main.components.container_setup as container_setup
 import jiant.proj.main.modeling.primary as primary
 import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.proj.main.modeling.heads as heads
+import jiant.proj.main.modeling.modules as modules
 import jiant.shared.model_setup as model_setup
 import jiant.utils.python.strings as strings
 from jiant.shared.model_setup import ModelArchitectures
@@ -22,6 +24,7 @@ def setup_jiant_model(
     tokenizer_path: str,
     task_dict: Dict[str, Task],
     taskmodels_config: container_setup.TaskmodelsConfig,
+    global_args,
 ):
     """Sets up tokenizer, encoder, and task models, and instantiates and returns a JiantModel.
 
@@ -43,6 +46,14 @@ def setup_jiant_model(
         transformers_class_spec=transformers_class_spec, model_config_path=model_config_path,
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
+    if global_args.transnorm_replacement:
+        modules.replace_layernorm_with_transnorm(
+            encoder=encoder.encoder,
+            num_layers=encoder.config.num_hidden_layers,
+            task_names=task_dict.keys(),
+            transnorm_update_rate=global_args.transnorm_update_rate,
+            transnorm_skip=global_args.transnorm_skip,
+        )
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
             task=task_dict[task_name_list[0]],  # Take the first task
@@ -54,13 +65,45 @@ def setup_jiant_model(
             taskmodels_config.task_to_taskmodel_map
         ).items()
     }
-    return primary.JiantModel(
-        task_dict=task_dict,
-        encoder=encoder,
-        taskmodels_dict=taskmodels_dict,
-        task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
-        tokenizer=tokenizer,
-    )
+
+    def maybe_load_json(json_string):
+        if json_string != "none":
+            return json.loads(json_string)
+        else:
+            return None
+
+    if global_args.architecture == "default":
+        return primary.JiantModel(
+            task_dict=task_dict,
+            encoder=encoder,
+            taskmodels_dict=taskmodels_dict,
+            task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
+            tokenizer=tokenizer,
+            global_args=global_args,
+        )
+    elif global_args.architecture == "adapterfusion":
+        return primary.JiantModelWithAdapterFusion(
+            task_dict=task_dict,
+            encoder=encoder,
+            taskmodels_dict=taskmodels_dict,
+            task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
+            tokenizer=tokenizer,
+            global_args=global_args,
+            attention_fusion=global_args.adapter_fusion_attention_fusion,
+            freeze_transformer=global_args.adapter_fusion_freeze_transformer,
+            freeze_adapters=global_args.adapter_fusion_freeze_adapters,
+        )
+    elif global_args.architecture == "sluice":
+        return primary.JiantModelWithSluice(
+            task_dict=task_dict,
+            encoder=encoder,
+            taskmodels_dict=taskmodels_dict,
+            task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
+            tokenizer=tokenizer,
+            global_args=global_args,
+            task_a=global_args.source_task,
+            task_b=global_args.target_task,
+        )
 
 
 def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, load_mode: str):
@@ -75,8 +118,16 @@ def delegate_load_from_path(jiant_model: primary.JiantModel, weights_path: str, 
         TODO: return behavior is not consistent between load_mode options, clarify as needed here.
 
     """
-    weights_dict = torch.load(weights_path)
-    return delegate_load(jiant_model=jiant_model, weights_dict=weights_dict, load_mode=load_mode)
+    if "," in weights_path:
+        weights_paths = weights_path.split(",")
+        load_modes = load_mode.split(",")
+        assert len(weights_paths) == len(load_modes)
+    else:
+        weights_paths = [weights_path]
+        load_modes = [load_mode]
+    for weights_path, load_mode in zip(weights_paths, load_modes):
+        weights_dict = torch.load(weights_path)
+        delegate_load(jiant_model=jiant_model, weights_dict=weights_dict, load_mode=load_mode)
 
 
 def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
@@ -103,6 +154,18 @@ def delegate_load(jiant_model, weights_dict: dict, load_mode: str):
             jiant_model=jiant_model, weights_dict=remainder,
         )
         return
+    elif load_mode == "from_adapters":
+        adapter_weights = {key: weight for key, weight in weights_dict.items() if "adapters" in key}
+        jiant_model.load_state_dict(adapter_weights, strict=False)
+    elif load_mode == "encoder_for_sluice":
+        weights_dict_dup = {
+            key.replace("encoder.encoder.layer", f"encoder.encoder.layer_{side}"): weight
+            for key, weight in weights_dict.items()
+            if "encoder.encoder.layer" in key
+            for side in ["a", "b"]
+        }
+        weights_dict.update(weights_dict_dup)
+        jiant_model.load_state_dict(weights_dict, strict=False)
     elif load_mode == "all":
         jiant_model.load_state_dict(weights_dict)
     elif load_mode == "partial_weights":
@@ -150,7 +213,7 @@ def load_encoder_from_transformers_weights(
             load_weights_dict[strings.remove_prefix(k, encoder_prefix)] = v
         else:
             remainder_weights_dict[k] = v
-    encoder.load_state_dict(load_weights_dict)
+    encoder.load_state_dict(load_weights_dict, strict=False)
     if return_remainder:
         return remainder_weights_dict
 

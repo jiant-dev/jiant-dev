@@ -1,10 +1,13 @@
 from typing import Dict, Union
-
+import copy
+import torch
 import torch.nn as nn
 
 import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.tasks as tasks
 from jiant.proj.main.components.outputs import construct_output_from_dict
+import jiant.shared.task_aware_unit as tau
+import jiant.proj.main.modeling.modules as jiantmodules
 
 
 class JiantModel(nn.Module):
@@ -15,6 +18,7 @@ class JiantModel(nn.Module):
         taskmodels_dict: Dict[str, taskmodels.Taskmodel],
         task_to_taskmodel_map: Dict[str, str],
         tokenizer,
+        global_args,
     ):
         super().__init__()
         self.task_dict = task_dict
@@ -22,6 +26,11 @@ class JiantModel(nn.Module):
         self.taskmodels_dict = nn.ModuleDict(taskmodels_dict)
         self.task_to_taskmodel_map = task_to_taskmodel_map
         self.tokenizer = tokenizer
+        self.weight_regularization_type = global_args.weight_regularization_type
+        self.weight_regularization_coef = global_args.weight_regularization_coef
+        if self.weight_regularization_type == "EWC":
+            self.saved_weights = copy.deepcopy(list(self.encoder.encoder.parameters()))
+        self.model_taus = tau.create_tau_dict(list(self.named_modules()))
 
     def forward(self, batch: tasks.BatchMixin, task: tasks.Task, compute_loss: bool = False):
         """Calls to this forward method are delegated to the forward of the appropriate taskmodel.
@@ -48,9 +57,73 @@ class JiantModel(nn.Module):
             task = task
         taskmodel_key = self.task_to_taskmodel_map[task_name]
         taskmodel = self.taskmodels_dict[taskmodel_key]
-        return taskmodel(
+        tau.set_tau_task(self.model_taus, task_name)
+        outputs = taskmodel(
             batch=batch, task=task, tokenizer=self.tokenizer, compute_loss=compute_loss,
         ).to_dict()
+        if compute_loss and self.compute_weight_regularization() is not None:
+            outputs["loss"] = outputs["loss"] + self.compute_weight_regularization()
+        return outputs
+
+    def compute_weight_regularization(self):
+        if self.weight_regularization_type == "EWC":
+            diff_norm = [
+                (p - q).pow(2).sum()
+                for p, q in zip(self.encoder.encoder.parameters(), self.saved_weights)
+            ]
+            return self.weight_regularization_coef * sum(diff_norm)
+        else:
+            return None
+
+
+class JiantModelWithAdapterFusion(JiantModel):
+    def __init__(self, attention_fusion, freeze_transformer=False, freeze_adapters=False, **kwargs):
+        super().__init__(**kwargs)
+        for i, layer in enumerate(self.encoder.encoder.layer):
+            if attention_fusion:
+                self.encoder.encoder.layer[i].output = jiantmodules.BertOutputWithAdapterFusion(
+                    layer.output,
+                    self.task_dict.keys(),
+                    self.encoder.config.hidden_size,
+                    reduction_factor=16,
+                    non_linearity="relu",
+                )
+            else:
+                self.encoder.encoder.layer[i].output = jiantmodules.BertOutputWithAdapter(
+                    layer.output,
+                    self.task_dict.keys(),
+                    self.encoder.config.hidden_size,
+                    reduction_factor=16,
+                    non_linearity="relu",
+                )
+
+        if freeze_transformer:
+            for p in self.parameters():
+                p.requires_grad = False
+        if not freeze_adapters:
+            for layer in self.encoder.encoder.layer:
+                for p in layer.output.adapters.parameters():
+                    p.requires_grad = True
+        if attention_fusion:
+            for layer in self.encoder.encoder.layer:
+                for p in (
+                    layer.output.key_layer.parameters()
+                    + layer.output.value_layer.parameters()
+                    + layer.output.query_layer.parameters()
+                ):
+                    p.requires_grad = True
+
+        self.model_taus = tau.create_tau_dict(list(self.named_modules()))
+
+
+class JiantModelWithSluice(JiantModel):
+    def __init__(self, task_a, task_b, **kwargs):
+        super().__init__(**kwargs)
+        self.task_a = task_a
+        self.task_b = task_b
+        self.encoder.encoder = jiantmodules.SluiceEncoder(
+            self.encoder.encoder, self.encoder.config, self.task_a, self.task_b
+        )
 
 
 def wrap_jiant_forward(
