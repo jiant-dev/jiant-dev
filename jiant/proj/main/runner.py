@@ -424,7 +424,10 @@ class L2TWWRunner(JiantRunner):
         self.teacher_jiant_model = teacher_jiant_model
         for p in self.teacher_jiant_model.parameters():
             p.requires_grad = False
-        self.what_where_net = self.MetaWhatAndWhere(hidden_size, teacher_num_layers, student_num_layers)
+        what_net = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
+        where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
+        self.what_where_net = self.MetaWhatAndWhere(what_net, where_network) #hidden_size, teacher_num_layers, student_num_layers)
+        import pdb; pdb.set_trace()
         self.meta_optimizer = torch.optim.Adam(self.what_where_net.parameters(), lr=meta_optim_params['lr'])
 
     class WhatNetwork(nn.Module):
@@ -433,12 +436,13 @@ class L2TWWRunner(JiantRunner):
             self.hidden_size = hidden_size
             self.teacher_num_layers = teacher_num_layers
             self.student_num_layers = student_num_layers
-
+            print("initiazliging what:")
             # WeightNet (l, hidden* num_target_layers) for all l in source
             # outputs = softmax across hidden for all pairs
             self.what_network_linear = []
             for i in range(teacher_num_layers):
                 self.what_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers * self.hidden_size))
+            self.what_network_linear = nn.ModuleList(self.what_network_linear)
 
         def forward(self, teacher_states):
             # TODO: compute L_wfm
@@ -463,6 +467,8 @@ class L2TWWRunner(JiantRunner):
             self.where_network_linear = []
             for i in range(teacher_num_layers):
                 self.where_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers))
+            self.where_network_linear = nn.ModuleList(self.where_network_linear)
+
 
         def forward(self, teacher_states):
             # TODO: compute L_wfm
@@ -473,10 +479,12 @@ class L2TWWRunner(JiantRunner):
             return outputs
 
     class MetaWhatAndWhere(nn.Module):
-        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+        def __init__(self, what_network, where_network): #hidden_size, teacher_num_layers, student_num_layers):
             super().__init__()
-            self.what_network = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
-            self.where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
+            self.what_network = what_network
+            self.where_network = where_network
+            #self.what_network = L2TWWRunner.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
+            #self.where_network = L2TWWRunner.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
 
         def forward(self, teacher_states, student_states):
             # TODO: compute L_wfm

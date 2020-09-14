@@ -13,7 +13,7 @@ import jiant.shared.model_setup as model_setup
 import jiant.utils.torch_utils as torch_utils
 import jiant.utils.python.io as py_io
 import jiant.utils.zconf as zconf
-
+import copy
 
 @zconf.run_config
 class RunConfiguration(zconf.RunConfig):
@@ -156,12 +156,12 @@ def setup_runner(
         max_grad_norm=args.max_grad_norm,
     )
 
-    if type == "l2tww":
-        hidden_size=jiant_model.encoder.hidden_size
-        student_num_layers=jiant_model.encoder.num_hidden_layers
-        teacher_num_layers=teacher_jiant_model.encoder.num_hidden_layers
+    if type != "l2tww":
+        hidden_size=vars(jiant_model.encoder)["config"].hidden_size
+        student_num_layers=vars(jiant_model.encoder)["config"].num_hidden_layers
+        teacher_num_layers=vars(teacher_jiant_model.encoder)["config"].num_hidden_layers
 
-        runner = jiant_runner.JiantRunner(
+        runner = jiant_runner.L2TWWRunner(
             jiant_task_container=jiant_task_container,
             jiant_model=jiant_model,
             optimizer_scheduler=optimizer_scheduler,
