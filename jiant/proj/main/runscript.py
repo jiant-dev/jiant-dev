@@ -98,6 +98,7 @@ def setup_runner(
     jiant_task_container: container_setup.JiantTaskContainer,
     quick_init_out,
     verbose: bool = True,
+    type: str = "l2tww",
 ) -> jiant_runner.JiantRunner:
     """Setup jiant model, optimizer, and runner, and return runner.
 
@@ -106,6 +107,7 @@ def setup_runner(
         jiant_task_container (container_setup.JiantTaskContainer): task and sampler configs.
         quick_init_out (QuickInitContainer): device (GPU/CPU) and logging configuration.
         verbose: If True, enables printing configuration info (to standard out).
+        type (str): Jiant model type
 
     Returns:
         jiant_runner.JiantRunner
@@ -151,14 +153,30 @@ def setup_runner(
         fp16=args.fp16,
         max_grad_norm=args.max_grad_norm,
     )
-    runner = jiant_runner.JiantRunner(
-        jiant_task_container=jiant_task_container,
-        jiant_model=jiant_model,
-        optimizer_scheduler=optimizer_scheduler,
-        device=quick_init_out.device,
-        rparams=rparams,
-        log_writer=quick_init_out.log_writer,
-    )
+
+    if type == "l2tww":
+        runner = jiant_runner.JiantRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+            teacher_jiant_model=teacher_jiant_model,
+            hidden_size=hidden_size,
+            teacher_num_layers=teacher_num_layers,
+            student_num_layers=student_num_layers,
+            meta_optim_params={"lr":args.learning_rate},
+        )
+    else:
+        runner = jiant_runner.JiantRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+        )
     return runner
 
 

@@ -418,13 +418,14 @@ class DistillationRunner(JiantRunner):
 
 
 class L2TWWRunner(JiantRunner):
-    def __init__(self, teacher_jiant_model, meta_optimizer_scheduler, **kwarg):
+    def __init__(self, teacher_jiant_model,
+                 hidden_size, teacher_num_layers, student_num_layers, meta_optim_params, **kwarg):
         super().__init__(**kwarg)
         self.teacher_jiant_model = teacher_jiant_model
         for p in self.teacher_jiant_model.parameters():
             p.requires_grad = False
         self.what_where_net = self.MetaWhatAndWhere(hidden_size, teacher_num_layers, student_num_layers)
-        self.meta_optimizer = meta_optimizer_scheduler
+        self.meta_optimizer = torch.optim.Adam(self.what_where_net.parameters(), lr=meta_optim_params['lr'])
 
     class WhatNetwork(nn.Module):
         def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
