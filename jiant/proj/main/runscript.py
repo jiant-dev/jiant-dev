@@ -129,6 +129,8 @@ def setup_runner(
         )
         jiant_model.to(quick_init_out.device)
 
+    teacher_jiant_model = copy.deepcopy(jiant_model)
+
     optimizer_scheduler = model_setup.create_optimizer(
         model=jiant_model,
         learning_rate=args.learning_rate,
@@ -155,6 +157,10 @@ def setup_runner(
     )
 
     if type == "l2tww":
+        hidden_size=jiant_model.encoder.hidden_size
+        student_num_layers=jiant_model.encoder.num_hidden_layers
+        teacher_num_layers=teacher_jiant_model.encoder.num_hidden_layers
+
         runner = jiant_runner.JiantRunner(
             jiant_task_container=jiant_task_container,
             jiant_model=jiant_model,

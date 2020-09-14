@@ -497,7 +497,7 @@ class L2TWWRunner(JiantRunner):
 
     def run_inner_loop(self,  meta_batches, task, inner_steps=1):
         self.teacher_jiant_model.eval()
-        with higher.innerloop_ctx(self.jiant_model, optimizer) as (fmodel, diffopt):
+        with higher.innerloop_ctx(self.jiant_model, self.optimizer_scheduler.optimizer) as (fmodel, diffopt):
             for batch in meta_batches:
                 for inner_idx in range(inner_steps):
                     model_output = wrap_jiant_forward(

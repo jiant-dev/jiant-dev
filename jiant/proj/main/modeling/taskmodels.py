@@ -26,7 +26,8 @@ class ClassificationModel(Taskmodel):
         self.classification_head = classification_head
 
     def forward(self, batch, task, tokenizer, compute_loss: bool = False):
-        encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
+        with transformer_utils.output_hidden_states_context(self.encoder):
+            encoder_output = get_output_from_encoder_and_batch(encoder=self.encoder, batch=batch)
         logits = self.classification_head(pooled=encoder_output.pooled)
         if compute_loss:
             loss_fct = nn.CrossEntropyLoss()
