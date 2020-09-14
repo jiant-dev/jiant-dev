@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4d8a6bef-aaa6-4d84-9244-47b7d2599b2e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/jiant/proj/main/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/jiant/proj/main/runner.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1h0xir01VOhEmNs9RllR4jUkbGM" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4d8a6bef-aaa6-4d84-9244-47b7d2599b2e" name="Default Changelist" comment="" />
+      <created>1599161941304</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1599161941304</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="385" y="190" width="670" height="676" key="search.everywhere.popup" timestamp="1599935218913">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="1953" y="228" width="894" height="812" key="search.everywhere.popup/0.0.1440.900/1440.0.1920.1080@1440.0.1920.1080" timestamp="1599597571168" />
+    <state x="385" y="190" width="670" height="676" key="search.everywhere.popup/0.0.1440.900@0.0.1440.900" timestamp="1599935218913" />
+    <state x="385" y="196" key="search.everywhere.popup/0.23.1440.820@0.23.1440.820" timestamp="1599162154479" />
+  </component>
+</project>

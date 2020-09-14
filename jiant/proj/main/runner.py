@@ -418,16 +418,13 @@ class DistillationRunner(JiantRunner):
 
 
 class L2TWWRunner(JiantRunner):
-    def __init__(self, teacher_jiant_model, **kwarg):
+    def __init__(self, teacher_jiant_model, meta_optimizer_scheduler, **kwarg):
         super().__init__(**kwarg)
         self.teacher_jiant_model = teacher_jiant_model
         for p in self.teacher_jiant_model.parameters():
             p.requires_grad = False
-        self.what_network = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
-        self.where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
-
-        self.what_where_net = self.MetaWhatAndWhere()
-        self.meta_optimizer = None
+        self.what_where_net = self.MetaWhatAndWhere(hidden_size, teacher_num_layers, student_num_layers)
+        self.meta_optimizer = meta_optimizer_scheduler
 
     class WhatNetwork(nn.Module):
         def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
@@ -438,15 +435,15 @@ class L2TWWRunner(JiantRunner):
 
             # WeightNet (l, hidden* num_target_layers) for all l in source
             # outputs = softmax across hidden for all pairs
-            self.what_network = []
+            self.what_network_linear = []
             for i in range(teacher_num_layers):
-                self.where_network.append(nn.Linear(self.hidden_size, self.student_num_layers * self.hidden_size))
+                self.what_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers * self.hidden_size))
 
         def forward(self, teacher_states):
             # TODO: compute L_wfm
             outputs = []
             for i in range(len(teacher_states)):
-                out = self.what_network[i](teacher_states[i])
+                out = self.what_network_linear[i](teacher_states[i])
                 out = out.reshape(self.student_num_layers, self.hidden_size)
                 out = F.softmax(out, 1)
                 outputs.extend(out)
@@ -462,27 +459,31 @@ class L2TWWRunner(JiantRunner):
 
             # LossWeightNet (l, num_target_layers) for all l in source
             # outputs => lambdas[0,..., num_pairs]
-            self.where_network = []
+            self.where_network_linear = []
             for i in range(teacher_num_layers):
-                self.where_network.append(nn.Linear(self.hidden_size, self.student_num_layers))
+                self.where_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers))
 
         def forward(self, teacher_states):
             # TODO: compute L_wfm
             outputs = []
             for i in range(self.teacher_num_layers):
-                out = F.relu(self.where_network[i](teacher_states[i])).squeeze()
+                out = F.relu(self.where_network_linear[i](teacher_states[i])).squeeze()
                 outputs.extend(out)
             return outputs
 
     class MetaWhatAndWhere(nn.Module):
-        def __init__(self):
+        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
             super().__init__()
-            # self.gammas = []
-            # for i in range(student_num_layers):
-            #    self.gammas.append(nn.Linear(self.hidden_size, 1))
+            self.what_network = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
+            self.where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
 
-        def forward(self, teacher_states, student_states, weights, loss_weights):
+        def forward(self, teacher_states, student_states):
             # TODO: compute L_wfm
+            weights = self.what_network(teacher_states)
+            loss_weights = self.where_network(teacher_states)
+            matching_loss = self.what_where_net(teacher_states, student_states, weights,
+                                                loss_weights)
+
             matching_loss = 0.0
             for m in range(len(teacher_states)):
                 for n in range(len(student_states)):
@@ -507,11 +508,7 @@ class L2TWWRunner(JiantRunner):
                     )
 
                     beta = 0.5
-
-                    weights = self.what_network(teacher_model_output.other[0])
-                    loss_weights = self.where_network(teacher_model_output.other[0])
-                    matching_loss = self.what_where_net(teacher_model_output.other[0], model_output.other[0], weights,
-                                                        loss_weights)
+                    matching_loss = self.what_where_net(teacher_model_output.other[0], model_output.other[0])
                     total_inner_loss = model_output.loss + matching_loss * beta
                     diffopt.step(total_inner_loss)
                 outer_model_output = wrap_jiant_forward(
@@ -520,7 +517,7 @@ class L2TWWRunner(JiantRunner):
                 outer_loss = outer_model_output.loss
                 outer_loss.backward()
                 self.meta_optimizer.step()
-        raise NotImplementedError
+
 
     def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
 
