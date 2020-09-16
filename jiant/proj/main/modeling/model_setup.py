@@ -356,7 +356,11 @@ def create_taskmodel(
                 vocab_size=encoder.config.vocab_size,
                 layer_norm_eps=encoder.config.layer_norm_eps,
             )
-        elif model_arch in (ModelArchitectures.BART, ModelArchitectures.MBART, ModelArchitectures.ELECTRA):
+        elif model_arch in (
+            ModelArchitectures.BART,
+            ModelArchitectures.MBART,
+            ModelArchitectures.ELECTRA,
+        ):
             raise NotImplementedError()
         else:
             raise KeyError(model_arch)

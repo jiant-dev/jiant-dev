@@ -347,13 +347,11 @@ def get_output_from_bart_models(encoder, input_ids, input_mask):
     # sentence representation is the final decoder state.
     # That's what we use for `unpooled` here.
     dec_last, dec_all, enc_last, enc_all = encoder(
-        input_ids=input_ids,
-        attention_mask=input_mask,
-        output_hidden_states=True,
+        input_ids=input_ids, attention_mask=input_mask, output_hidden_states=True,
     )
     unpooled = dec_last
 
-    other = (enc_all+dec_all,)
+    other = (enc_all + dec_all,)
 
     bsize, slen = input_ids.shape
     batch_idx = torch.arange(bsize).to(input_ids.device)
