@@ -231,7 +231,7 @@ class SimpleAPIMultiTaskConfigurator(zconf.RunConfig):
         else:
             sampler_config = {
                 "sampler_type": "SpecifiedProbMultiTaskSampler",
-                "task_to_unweighted_probs": capped_num_examples_dict,
+                "task_to_unnormalized_probs": capped_num_examples_dict,
             }
 
         # === Build configuration === #

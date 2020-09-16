@@ -18,7 +18,7 @@ class JiantModel(nn.Module):
         taskmodels_dict: Dict[str, taskmodels.Taskmodel],
         task_to_taskmodel_map: Dict[str, str],
         tokenizer,
-        global_args,
+        args,
     ):
         super().__init__()
         self.task_dict = task_dict
@@ -26,8 +26,8 @@ class JiantModel(nn.Module):
         self.taskmodels_dict = nn.ModuleDict(taskmodels_dict)
         self.task_to_taskmodel_map = task_to_taskmodel_map
         self.tokenizer = tokenizer
-        self.weight_regularization_type = global_args.weight_regularization_type
-        self.weight_regularization_coef = global_args.weight_regularization_coef
+        self.weight_regularization_type = args.weight_regularization_type
+        self.weight_regularization_coef = args.weight_regularization_coef
         if self.weight_regularization_type == "EWC":
             self.saved_weights = copy.deepcopy(list(self.encoder.encoder.parameters()))
         self.model_taus = tau.create_tau_dict(list(self.named_modules()))
@@ -107,9 +107,9 @@ class JiantModelWithAdapterFusion(JiantModel):
         if attention_fusion:
             for layer in self.encoder.encoder.layer:
                 for p in (
-                    layer.output.key_layer.parameters()
-                    + layer.output.value_layer.parameters()
-                    + layer.output.query_layer.parameters()
+                    list(layer.output.key_layer.parameters())
+                    + list(layer.output.value_layer.parameters())
+                    + list(layer.output.query_layer.parameters())
                 ):
                     p.requires_grad = True
 
@@ -117,13 +117,18 @@ class JiantModelWithAdapterFusion(JiantModel):
 
 
 class JiantModelWithSluice(JiantModel):
-    def __init__(self, task_a, task_b, **kwargs):
+    def __init__(self, task_a, task_b, sluice_num_subspaces, sluice_init_var, **kwargs):
         super().__init__(**kwargs)
-        self.task_a = task_a
-        self.task_b = task_b
         self.encoder.encoder = jiantmodules.SluiceEncoder(
-            self.encoder.encoder, self.encoder.config, self.task_a, self.task_b
+            self.encoder.encoder,
+            self.encoder.config,
+            task_a,
+            task_b,
+            sluice_num_subspaces,
+            sluice_init_var,
         )
+
+        self.model_taus = tau.create_tau_dict(list(self.named_modules()))
 
 
 def wrap_jiant_forward(

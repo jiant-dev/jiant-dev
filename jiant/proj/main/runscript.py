@@ -33,7 +33,13 @@ class RunConfiguration(zconf.RunConfig):
     epochs = zconf.attr(type=int, default=None)
     max_steps = zconf.attr(type=int, default=None)
     warmup_steps_proportion = zconf.attr(type=float, default=0.1)
-    sampler_type = zconf.attr(type=str, default="ProportionalMultiTaskSampler")
+    sampler_type = zconf.attr(type=str, default="proportional_sampler")
+    prob_sampler_task_probs = zconf.attr(type=str, default="")
+    temperature_sampler_temperature = zconf.attr(type=float, default=1.0)
+    temperature_sampler_examples_cap = zconf.attr(type=float, default=10000)
+    time_func_sampler_task_probs = zconf.attr(type=str, default="")
+    multidds_sampler_lr = zconf.attr(type=float, default=1e-4)
+    multidds_sampler_update_steps = zconf.attr(type=int, default=1000)
 
     # === Model parameters === #
     model_type = zconf.attr(type=str, required=True)
@@ -55,6 +61,7 @@ class RunConfiguration(zconf.RunConfig):
     delete_checkpoint_if_done = zconf.attr(action="store_true")
     force_overwrite = zconf.attr(action="store_true")
     seed = zconf.attr(type=int, default=-1)
+    multiple_checkpoints = zconf.attr(action="store_true")
 
     # === Training Learning Parameters === #
     learning_rate = zconf.attr(default=1e-5, type=float)
@@ -72,20 +79,25 @@ class RunConfiguration(zconf.RunConfig):
 
     # New args in transfer methods
     architecture = zconf.attr(default="default", type=str)
-    source_task = zconf.attr(default="", type=str)
-    target_task = zconf.attr(default="", type=str)
     adapter_fusion_attention_fusion = zconf.attr(action="store_true")
     adapter_fusion_freeze_transformer = zconf.attr(action="store_true")
     adapter_fusion_freeze_adapters = zconf.attr(action="store_true")
     sluice_task_a = zconf.attr(default="", type=str)
     sluice_task_b = zconf.attr(default="", type=str)
+    sluice_num_subspaces = zconf.attr(default=4, type=int)
+    sluice_init_var = zconf.attr(default=0.02, type=float)
     transnorm_replacement = zconf.attr(action="store_true")
     transnorm_update_rate = zconf.attr(default=0.1, type=float)
     transnorm_skip = zconf.attr(action="store_true")
     weight_regularization_type = zconf.attr(default="", type=str)
     weight_regularization_coef = zconf.attr(default=0.0, type=float)
-    # optimizer settings
-    # trainer settings
+    runner_type = zconf.attr(default="default", type=str)
+    reptile_inner_steps = zconf.attr(default=5, type=int)
+    reptile_num_sampled_tasks = zconf.attr(default=8, type=int)
+    multidds_samper_update_freq = zconf.attr(default=1000, type=int)
+    multidds_target_task = zconf.attr(default="", type=str)
+    grad_sim_metric = zconf.attr(default="cos", type=str)
+    grad_sim_nonlinear = zconf.attr(default="")
 
 
 @zconf.run_config
@@ -120,7 +132,7 @@ def setup_runner(
             tokenizer_path=args.model_tokenizer_path,
             task_dict=jiant_task_container.task_dict,
             taskmodels_config=jiant_task_container.taskmodels_config,
-            global_args=args,
+            args=args,
         )
         jiant_model_setup.delegate_load_from_path(
             jiant_model=jiant_model, weights_path=args.model_path, load_mode=args.model_load_mode
@@ -128,6 +140,7 @@ def setup_runner(
         jiant_model.to(quick_init_out.device)
 
     optimizer_scheduler = model_setup.create_optimizer(
+        args=args,
         model=jiant_model,
         learning_rate=args.learning_rate,
         t_total=jiant_task_container.global_train_config.max_steps,
@@ -151,14 +164,43 @@ def setup_runner(
         fp16=args.fp16,
         max_grad_norm=args.max_grad_norm,
     )
-    runner = jiant_runner.JiantRunner(
-        jiant_task_container=jiant_task_container,
-        jiant_model=jiant_model,
-        optimizer_scheduler=optimizer_scheduler,
-        device=quick_init_out.device,
-        rparams=rparams,
-        log_writer=quick_init_out.log_writer,
-    )
+    if args.runner_type == "default":
+        runner = jiant_runner.JiantRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+        )
+    elif args.runner_type == "reptile":
+        runner = jiant_runner.ReptileRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+            inner_steps=args.reptile_inner_steps,
+            num_sampled_tasks=args.reptile_num_sampled_tasks,
+        )
+    elif args.runner_type == "multidds":
+        runner = jiant_runner.MultiDDSRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+            sampler_update_freq=args.multidds_samper_update_freq,
+            target_task=args.multidds_target_task,
+        )
+    elif args.runner_type == "grad_sim":
+        raise NotImplementedError
+    elif args.runner_type == "distill":
+        raise NotImplementedError
+    elif args.runner_type == "l2tww":
+        raise NotImplementedError
     return runner
 
 
@@ -179,7 +221,8 @@ def run_loop(args: RunConfiguration, checkpoint=None):
             del checkpoint["runner_state"]
         checkpoint_saver = jiant_runner.CheckpointSaver(
             metadata={"args": args.to_dict()},
-            save_path=os.path.join(args.output_dir, "checkpoint.p"),
+            output_dir=args.output_dir,
+            multiple_checkpoints=args.multiple_checkpoints,
         )
         if args.do_train:
             metarunner = jiant_metarunner.JiantMetarunner(

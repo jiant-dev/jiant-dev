@@ -51,14 +51,16 @@ class SpecifiedProbMultiTaskSampler(BaseMultiTaskSampler):
         self,
         task_dict: dict,
         rng: Union[int, np.random.RandomState],
-        task_to_unweighted_probs: dict,
+        task_to_unnormalized_probs: dict,
     ):
         super().__init__(task_dict=task_dict, rng=rng)
-        assert task_dict.keys() == task_to_unweighted_probs.keys()
-        self.task_to_unweighted_probs = task_to_unweighted_probs
-        self.task_names = list(task_to_unweighted_probs.keys())
-        self.unweighted_probs_arr = np.array([task_to_unweighted_probs[k] for k in self.task_names])
-        self.task_p = self.unweighted_probs_arr / self.unweighted_probs_arr.sum()
+        assert task_dict.keys() == task_to_unnormalized_probs.keys()
+        self.task_to_unnormalized_probs = task_to_unnormalized_probs
+        self.task_names = list(task_to_unnormalized_probs.keys())
+        self.unnormalized_probs_arr = np.array(
+            [task_to_unnormalized_probs[k] for k in self.task_names]
+        )
+        self.task_p = self.unnormalized_probs_arr / self.unnormalized_probs_arr.sum()
 
     def pop(self):
         task_name = self.rng.choice(self.task_names, p=self.task_p)
@@ -89,54 +91,32 @@ class TemperatureMultiTaskSampler(BaseMultiTaskSampler):
         return task_name, self.task_dict[task_name]
 
 
-class MetaLearningMixSampler(BaseMultiTaskSampler):
-    def __init__(
-        self,
-        task_dict: dict,
-        rng: Union[int, np.random.RandomState],
-        target_task: str,
-        mix_ratio: float,
-        exclude_target: True,
-    ):
-        super().__init__(task_dict=task_dict, rng=rng)
-        self.target_task = target_task
-        self.mix_ratio = mix_ratio
-        self.task_names = [
-            key for key in task_dict.keys() if not exclude_target or key != self.target_task
-        ]
-
-    def pop(self):
-        task_name = self.rng.choice(self.task_names)
-        return task_name, self.task_dict[task_name]
-
-
 class MultiDDSSampler(BaseMultiTaskSampler):
     def __init__(
         self,
         task_dict: dict,
         rng: Union[int, np.random.RandomState],
         task_to_num_examples_dict: dict,
-        target_task: str,
         sampler_lr: float,
         sampler_update_steps: int,
     ):
         super().__init__(task_dict=task_dict, rng=rng)
-        self.sampler_weight = nn.Parameter(torch.zeros(len(task_dict)))
-        try:
-            self.sampler_weight = self.sampler_weight.cuda()
-        except Exception:
-            pass
-        raw_n = torch.FloatTensor([task_to_num_examples_dict[k] for k in self.task_names])
-        self.sampler_weight.data = torch.log(raw_n)
-        self.sampler_weight.data -= torch.mean(self.sampler_weight.data)
-        self.sampler_optimizer = torch.optim.Adam([self.sampler_weight], self.sampler_lr)
+        with torch.no_grad():
+            raw_n = torch.FloatTensor([task_to_num_examples_dict[k] for k in self.task_dict],)
+            if torch.cuda.is_available():
+                raw_n = raw_n.cuda()
+            log_n = torch.log(raw_n) - torch.mean(torch.log(raw_n))
+            self.sampler_weight = log_n.detach()
+            self.sampler_weight.requires_grad = True
+        self.sampler_optimizer = torch.optim.Adam([self.sampler_weight], sampler_lr)
         self.sampler_update_steps = sampler_update_steps
+        self.task_names = list(task_dict.keys())
 
     def task_p(self):
         return torch.softmax(self.sampler_weight, dim=0)
 
     def pop(self):
-        task_name = self.rng.choice(self.task_names, p=self.task_p.numpy())
+        task_name = self.rng.choice(self.task_names, p=self.task_p().detach().cpu().numpy())
         return task_name, self.task_dict[task_name]
 
     def update_sampler(self, choice: torch.LongTensor, reward: torch.FloatTensor):
@@ -232,22 +212,22 @@ def create_task_sampler(
 
     """
     sampler_type = sampler_config["sampler_type"]
-    if sampler_type == "UniformMultiTaskSampler":
+    if sampler_type == "uniform_sampler":
         assert len(sampler_config) == 1
         return UniformMultiTaskSampler(task_dict=task_dict, rng=rng)
-    elif sampler_type == "ProportionalMultiTaskSampler":
+    elif sampler_type == "proportional_sampler":
         assert len(sampler_config) == 1
         return ProportionalMultiTaskSampler(
             task_dict=task_dict, rng=rng, task_to_num_examples_dict=task_to_num_examples_dict,
         )
-    elif sampler_type == "SpecifiedProbMultiTaskSampler":
+    elif sampler_type == "prob_sampler":
         assert len(sampler_config) == 2
         return SpecifiedProbMultiTaskSampler(
             task_dict=task_dict,
             rng=rng,
-            task_to_unweighted_probs=sampler_config["task_to_unweighted_probs"],
+            task_to_unnormalized_probs=sampler_config["task_to_unnormalized_probs"],
         )
-    elif sampler_type == "TemperatureMultiTaskSampler":
+    elif sampler_type == "temperature_sampler":
         assert len(sampler_config) == 3
         return TemperatureMultiTaskSampler(
             task_dict=task_dict,
@@ -256,7 +236,7 @@ def create_task_sampler(
             temperature=sampler_config["temperature"],
             examples_cap=sampler_config["examples_cap"],
         )
-    elif sampler_type == "TimeDependentProbMultiTaskSampler":
+    elif sampler_type == "time_func_sampler":
         assert len(sampler_config) == 3
         return TimeDependentProbMultiTaskSampler(
             task_dict=task_dict,
@@ -266,23 +246,14 @@ def create_task_sampler(
             ],
             max_steps=sampler_config["max_steps"],
         )
-    elif sampler_type == "MetaLearningMixSampler":
-        assert len(sampler_config) == 3
-        return MetaLearningMixSampler(
-            task_dict=task_dict,
-            rng=rng,
-            target_task=sampler_config["target_task"],
-            mix_ratio=sampler_config["mix_ratio"],
-        )
-    elif sampler_type == "MultiDDSSampler":
+    elif sampler_type == "multidds_sampler":
         assert len(sampler_config) == 3
         return MultiDDSSampler(
             task_dict=task_dict,
             rng=rng,
             task_to_num_examples_dict=task_to_num_examples_dict,
-            target_task=sampler_config["target_task"],
-            sampler_lr=1e-4,
-            sampler_update_steps=1000,
+            sampler_lr=sampler_config["sampler_lr"],
+            sampler_update_steps=sampler_config["sampler_update_steps"],
         )
     else:
         raise KeyError(sampler_type)

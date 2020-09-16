@@ -24,7 +24,7 @@ def setup_jiant_model(
     tokenizer_path: str,
     task_dict: Dict[str, Task],
     taskmodels_config: container_setup.TaskmodelsConfig,
-    global_args,
+    args,
 ):
     """Sets up tokenizer, encoder, and task models, and instantiates and returns a JiantModel.
 
@@ -46,13 +46,13 @@ def setup_jiant_model(
         transformers_class_spec=transformers_class_spec, model_config_path=model_config_path,
     )
     encoder = get_encoder(model_arch=model_arch, ancestor_model=ancestor_model)
-    if global_args.transnorm_replacement:
+    if args.transnorm_replacement:
         modules.replace_layernorm_with_transnorm(
             encoder=encoder.encoder,
             num_layers=encoder.config.num_hidden_layers,
             task_names=task_dict.keys(),
-            transnorm_update_rate=global_args.transnorm_update_rate,
-            transnorm_skip=global_args.transnorm_skip,
+            transnorm_update_rate=args.transnorm_update_rate,
+            transnorm_skip=args.transnorm_skip,
         )
     taskmodels_dict = {
         taskmodel_name: create_taskmodel(
@@ -72,37 +72,39 @@ def setup_jiant_model(
         else:
             return None
 
-    if global_args.architecture == "default":
+    if args.architecture == "default":
         return primary.JiantModel(
             task_dict=task_dict,
             encoder=encoder,
             taskmodels_dict=taskmodels_dict,
             task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
             tokenizer=tokenizer,
-            global_args=global_args,
+            args=args,
         )
-    elif global_args.architecture == "adapterfusion":
+    elif args.architecture == "adapterfusion":
         return primary.JiantModelWithAdapterFusion(
             task_dict=task_dict,
             encoder=encoder,
             taskmodels_dict=taskmodels_dict,
             task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
             tokenizer=tokenizer,
-            global_args=global_args,
-            attention_fusion=global_args.adapter_fusion_attention_fusion,
-            freeze_transformer=global_args.adapter_fusion_freeze_transformer,
-            freeze_adapters=global_args.adapter_fusion_freeze_adapters,
+            args=args,
+            attention_fusion=args.adapter_fusion_attention_fusion,
+            freeze_transformer=args.adapter_fusion_freeze_transformer,
+            freeze_adapters=args.adapter_fusion_freeze_adapters,
         )
-    elif global_args.architecture == "sluice":
+    elif args.architecture == "sluice":
         return primary.JiantModelWithSluice(
             task_dict=task_dict,
             encoder=encoder,
             taskmodels_dict=taskmodels_dict,
             task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
             tokenizer=tokenizer,
-            global_args=global_args,
-            task_a=global_args.source_task,
-            task_b=global_args.target_task,
+            args=args,
+            task_a=args.sluice_task_a,
+            task_b=args.sluice_task_b,
+            sluice_num_subspaces=args.sluice_num_subspaces,
+            sluice_init_var=args.sluice_init_var,
         )
 
 

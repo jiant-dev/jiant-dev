@@ -1,6 +1,6 @@
 from typing import Dict
 from dataclasses import dataclass
-
+import os
 import torch
 import torch.nn as nn
 
@@ -249,7 +249,7 @@ class ReptileRunner(JiantRunner):
         task_name, task = self.jiant_task_container.task_sampler.pop()
         task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
 
-        self.optimizer_scheduler.optimizer.inner_begin()
+        self.optimizer_scheduler.inner_begin()
 
         loss_val = 0
         for step in range(self.inner_steps):
@@ -266,8 +266,8 @@ class ReptileRunner(JiantRunner):
                     )
                     loss_val += loss.item()
 
-            self.optimizer_scheduler.optimizer.inner_step()
-        self.optimizer_scheduler.optimizer.inner_end()
+            self.optimizer_scheduler.inner_step()
+        self.optimizer_scheduler.inner_end()
 
         self.optimizer_scheduler.step()
         self.optimizer_scheduler.optimizer.zero_grad()
@@ -291,7 +291,7 @@ class MultiDDSRunner(JiantRunner):
     def __init__(self, sampler_update_freq, target_task, **kwarg):
         super().__init__(**kwarg)
         self.sampler_update_freq = sampler_update_freq
-        self.target_task
+        self.target_task = target_task
 
     def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
         self.jiant_model.train()
@@ -324,7 +324,7 @@ class MultiDDSRunner(JiantRunner):
                 self.target_task,
                 self.jiant_task_container.task_sampler.task_dict[self.target_task],
             )
-            target_grad = self.optimizer_scheduler.optimizer.get_shared_grad(copy=True)
+            target_grad = self.optimizer_scheduler.get_shared_grad(copy=True)
             self.optimizer_scheduler.optimizer.zero_grad()
 
             task_choice = []
@@ -333,9 +333,9 @@ class MultiDDSRunner(JiantRunner):
                 self.jiant_task_container.task_sampler.task_dict.items()
             ):
                 _ = run_one_batch(task_name, task,)
-                auxillary_grad = self.optimizer_scheduler.optimizer.get_shared_grad(copy=False)
+                auxillary_grad = self.optimizer_scheduler.get_shared_grad(copy=False)
                 task_choice.append(task_idx)
-                task_grad_sim = self.optimizer_scheduler.optimizer.grad_sim(
+                task_grad_sim = self.optimizer_scheduler.grad_sim(
                     target_grad, auxillary_grad, reduce=True
                 )
                 self.optimizer_scheduler.optimizer.zero_grad()
@@ -470,9 +470,11 @@ class L2TWWRunner(JiantRunner):
 
 
 class CheckpointSaver:
-    def __init__(self, metadata, save_path):
+    def __init__(self, metadata, output_dir, multiple_checkpoints):
         self.metadata = metadata
-        self.save_path = save_path
+        self.output_dir = output_dir
+        self.multiple_checkpoints = multiple_checkpoints
+        self.save_count = 0
 
     def save(self, runner_state: dict, metarunner_state: dict):
         to_save = {
@@ -480,7 +482,12 @@ class CheckpointSaver:
             "metarunner_state": metarunner_state,
             "metadata": self.metadata,
         }
-        torch_utils.safe_save(to_save, self.save_path)
+        if self.multiple_checkpoints:
+            save_path = os.path.join(self.output_dir, f"checkpoint_{self.save_count}.p")
+            self.save_count += 1
+        else:
+            save_path = os.path.join(self.output_dir, "checkpoint.p")
+        torch_utils.safe_save(to_save, save_path)
 
 
 def run_val(

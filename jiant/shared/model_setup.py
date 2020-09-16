@@ -1,9 +1,9 @@
 import transformers
 import torch
+from copy import deepcopy
 
 from jiant.ext.radam import RAdam
 from jiant.shared.model_resolution import ModelArchitectures, resolve_tokenizer_class
-import jiant.shared.task_aware_unit as tau
 
 
 def get_tokenizer(model_type, tokenizer_path):
@@ -61,15 +61,46 @@ class OptimizerScheduler:
         self.scheduler.load_state_dict(state_dict["scheduler"], strict=strict)
 
 
-class OptimizerSchedulerWithGradSim(tau.TauMixin, OptimizerScheduler):
-    def __init__(self, **kwargs):
-        super.__init__(**kwargs)
+class OptimizerSchedulerWithGradOps(OptimizerScheduler):
+    def __init__(self, grad_sim_metric, grad_sim_nonlinear, **kwargs):
+        super().__init__(**kwargs)
+        self.grad_sim_metric = grad_sim_metric
+        self.grad_sim_nonlinear = grad_sim_nonlinear
 
-    def step(self):
-        raise NotImplementedError
+    def get_shared_grad(self, copy=False):
+        shared_param_grad = [
+            [p.grad for p in g["param"]] if g["shared"] else []
+            for g in self.optimizer.param_groups()
+        ]
+        if copy:
+            shared_param_grad = deepcopy(shared_param_grad)
+        return shared_param_grad
+
+    def grad_sim(self, grad_a, grad_b):
+        if self.grad_sim_metric == "cos":
+            norm_a = torch.sqrt(sum([torch.sum(p * p) for g in grad_a for p in g]))
+            norm_b = torch.sqrt(sum([torch.sum(p * p) for g in grad_b for p in g]))
+            a_dot_b = sum(
+                [
+                    torch.sum(p_a * p_b)
+                    for g_a, g_b in zip(grad_a, grad_b)
+                    for p_a, p_b in zip(g_a, g_b)
+                ]
+            )
+            grad_sim = a_dot_b / norm_a / norm_b
+        elif self.grad_sim_metric == "fisher":
+            raise NotImplementedError
+        else:
+            raise KeyError(self.grad_sim_metric)
+
+        if self.grad_sim_nonlinear == "":
+            return grad_sim
+        elif self.grad_sim_nonlinear == "step":
+            return grad_sim > 0
 
 
 def create_optimizer(
+    args,
     model,
     learning_rate,
     t_total,
@@ -80,6 +111,7 @@ def create_optimizer(
     verbose=False,
 ):
     return create_optimizer_from_params(
+        args=args,
         named_parameters=list(model.named_parameters()),
         learning_rate=learning_rate,
         t_total=t_total,
@@ -92,6 +124,7 @@ def create_optimizer(
 
 
 def create_optimizer_from_params(
+    args,
     named_parameters,
     learning_rate,
     t_total,
@@ -110,6 +143,8 @@ def create_optimizer_from_params(
         "adapter.down_project.weight",
         "adapter.up_project.weight",
         "weighted_sum.weights",
+        "task_sharing",
+        "layer_sharing",
     ]
     if verbose:
         print("No optimizer decay for:")
@@ -117,12 +152,7 @@ def create_optimizer_from_params(
             if any(nd in n for nd in no_decay):
                 print(f"  {n}")
 
-    used_named_parameters = [
-        (n, p) for n, p in named_parameters if p.requires_grad and "weighted_sum.weights" not in n
-    ]
-    weighted_sum_params = [
-        (n, p) for n, p in named_parameters if p.requires_grad and "weighted_sum.weights" in n
-    ]
+    used_named_parameters = [(n, p) for n, p in named_parameters if p.requires_grad]
 
     optimizer_grouped_parameters = [
         {
@@ -173,11 +203,6 @@ def create_optimizer_from_params(
         if verbose:
             print("Using RAdam")
         optimizer = RAdam(optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon)
-    elif optimizer_type == "gradsim":
-        if verbose:
-            print("Using GradSimAdamW")
-        raise NotImplementedError
-        optimizer = GradSimAdamW()
     else:
         raise KeyError(optimizer_type)
 
@@ -188,12 +213,22 @@ def create_optimizer_from_params(
         scheduler = transformers.get_linear_schedule_with_warmup(
             optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
         )
-    elif scheduler_type == "gradsim":
-        raise NotImplementedError
-        scheduler = GradSimLinear()
     else:
         raise KeyError(scheduler_type)
-    optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
+
+    if args.runner_type in ["default", "distill"]:
+        optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
+    elif args.runner_type in ["multidds", "grad_sim"]:
+        optimizer_scheduler = OptimizerSchedulerWithGradOps(
+            optimizer=optimizer,
+            scheduler=scheduler,
+            grad_sim_metric=args.grad_sim_metric,
+            grad_sim_nonlinear=args.grad_sim_nonlinear,
+        )
+    elif args.runner_type == "reptile":
+        optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
+    else:
+        raise KeyError(args.runner_type)
     return optimizer_scheduler
 
 

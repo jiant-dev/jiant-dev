@@ -134,15 +134,17 @@ class BertOutputWithAdapterFusion(BertOutputWithAdapter):
         super().__init__(
             bert_output_layer, task_names, hidden_size, reduction_factor, non_linearity
         )
+
         self.key_layer = nn.Linear(hidden_size, hidden_size)
-        self.key_layer.weight.data.normal_(0, 0.02)
         self.query_layer = nn.Linear(hidden_size, hidden_size)
-        self.query_layer.weight.data.normal_(0, 0.02)
         self.value_layer = nn.Linear(hidden_size, hidden_size, bias=False)
-        self.value.weight.data = (
-            torch.zeros(int(hidden_size), int(hidden_size)) + 0.000001
-        ).fill_diagonal_(1.0)
         self.dropout = nn.Dropout(0.1)
+        with torch.no_grad():
+            self.key_layer.weight.data.normal_(0, 0.02)
+            self.query_layer.weight.data.normal_(0, 0.02)
+            self.value_layer.weight.copy_(
+                torch.zeros(int(hidden_size), int(hidden_size)) + 0.000001
+            ).fill_diagonal_(1.0)
 
     def forward(self, hidden_states, input_tensor, attention_mask=None):
         hidden_states = self.dense(hidden_states)
@@ -165,21 +167,25 @@ class BertOutputWithAdapterFusion(BertOutputWithAdapter):
 
 
 class SluiceEncoder(tau.TauMixin, nn.Module):
-    def __init__(self, bert_encoder, bert_config, task_a, task_b):
+    def __init__(
+        self, bert_encoder, bert_config, task_a, task_b, sluice_num_subspaces, sluice_init_var
+    ):
         super().__init__()
         self.layer_a = bert_encoder.layer
         self.layer_b = copy.deepcopy(self.layer_a)
         self.task_sharing = nn.ModuleList(
             [
-                SluiceTaskSharingUnit(bert_config.hidden_size, bert_config.num_attention_heads)
+                SluiceTaskSharingUnit(
+                    bert_config.hidden_size, sluice_num_subspaces, sluice_init_var
+                )
                 for i in range(bert_config.num_hidden_layers)
             ]
         )
         self.layer_sharing_a = SluiceLayerSharingUnit(
-            bert_config.num_hidden_layers, bert_config.hidden_size, bert_config.num_attention_heads
+            bert_config.num_hidden_layers, bert_config.hidden_size, sluice_num_subspaces
         )
         self.layer_sharing_b = SluiceLayerSharingUnit(
-            bert_config.num_hidden_layers, bert_config.hidden_size, bert_config.num_attention_heads
+            bert_config.num_hidden_layers, bert_config.hidden_size, sluice_num_subspaces
         )
         self.task_a = task_a
         self.task_b = task_b
@@ -198,7 +204,6 @@ class SluiceEncoder(tau.TauMixin, nn.Module):
         assert not output_attentions
         hidden_states_a = hidden_states_b = hidden_states
         all_hidden_states = (hidden_states,)
-        all_attentions = ()
         for i, (layer_module_a, layer_module_b) in enumerate(zip(self.layer_a, self.layer_b)):
 
             layer_outputs_a = layer_module_a(
@@ -221,37 +226,39 @@ class SluiceEncoder(tau.TauMixin, nn.Module):
                 all_hidden_states = all_hidden_states + (hidden_states_a,)
             elif self.tau_task_name == self.task_b:
                 all_hidden_states = all_hidden_states + (hidden_states_b,)
+            else:
+                assert False
 
             hidden_states_a, hidden_states_b = self.task_sharing[i](
-                layer_outputs_a[0], layer_outputs_b[0]
+                hidden_states_a, hidden_states_b
             )
 
         if self.tau_task_name == self.task_a:
             hidden_states = self.layer_sharing_a(all_hidden_states)
         elif self.tau_task_name == self.task_b:
             hidden_states = self.layer_sharing_b(all_hidden_states)
+        else:
+            assert False
 
         if not return_dict:
-            return tuple(
-                v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None
-            )
+            return tuple(v for v in [hidden_states, all_hidden_states] if v is not None)
 
         return transformers.modeling_bert.BaseModelOutput(
-            last_hidden_state=hidden_states,
-            hidden_states=all_hidden_states,
-            attentions=all_attentions,
+            last_hidden_state=hidden_states, hidden_states=all_hidden_states,
         )
 
 
 class SluiceTaskSharingUnit(nn.Module):
-    def __init__(self, hidden_size, num_subspaces):
+    def __init__(self, hidden_size, sluice_num_subspaces, sluice_init_var):
         super().__init__()
-        self.subspace_size = hidden_size // num_subspaces
-        self.exchange_matrix = nn.Parameter(torch.eye(num_subspaces * 2))
-        self.exchange_matrix.data.normal_(0, 0.02).fill_diagonal_(1)
+        self.subspace_size = hidden_size // sluice_num_subspaces
+        self.exchange_matrix = nn.Parameter(torch.eye(sluice_num_subspaces * 2))
+        self.exchange_matrix.data.normal_(0, sluice_init_var).fill_diagonal_(1)
         self.register_buffer(
             "channel_mask",
-            torch.eye(self.subspace_size).repeat(2 * num_subspaces, 2 * num_subspaces),
+            torch.eye(self.subspace_size).repeat(
+                2 * sluice_num_subspaces, 2 * sluice_num_subspaces
+            ),
         )
 
     def forward(self, input_a, input_b):
@@ -268,10 +275,10 @@ class SluiceTaskSharingUnit(nn.Module):
 
 
 class SluiceLayerSharingUnit(nn.Module):
-    def __init__(self, num_layers, hidden_size, num_subspaces):
+    def __init__(self, num_layers, hidden_size, sluice_num_subspaces):
         super().__init__()
-        self.subspace_size = hidden_size // num_subspaces
-        self.mix_matrix = nn.Parameter(torch.zeros(num_layers + 1, num_subspaces))
+        self.subspace_size = hidden_size // sluice_num_subspaces
+        self.mix_matrix = nn.Parameter(torch.zeros(num_layers + 1, sluice_num_subspaces))
         self.mix_matrix.data[-1] += 1
 
     def forward(self, all_layer_states):

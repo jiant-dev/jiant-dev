@@ -333,6 +333,8 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
     )
     if args.max_steps is not None:
         max_steps = args.max_steps
+    else:
+        args.max_steps = max_steps
     global_train_config = GlobalTrainConfig.from_dict(
         {"max_steps": int(max_steps), "warmup_steps": int(max_steps * args.warmup_steps_proportion)}
     )
@@ -348,10 +350,42 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
         {"metric_aggregator_type": "EqualMetricAggregator"}
     )
 
-    if args.sampler_type == "ProportionalMultiTaskSampler":
+    if args.sampler_type in ["proportional_sampler", "uniform_sampler"]:
         sampler_config = {
             "sampler_type": args.sampler_type,
         }
+    elif args.sampler_type == "prob_sampler":
+        sampler_config = {
+            "sampler_type": args.sampler_type,
+            "task_to_unnormalized_probs": {
+                term.split(":")[0]: float(term.split(":")[1])
+                for term in args.prob_sampler_task_probs.split(",")
+            },
+        }
+    elif args.sampler_type == "temperature_sampler":
+        sampler_config = {
+            "sampler_type": args.sampler_type,
+            "temperature": args.temperature_sampler_temperature,
+            "examples_cap": args.temperature_sampler_examples_cap,
+        }
+    elif args.sampler_type == "time_func_sampler":
+        sampler_config = {
+            "sampler_type": args.sampler_type,
+            "task_to_unnormalized_prob_funcs_dict": {
+                term.split(":")[0]: float(term.split(":")[1])
+                for term in args.time_func_sampler_task_probs.split(",")
+            },
+            "max_steps": args.max_steps,
+        }
+    elif args.sampler_type == "multidds_sampler":
+        sampler_config = {
+            "sampler_type": args.sampler_type,
+            "sampler_lr": args.multidds_sampler_lr,
+            "sampler_update_steps": args.multidds_sampler_update_steps,
+        }
+    else:
+        raise KeyError(args.sampler_type)
+
     task_sampler = jiant_task_sampler.create_task_sampler(
         sampler_config=sampler_config,
         task_dict={
