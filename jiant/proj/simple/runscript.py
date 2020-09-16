@@ -70,13 +70,11 @@ class RunConfiguration(zconf.RunConfig):
             self.train_tasks or self.val_tasks or self.test_tasks
         ), "Must include tasks or one of train_tasks, val_tasks, tests_tasks"
         if self.tasks and (self.train_tasks or self.val_tasks or self.test_tasks):
-            print(self.tasks)
-            print(self.train_tasks)
             assert (
                 ([self.tasks] == self.train_tasks)
                 and ([self.tasks] == self.val_tasks)
                 and ([self.tasks] == self.test_tasks)
-            ), "Can only specify tasks, or train_tasks/val_tasks/test_tasks"
+            ), "Tasks must be same as train_tasks/val_tasks/test_tasks if both are present"
         if self.tasks:
             self.train_tasks = self.tasks
             self.val_tasks = self.tasks
