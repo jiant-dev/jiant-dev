@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import os
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 import jiant.tasks.evaluate as evaluate
 import jiant.utils.torch_utils as torch_utils
@@ -17,6 +18,7 @@ from jiant.shared.runner import (
 from jiant.utils.display import maybe_tqdm
 from jiant.utils.python.datastructures import InfiniteYield, ExtendedDataClassMixin
 
+import higher
 
 @dataclass
 class RunnerParameters(ExtendedDataClassMixin):
@@ -416,23 +418,106 @@ class DistillationRunner(JiantRunner):
 
 
 class L2TWWRunner(JiantRunner):
-    def __init__(self, teacher_jiant_model, **kwarg):
+    def __init__(self, teacher_jiant_model, meta_optimizer_scheduler, **kwarg):
         super().__init__(**kwarg)
         self.teacher_jiant_model = teacher_jiant_model
         for p in self.teacher_jiant_model.parameters():
             p.requires_grad = False
+        self.what_where_net = self.MetaWhatAndWhere(hidden_size, teacher_num_layers, student_num_layers)
+        self.meta_optimizer = meta_optimizer_scheduler
 
-        class MetaWhatAndWhere(nn.Module):
-            def __init__(self, hidden_size, num_layers):
-                super().__init__()
-                self.hidden_size = hidden_size
-                self.num_layers = num_layers
-                self.what_network = nn.Linear(self.hidden_size, self.num_layers * self.hidden_size)
-                self.where_network = nn.Linear(self.hidden_size, self.num_layers)
+    class WhatNetwork(nn.Module):
+        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+            super().__init__()
+            self.hidden_size = hidden_size
+            self.teacher_num_layers = teacher_num_layers
+            self.student_num_layers = student_num_layers
 
-            def forward(self, teacher_states, student_states):
-                # TODO: compute L_wfm
-                raise NotImplementedError
+            # WeightNet (l, hidden* num_target_layers) for all l in source
+            # outputs = softmax across hidden for all pairs
+            self.what_network_linear = []
+            for i in range(teacher_num_layers):
+                self.what_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers * self.hidden_size))
+
+        def forward(self, teacher_states):
+            # TODO: compute L_wfm
+            outputs = []
+            for i in range(len(teacher_states)):
+                out = self.what_network_linear[i](teacher_states[i])
+                out = out.reshape(self.student_num_layers, self.hidden_size)
+                out = F.softmax(out, 1)
+                outputs.extend(out)
+
+            return outputs
+
+    class WhereNetwork(nn.Module):
+        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+            super().__init__()
+            self.hidden_size = hidden_size
+            self.teacher_num_layers = teacher_num_layers
+            self.student_num_layers = student_num_layers
+
+            # LossWeightNet (l, num_target_layers) for all l in source
+            # outputs => lambdas[0,..., num_pairs]
+            self.where_network_linear = []
+            for i in range(teacher_num_layers):
+                self.where_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers))
+
+        def forward(self, teacher_states):
+            # TODO: compute L_wfm
+            outputs = []
+            for i in range(self.teacher_num_layers):
+                out = F.relu(self.where_network_linear[i](teacher_states[i])).squeeze()
+                outputs.extend(out)
+            return outputs
+
+    class MetaWhatAndWhere(nn.Module):
+        def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
+            super().__init__()
+            self.what_network = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
+            self.where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
+
+        def forward(self, teacher_states, student_states):
+            # TODO: compute L_wfm
+            weights = self.what_network(teacher_states)
+            loss_weights = self.where_network(teacher_states)
+            matching_loss = self.what_where_net(teacher_states, student_states, weights,
+                                                loss_weights)
+
+            matching_loss = 0.0
+            for m in range(len(teacher_states)):
+                for n in range(len(student_states)):
+                    # diff = teacher_states[m] - self.gammas[n](student_states[n])
+                    diff = (teacher_states[m] - student_states[n]).pow(2)  # BSZ * Hidden * SEQ_LEN
+                    diff = diff.mean(3).mean(2)
+                    diff = (diff.mul(weights[m][n]).sum(1) * loss_weights[m][n]).mean(0)
+                matching_loss += diff
+            return matching_loss
+
+    def run_inner_loop(self,  meta_batches, task, inner_steps=1):
+        self.teacher_jiant_model.eval()
+        with higher.innerloop_ctx(self.jiant_model, optimizer) as (fmodel, diffopt):
+            for batch in meta_batches:
+                for inner_idx in range(inner_steps):
+                    model_output = wrap_jiant_forward(
+                        jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
+                    )
+
+                    teacher_model_output = wrap_jiant_forward(
+                        jiant_model=self.teacher_jiant_model, batch=batch, task=task, compute_loss=True,
+                    )
+
+                    beta = 0.5
+                    matching_loss = self.what_where_net(teacher_model_output.other[0], model_output.other[0])
+                    total_inner_loss = model_output.loss + matching_loss * beta
+                    diffopt.step(total_inner_loss)
+                outer_model_output = wrap_jiant_forward(
+                        jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
+                    )
+                outer_loss = outer_model_output.loss
+                outer_loss.backward()
+                self.meta_optimizer.step()
+
 
     def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
 
@@ -442,9 +527,12 @@ class L2TWWRunner(JiantRunner):
         task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
 
         loss_val = 0
+
+        meta_batches = []
         for i in range(task_specific_config.gradient_accumulation_steps):
             batch, batch_metadata = train_dataloader_dict[task_name].pop()
             batch = batch.to(self.device)
+            meta_batches.append(batch_metadata.to(self.device))
             model_output = wrap_jiant_forward(
                 jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
             )
@@ -456,6 +544,8 @@ class L2TWWRunner(JiantRunner):
 
         self.optimizer_scheduler.step()
         self.optimizer_scheduler.optimizer.zero_grad()
+
+        run_inner_loop(meta_batches, task)
 
         train_state.step(task_name=task_name)
         self.log_writer.write_entry(
