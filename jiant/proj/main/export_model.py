@@ -80,6 +80,8 @@ def get_model_and_tokenizer_classes(
         "xlm-clm-": (transformers.XLMWithLMHeadModel, transformers.XLMTokenizer),
         "roberta": (transformers.RobertaForMaskedLM, transformers.RobertaTokenizer),
         "albert": (transformers.AlbertForMaskedLM, transformers.AlbertTokenizer),
+        "bart": (transformers.BartForConditionalGeneration, transformers.BartTokenizer),
+        "mbart": (transformers.BartForConditionalGeneration, transformers.MBartTokenizer),
     }
     if model_type.split("-")[0] in class_lookup:
         return class_lookup[model_type.split("-")[0]]

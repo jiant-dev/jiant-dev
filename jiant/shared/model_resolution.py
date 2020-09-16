@@ -12,6 +12,8 @@ class ModelArchitectures(Enum):
     ROBERTA = 3
     ALBERT = 4
     XLM_ROBERTA = 5
+    BART = 6
+    MBART = 7
 
     @classmethod
     def from_model_type(cls, model_type: str):
@@ -36,6 +38,10 @@ class ModelArchitectures(Enum):
             return cls.GLOVE_LSTM
         elif model_type.startswith("xlm-roberta-"):
             return cls.XLM_ROBERTA
+        elif model_type.startswith("bart-"):
+            return cls.BART
+        elif model_type.startswith("mbart-"):
+            return cls.MBART
         else:
             raise KeyError(model_type)
 
@@ -46,7 +52,7 @@ class ModelArchitectures(Enum):
         ) and transformers_model.__class__.__name__.startswith("Bert"):
             return cls.BERT
         elif isinstance(transformers_model, transformers.XLMPreTrainedModel):
-            return cls.XLM_ROBERTA
+            return cls.XLM
         elif isinstance(
             transformers_model, transformers.BertPreTrainedModel
         ) and transformers_model.__class__.__name__.startswith("Robert"):
@@ -57,6 +63,8 @@ class ModelArchitectures(Enum):
             return cls.XLM_ROBERTA
         elif isinstance(transformers_model, transformers.modeling_albert.AlbertPreTrainedModel):
             return cls.ALBERT
+        elif isinstance(transformers_model, transformers.modeling_bart.PretrainedBartModel):
+            return bart_or_mbart_model_heuristic(model_config=transformers_model.config)
         else:
             raise KeyError(str(transformers_model))
 
@@ -65,13 +73,17 @@ class ModelArchitectures(Enum):
         if isinstance(tokenizer_class, transformers.BertTokenizer):
             return cls.BERT
         elif isinstance(tokenizer_class, transformers.XLMTokenizer):
-            return cls.XLM_ROBERTA
+            return cls.XLM
         elif isinstance(tokenizer_class, transformers.RobertaTokenizer):
             return cls.ROBERTA
         elif isinstance(tokenizer_class, transformers.XLMRobertaTokenizer):
             return cls.XLM_ROBERTA
         elif isinstance(tokenizer_class, transformers.AlbertTokenizer):
             return cls.ALBERT
+        elif isinstance(tokenizer_class, transformers.BartTokenizer):
+            return cls.BART
+        elif isinstance(tokenizer_class, transformers.MBartTokenizer):
+            return cls.MBART
         else:
             raise KeyError(str(tokenizer_class))
 
@@ -83,6 +95,8 @@ class ModelArchitectures(Enum):
             cls.ROBERTA,
             cls.ALBERT,
             cls.XLM_ROBERTA,
+            cls.BART,
+            cls.MBART,
         ]
 
     @classmethod
@@ -92,6 +106,10 @@ class ModelArchitectures(Enum):
             and encoder.__class__.__name__ == "BertModel"
         ):
             return cls.BERT
+        elif (
+            isinstance(encoder, transformers.XLMModel) and encoder.__class__.__name__ == "XLMModel"
+        ):
+            return cls.XLM
         elif (
             isinstance(encoder, transformers.RobertaModel)
             and encoder.__class__.__name__ == "RobertaModel"
@@ -107,6 +125,11 @@ class ModelArchitectures(Enum):
             and encoder.__class__.__name__ == "XlmRobertaModel"
         ):
             return cls.XLM_ROBERTA
+        elif (
+            isinstance(encoder, transformers.BartModel)
+            and encoder.__class__.__name__ == "BartModel"
+        ):
+            return bart_or_mbart_model_heuristic(model_config=encoder.config)
         else:
             raise KeyError(type(encoder))
 
@@ -194,6 +217,40 @@ def build_featurization_spec(model_type, max_seq_length):
             sequence_b_segment_id=0,  # XLM-RoBERTa has no token_type_ids
             sep_token_extra=True,
         )
+    elif model_arch == ModelArchitectures.BART:
+        # BART is weird
+        # token 0 = '<s>' which is the cls_token
+        # token 1 = '</s>' which is the sep_token
+        # Also two '</s>'s are used between sentences. Yes, not '</s><s>'.
+        return FeaturizationSpec(
+            max_seq_length=max_seq_length,
+            cls_token_at_end=False,
+            pad_on_left=False,
+            cls_token_segment_id=0,
+            pad_token_segment_id=0,
+            pad_token_id=1,  # BART uses pad_token_id = 1
+            pad_token_mask_id=0,
+            sequence_a_segment_id=0,
+            sequence_b_segment_id=0,  # BART has no token_type_ids
+            sep_token_extra=True,
+        )
+    elif model_arch == ModelArchitectures.MBART:
+        # mBART is weird
+        # token 0 = '<s>' which is the cls_token
+        # token 1 = '</s>' which is the sep_token
+        # Also two '</s>'s are used between sentences. Yes, not '</s><s>'.
+        return FeaturizationSpec(
+            max_seq_length=max_seq_length,
+            cls_token_at_end=False,
+            pad_on_left=False,
+            cls_token_segment_id=0,
+            pad_token_segment_id=0,
+            pad_token_id=1,  # mBART uses pad_token_id = 1
+            pad_token_mask_id=0,
+            sequence_a_segment_id=0,
+            sequence_b_segment_id=0,  # mBART has no token_type_ids
+            sep_token_extra=True,
+        )
     else:
         raise KeyError(model_arch)
 
@@ -204,6 +261,8 @@ TOKENIZER_CLASS_DICT = {
     ModelArchitectures.ROBERTA: transformers.RobertaTokenizer,
     ModelArchitectures.XLM_ROBERTA: transformers.XLMRobertaTokenizer,
     ModelArchitectures.ALBERT: transformers.AlbertTokenizer,
+    ModelArchitectures.BART: transformers.BartTokenizer,
+    ModelArchitectures.MBART: transformers.MBartTokenizer,
 }
 
 
@@ -225,3 +284,10 @@ def resolve_is_lower_case(tokenizer):
         return tokenizer.basic_tokenizer.do_lower_case
     else:
         return False
+
+
+def bart_or_mbart_model_heuristic(model_config: transformers.BartConfig) -> ModelArchitectures:
+    if model_config.is_valid_mbart():
+        return ModelArchitectures.MBART
+    else:
+        return ModelArchitectures.BART
