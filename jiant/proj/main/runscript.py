@@ -211,7 +211,7 @@ def run_loop(args: RunConfiguration, checkpoint=None):
     ):
         os.remove(os.path.join(args.output_dir, "checkpoint.p"))
 
-    py_io.write_file(args.to_json(), os.path.join(args.output_dir, "run_config.json"))
+    py_io.write_file(args.to_json(), os.path.join(args.output_dir, "run_main_config.json"))
     py_io.write_file("DONE", os.path.join(args.output_dir, "done_file"))
 
 
