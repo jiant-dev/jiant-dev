@@ -245,6 +245,7 @@ def create_taskmodel(
         ModelArchitectures.ROBERTA,
         ModelArchitectures.ALBERT,
         ModelArchitectures.XLM_ROBERTA,
+        ModelArchitectures.ELECTRA,
     ]:
         hidden_size = encoder.config.hidden_size
         hidden_dropout_prob = encoder.config.hidden_dropout_prob
@@ -355,7 +356,7 @@ def create_taskmodel(
                 vocab_size=encoder.config.vocab_size,
                 layer_norm_eps=encoder.config.layer_norm_eps,
             )
-        elif model_arch in (ModelArchitectures.BART, ModelArchitectures.MBART):
+        elif model_arch in (ModelArchitectures.BART, ModelArchitectures.MBART, ModelArchitectures.ELECTRA):
             raise NotImplementedError()
         else:
             raise KeyError(model_arch)
@@ -403,6 +404,8 @@ def get_encoder(model_arch, ancestor_model):
         return ancestor_model.roberta
     elif model_arch in (ModelArchitectures.BART, ModelArchitectures.MBART):
         return ancestor_model.model
+    elif model_arch == ModelArchitectures.ELECTRA:
+        return ancestor_model.electra
     else:
         raise KeyError(model_arch)
 
@@ -434,6 +437,21 @@ TRANSFORMERS_CLASS_SPEC_DICT = {
         config_class=transformers.XLMRobertaConfig,
         tokenizer_class=transformers.XLMRobertaTokenizer,
         model_class=transformers.XLMRobertaForMaskedLM,
+    ),
+    ModelArchitectures.BART: TransformersClassSpec(
+        config_class=transformers.BartConfig,
+        tokenizer_class=transformers.BartTokenizer,
+        model_class=transformers.BartForConditionalGeneration,
+    ),
+    ModelArchitectures.MBART: TransformersClassSpec(
+        config_class=transformers.BartConfig,
+        tokenizer_class=transformers.MBartTokenizer,
+        model_class=transformers.BartForConditionalGeneration,
+    ),
+    ModelArchitectures.ELECTRA: TransformersClassSpec(
+        config_class=transformers.ElectraConfig,
+        tokenizer_class=transformers.ElectraTokenizer,
+        model_class=transformers.ElectraForPreTraining,
     ),
 }
 
@@ -467,6 +485,7 @@ MODEL_PREFIX = {
     ModelArchitectures.XLM_ROBERTA: "xlm-roberta",
     ModelArchitectures.BART: "model",
     ModelArchitectures.MBART: "model",
+    ModelArchitectures.ELECTRA: "electra",
 }
 
 

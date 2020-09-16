@@ -14,6 +14,7 @@ class ModelArchitectures(Enum):
     XLM_ROBERTA = 5
     BART = 6
     MBART = 7
+    ELECTRA = 8
 
     @classmethod
     def from_model_type(cls, model_type: str):
@@ -42,6 +43,8 @@ class ModelArchitectures(Enum):
             return cls.BART
         elif model_type.startswith("mbart-"):
             return cls.MBART
+        elif model_type.startswith("electra-"):
+            return cls.ELECTRA
         else:
             raise KeyError(model_type)
 
@@ -65,6 +68,8 @@ class ModelArchitectures(Enum):
             return cls.ALBERT
         elif isinstance(transformers_model, transformers.modeling_bart.PretrainedBartModel):
             return bart_or_mbart_model_heuristic(model_config=transformers_model.config)
+        elif isinstance(transformers_model, transformers.modeling_electra.ElectraPreTrainedModel):
+            return cls.ELECTRA
         else:
             raise KeyError(str(transformers_model))
 
@@ -84,6 +89,8 @@ class ModelArchitectures(Enum):
             return cls.BART
         elif isinstance(tokenizer_class, transformers.MBartTokenizer):
             return cls.MBART
+        elif isinstance(tokenizer_class, transformers.ElectraTokenizer):
+            return cls.ELECTRA
         else:
             raise KeyError(str(tokenizer_class))
 
@@ -97,6 +104,7 @@ class ModelArchitectures(Enum):
             cls.XLM_ROBERTA,
             cls.BART,
             cls.MBART,
+            cls.ELECTRA,
         ]
 
     @classmethod
@@ -130,6 +138,11 @@ class ModelArchitectures(Enum):
             and encoder.__class__.__name__ == "BartModel"
         ):
             return bart_or_mbart_model_heuristic(model_config=encoder.config)
+        elif (
+            isinstance(encoder, transformers.ElectraModel)
+            and encoder.__class__.__name__ == "ElectraModel"
+        ):
+            return cls.ELECTRA
         else:
             raise KeyError(type(encoder))
 
@@ -251,6 +264,19 @@ def build_featurization_spec(model_type, max_seq_length):
             sequence_b_segment_id=0,  # mBART has no token_type_ids
             sep_token_extra=True,
         )
+    elif model_arch == ModelArchitectures.ELECTRA:
+        return FeaturizationSpec(
+            max_seq_length=max_seq_length,
+            cls_token_at_end=False,
+            pad_on_left=False,
+            cls_token_segment_id=0,
+            pad_token_segment_id=0,
+            pad_token_id=0,
+            pad_token_mask_id=0,
+            sequence_a_segment_id=0,
+            sequence_b_segment_id=1,
+            sep_token_extra=False,
+        )
     else:
         raise KeyError(model_arch)
 
@@ -263,6 +289,7 @@ TOKENIZER_CLASS_DICT = {
     ModelArchitectures.ALBERT: transformers.AlbertTokenizer,
     ModelArchitectures.BART: transformers.BartTokenizer,
     ModelArchitectures.MBART: transformers.MBartTokenizer,
+    ModelArchitectures.ELECTRA: transformers.ElectraTokenizer,
 }
 
 

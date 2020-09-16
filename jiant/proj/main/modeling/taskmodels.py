@@ -312,6 +312,10 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
         pooled, unpooled, other = get_output_from_standard_transformer_models(
             encoder=encoder, input_ids=input_ids, segment_ids=segment_ids, input_mask=input_mask,
         )
+    elif model_arch == ModelArchitectures.ELECTRA:
+        pooled, unpooled, other = get_output_from_electra(
+            encoder=encoder, input_ids=input_ids, segment_ids=segment_ids, input_mask=input_mask,
+        )
     elif model_arch in [
         ModelArchitectures.BART,
         ModelArchitectures.MBART,
@@ -330,21 +334,8 @@ def get_output_from_encoder(encoder, input_ids, segment_ids, input_mask) -> Enco
 
 
 def get_output_from_standard_transformer_models(encoder, input_ids, segment_ids, input_mask):
-    model_arch = ModelArchitectures.from_encoder(encoder)
-    if model_arch == ModelArchitectures.ROBERTA:
-        segment_ids = None
-        position_ids = torch.arange(
-            2, input_ids.shape[1]+2, dtype=torch.long, device=input_ids.device,
-        )
-        output = encoder(
-            input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask,
-            position_ids=position_ids,
-        )
-        pooled, unpooled, other = output[0][:, 0], output[0], output[2:]
-    else:
-        output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
-        pooled, unpooled, other = output[1], output[0], output[2:]
-
+    output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+    pooled, unpooled, other = output[1], output[0], output[2:]
     return pooled, unpooled, other
 
 
@@ -369,6 +360,13 @@ def get_output_from_bart_models(encoder, input_ids, input_mask):
     # Get last non-pad index
     pooled = unpooled[batch_idx, slen - input_ids.eq(encoder.config.pad_token_id).sum(1) - 1]
     return pooled, unpooled, other
+
+
+def get_output_from_electra(encoder, input_ids, segment_ids, input_mask):
+    output = encoder(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+    unpooled = output[0]
+    pooled = unpooled[:, 0, :]
+    return pooled, unpooled, output
 
 
 def compute_mlm_loss(logits, masked_lm_labels):
