@@ -17,19 +17,19 @@
 | EP-Const | nonterminal | ✅ |  | nonterminal | Edge-Probing |
 | COPA | copa | ✅ | ✅ | copa | SuperGLUE |
 | EP-Coref | coref | ✅ |  | coref | Edge-Probing |
-| Cosmos QA | cosmosqa | ✅ |  | cosmosqa |  |
+| Cosmos QA | cosmosqa | ✅ | ✅ | cosmosqa |  |
 | EP-UD | dep | ✅ |  | dep | Edge-Probing |
 | EP-DPR | dpr | ✅ |  | dpr | Edge-Probing |
 | GLUE Diagnostic | glue_diagnostics | ✅ | ✅ | glue_diagnostics | GLUE |
 | HellaSwag | hellaswag | ✅ | ✅ | hellaswag |  |
-| MLM | * | ✅ |  | mlm_simple | See task-specific notes. |
+| MLM | * | ✅ | * | mlm_simple | See task-specific notes. |
 | MLQA | `mlqa_{lang1}_{lang2}` | ✅ | ✅ | mlqa | XTREME, multi-lang |
 | MNLI | mnli | ✅ | ✅ | mnli | GLUE, MNLI-matched |
 | MNLI-mismatched | mnli_mismatched | ✅ | ✅ | mnli_mismatched | GLUE |
 | MultiRC | multirc | ✅ | ✅ | multirc | SuperGLUE |
 | MRPC | mrpc | ✅ | ✅ | mrpc | GLUE |
-| QAMR | qamr | ✅ |  | qamr |  |
-| QA-SRL | qa-srl | ✅ |  | qa-srl |  |
+| QAMR | qamr | ✅ | ✅ | qamr |  |
+| QA-SRL | qa-srl | ✅ | ✅ | qa-srl |  |
 | EP-NER | ner | ✅ |  | ner | Edge-Probing |
 | PAWS-X | `pawsx_{lang}` | ✅ | ✅ | pawsx | XTREME, multi-lang |
 | WikiAnn | `panx_{lang}` | ✅ | ✅ | panx | XTREME, multi-lang |
@@ -38,7 +38,7 @@
 | QQP | qqp | ✅ | ✅ | qqp | GLUE |
 | ReCord | record | ✅ | ✅ | record | SuperGLUE |
 | RTE | rte | ✅ | ✅ | rte | GLUE, SuperGLUE |
-| SciTail | scitail | ✅ |  | scitail |  |
+| SciTail | scitail | ✅ | ✅ | scitail |  |
 | SentEval: Tense | senteval_tense | ✅ |  | senteval_tense | SentEval |
 | EP-Rel | semeval | ✅ |  | semeval | Edge-Probing |
 | SNLI | snli | ✅ | ✅ | snli |  |

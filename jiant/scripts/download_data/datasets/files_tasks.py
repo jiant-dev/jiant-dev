@@ -45,6 +45,12 @@ def download_task_data_and_write_config(task_name: str, task_data_path: str, tas
             task_data_path=task_data_path,
             task_config_path=task_config_path
         )
+    elif task_name == "scitail":
+        download_scitail_data_and_write_config(
+            task_name=task_name,
+            task_data_path=task_data_path,
+            task_config_path=task_config_path
+        )
     else:
         raise KeyError(task_name)
 
@@ -233,3 +239,33 @@ def download_qasrl_data_and_write_config(
         },
         path=task_config_path,
     )
+
+
+def download_scitail_data_and_write_config(
+    task_name: str, task_data_path: str, task_config_path: str
+):
+    os.makedirs(task_data_path, exist_ok=True)
+    download_utils.download_and_unzip(
+        "https://ai2-datasets.s3-us-west-2.amazonaws.com/scitail/SciTailV1.1.zip", task_data_path,
+    )
+    data_phase_list = ["train", "dev", "test"]
+    jiant_phase_list = ["train", "val", "test"]
+    for data_phase, jiant_phase in zip(data_phase_list, jiant_phase_list):
+        os.rename(
+            os.path.join(task_data_path, "SciTailV1.1", "tsv_format", f"scitail_1.0_{data_phase}.tsv"),
+            os.path.join(task_data_path, f"{jiant_phase}.tsv"),
+        )
+    shutil.rmtree(os.path.join(task_data_path, "SciTailV1.1"))
+    py_io.write_json(
+        data={
+            "task": task_name,
+            "paths": {
+                "train": os.path.join(task_data_path, "train.tsv"),
+                "val": os.path.join(task_data_path, "val.tsv"),
+                "test": os.path.join(task_data_path, "test.tsv"),
+            },
+            "name": task_name,
+        },
+        path=task_config_path,
+    )
+
