@@ -5,7 +5,24 @@ import jiant.utils.python.filesystem as filesystem
 import jiant.scripts.download_data.utils as download_utils
 import jiant.utils.python.io as py_io
 
-from jiant.scripts.download_data.constants import SQUAD_TASKS, DIRECT_DOWNLOAD_TASKS_TO_DATA_URLS
+from jiant.scripts.download_data.constants import SQUAD_TASKS, DIRECT_SUPERGLUE_TASKS_TO_DATA_URLS
+
+
+def download_task_data_and_write_config(task_name: str, task_data_path: str, task_config_path: str):
+    if task_name in SQUAD_TASKS:
+        download_squad_data_and_write_config(
+            task_name=task_name,
+            task_data_path=task_data_path,
+            task_config_path=task_config_path
+        )
+    elif task_name in DIRECT_SUPERGLUE_TASKS_TO_DATA_URLS:
+        download_superglue_data_and_write_config(
+            task_name=task_name,
+            task_data_path=task_data_path,
+            task_config_path=task_config_path
+        )
+    else:
+        raise KeyError(task_name)
 
 
 def download_squad_data_and_write_config(
@@ -43,11 +60,12 @@ def download_squad_data_and_write_config(
     )
 
 
-def download_task_data_and_write_config(task_name: str, task_data_path: str, task_config_path: str):
+def download_superglue_data_and_write_config(task_name: str, task_data_path: str, task_config_path: str):
+    # Applies to ReCoRD, MultiRC and WSC
     assert task_name not in SQUAD_TASKS
 
     os.makedirs(task_data_path, exist_ok=True)
-    download_utils.download_and_unzip(DIRECT_DOWNLOAD_TASKS_TO_DATA_URLS[task_name], task_data_path)
+    download_utils.download_and_unzip(DIRECT_SUPERGLUE_TASKS_TO_DATA_URLS[task_name], task_data_path)
 
     # Move task data up one folder (nested under task name when unzipped)
     # ie: mv ./record/ReCoRD/* ./record

@@ -42,7 +42,7 @@
 | SentEval: Tense | senteval_tense | ✅ |  | senteval_tense | SentEval |
 | EP-Rel | semeval | ✅ |  | semeval | Edge-Probing |
 | SNLI | snli | ✅ | ✅ | snli |  |
-| SocialIQA | socialiqa | ✅ |  | socialiqa |  |
+| SocialIQA | socialiqa | ✅ | ✅ | socialiqa |  |
 | EP-SPR1 | spr1 | ✅ |  | spr1 | Edge-Probing |
 | EP-SPR2 | spr2 | ✅ |  | spr2 | Edge-Probing |
 | SQuAD 1.1 | squad_v1 | ✅ | ✅ | squad |  |
