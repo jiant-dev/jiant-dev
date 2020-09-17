@@ -69,29 +69,32 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
 
     def get_shared_grad(self, copy=False):
         shared_param_grad = [
-            [p.grad for p in g["param"]] if g["shared"] else []
-            for g in self.optimizer.param_groups()
+            [p.grad for p in g["params"]] if g["shared"] else []
+            for g in self.optimizer.param_groups
         ]
         if copy:
             shared_param_grad = deepcopy(shared_param_grad)
         return shared_param_grad
 
-    def grad_sim(self, grad_a, grad_b):
-        if self.grad_sim_metric == "cos":
-            norm_a = torch.sqrt(sum([torch.sum(p * p) for g in grad_a for p in g]))
-            norm_b = torch.sqrt(sum([torch.sum(p * p) for g in grad_b for p in g]))
-            a_dot_b = sum(
-                [
-                    torch.sum(p_a * p_b)
-                    for g_a, g_b in zip(grad_a, grad_b)
-                    for p_a, p_b in zip(g_a, g_b)
-                ]
-            )
-            grad_sim = a_dot_b / norm_a / norm_b
-        elif self.grad_sim_metric == "fisher":
-            raise NotImplementedError
+    def grad_sim(self, grad_a, grad_b, reduce=True):
+        if reduce:
+            if self.grad_sim_metric == "cos":
+                norm_a = torch.sqrt(sum([torch.sum(p * p) for g in grad_a for p in g]))
+                norm_b = torch.sqrt(sum([torch.sum(p * p) for g in grad_b for p in g]))
+                a_dot_b = sum(
+                    [
+                        torch.sum(p_a * p_b)
+                        for g_a, g_b in zip(grad_a, grad_b)
+                        for p_a, p_b in zip(g_a, g_b)
+                    ]
+                )
+                grad_sim = a_dot_b / norm_a / norm_b
+            elif self.grad_sim_metric == "fisher":
+                raise NotImplementedError
+            else:
+                raise KeyError(self.grad_sim_metric)
         else:
-            raise KeyError(self.grad_sim_metric)
+            raise NotImplementedError
 
         if self.grad_sim_nonlinear == "":
             return grad_sim

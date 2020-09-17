@@ -20,6 +20,7 @@ from jiant.utils.python.datastructures import InfiniteYield, ExtendedDataClassMi
 
 import higher
 
+
 @dataclass
 class RunnerParameters(ExtendedDataClassMixin):
     local_rank: int
@@ -329,21 +330,17 @@ class MultiDDSRunner(JiantRunner):
             target_grad = self.optimizer_scheduler.get_shared_grad(copy=True)
             self.optimizer_scheduler.optimizer.zero_grad()
 
-            task_choice = []
             task_grad_sim = []
             for task_idx, (task_name, task) in enumerate(
                 self.jiant_task_container.task_sampler.task_dict.items()
             ):
                 _ = run_one_batch(task_name, task,)
                 auxillary_grad = self.optimizer_scheduler.get_shared_grad(copy=False)
-                task_choice.append(task_idx)
-                task_grad_sim = self.optimizer_scheduler.grad_sim(
-                    target_grad, auxillary_grad, reduce=True
+                task_grad_sim.append(
+                    self.optimizer_scheduler.grad_sim(target_grad, auxillary_grad, reduce=True)
                 )
                 self.optimizer_scheduler.optimizer.zero_grad()
-            self.task_sampler.update_sampler(
-                torch.LongTensor(task_choice), torch.cat(task_grad_sim, dim=0)
-            )
+            self.jiant_task_container.task_sampler.update_sampler(torch.stack(task_grad_sim, dim=0))
         self.log_writer.write_entry(
             "loss_train",
             {
@@ -423,7 +420,9 @@ class L2TWWRunner(JiantRunner):
         self.teacher_jiant_model = teacher_jiant_model
         for p in self.teacher_jiant_model.parameters():
             p.requires_grad = False
-        self.what_where_net = self.MetaWhatAndWhere(hidden_size, teacher_num_layers, student_num_layers)
+        self.what_where_net = self.MetaWhatAndWhere(
+            hidden_size, teacher_num_layers, student_num_layers
+        )
         self.meta_optimizer = meta_optimizer_scheduler
 
     class WhatNetwork(nn.Module):
@@ -437,7 +436,9 @@ class L2TWWRunner(JiantRunner):
             # outputs = softmax across hidden for all pairs
             self.what_network_linear = []
             for i in range(teacher_num_layers):
-                self.what_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers * self.hidden_size))
+                self.what_network_linear.append(
+                    nn.Linear(self.hidden_size, self.student_num_layers * self.hidden_size)
+                )
 
         def forward(self, teacher_states):
             # TODO: compute L_wfm
@@ -461,7 +462,9 @@ class L2TWWRunner(JiantRunner):
             # outputs => lambdas[0,..., num_pairs]
             self.where_network_linear = []
             for i in range(teacher_num_layers):
-                self.where_network_linear.append(nn.Linear(self.hidden_size, self.student_num_layers))
+                self.where_network_linear.append(
+                    nn.Linear(self.hidden_size, self.student_num_layers)
+                )
 
         def forward(self, teacher_states):
             # TODO: compute L_wfm
@@ -474,15 +477,20 @@ class L2TWWRunner(JiantRunner):
     class MetaWhatAndWhere(nn.Module):
         def __init__(self, hidden_size, teacher_num_layers, student_num_layers):
             super().__init__()
-            self.what_network = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
-            self.where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
+            self.what_network = self.WhatNetwork(
+                hidden_size, teacher_num_layers, student_num_layers
+            )
+            self.where_network = self.WhereNetwork(
+                hidden_size, teacher_num_layers, student_num_layers
+            )
 
         def forward(self, teacher_states, student_states):
             # TODO: compute L_wfm
             weights = self.what_network(teacher_states)
             loss_weights = self.where_network(teacher_states)
-            matching_loss = self.what_where_net(teacher_states, student_states, weights,
-                                                loss_weights)
+            matching_loss = self.what_where_net(
+                teacher_states, student_states, weights, loss_weights
+            )
 
             matching_loss = 0.0
             for m in range(len(teacher_states)):
@@ -494,7 +502,7 @@ class L2TWWRunner(JiantRunner):
                 matching_loss += diff
             return matching_loss
 
-    def run_inner_loop(self,  meta_batches, task, inner_steps=1):
+    def run_inner_loop(self, meta_batches, task, inner_steps=1):
         self.teacher_jiant_model.eval()
         with higher.innerloop_ctx(self.jiant_model, optimizer) as (fmodel, diffopt):
             for batch in meta_batches:
@@ -504,20 +512,24 @@ class L2TWWRunner(JiantRunner):
                     )
 
                     teacher_model_output = wrap_jiant_forward(
-                        jiant_model=self.teacher_jiant_model, batch=batch, task=task, compute_loss=True,
+                        jiant_model=self.teacher_jiant_model,
+                        batch=batch,
+                        task=task,
+                        compute_loss=True,
                     )
 
                     beta = 0.5
-                    matching_loss = self.what_where_net(teacher_model_output.other[0], model_output.other[0])
+                    matching_loss = self.what_where_net(
+                        teacher_model_output.other[0], model_output.other[0]
+                    )
                     total_inner_loss = model_output.loss + matching_loss * beta
                     diffopt.step(total_inner_loss)
                 outer_model_output = wrap_jiant_forward(
-                        jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
-                    )
+                    jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
+                )
                 outer_loss = outer_model_output.loss
                 outer_loss.backward()
                 self.meta_optimizer.step()
-
 
     def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
 

@@ -119,18 +119,14 @@ class MultiDDSSampler(BaseMultiTaskSampler):
         task_name = self.rng.choice(self.task_names, p=self.task_p().detach().cpu().numpy())
         return task_name, self.task_dict[task_name]
 
-    def update_sampler(self, choice: torch.LongTensor, reward: torch.FloatTensor):
-        try:
-            choice = choice.cuda()
-        except Exception:
-            pass
-        mean_reward = reward.mean()
+    def update_sampler(self, reward: torch.FloatTensor):
         for step in range(self.sampler_update_steps):
-            rl_loss = -(self.task_p()[choice] * (reward - mean_reward)).mean()
-            mean_reward = self.task_p()[choice] * reward
+            rl_loss = -(self.task_p() * reward).mean()
             rl_loss.backward()
             self.sampler_optimizer.step()
             self.sampler_optimizer.zero_grad()
+        # print(reward)
+        # print(self.task_p())
         return
 
 
