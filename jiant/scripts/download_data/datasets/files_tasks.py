@@ -21,6 +21,18 @@ def download_task_data_and_write_config(task_name: str, task_data_path: str, tas
             task_data_path=task_data_path,
             task_config_path=task_config_path
         )
+    elif task_name == "abductive_nli":
+        download_abductive_nli_data_and_write_config(
+            task_name=task_name,
+            task_data_path=task_data_path,
+            task_config_path=task_config_path
+        )
+    elif task_name == "swag":
+        download_swag_data_and_write_config(
+            task_name=task_name,
+            task_data_path=task_data_path,
+            task_config_path=task_config_path
+        )
     else:
         raise KeyError(task_name)
 
@@ -93,6 +105,55 @@ def download_superglue_data_and_write_config(task_name: str, task_data_path: str
         data={
             "task": task_name,
             "paths": {"train": train_path, "val": val_path, "test": test_path},
+            "name": task_name,
+        },
+        path=task_config_path,
+    )
+
+
+def download_abductive_nli_data_and_write_config(
+    task_name: str, task_data_path: str, task_config_path: str
+):
+    os.makedirs(task_data_path, exist_ok=True)
+    download_utils.download_and_unzip(
+        "https://storage.googleapis.com/ai2-mosaic/public/alphanli/alphanli-train-dev.zip", task_data_path,
+    )
+    py_io.write_json(
+        data={
+            "task": task_name,
+            "paths": {
+                "train_inputs": os.path.join(task_data_path, "train.jsonl"),
+                "train_labels": os.path.join(task_data_path, "train-labels.lst"),
+                "val_inputs": os.path.join(task_data_path, "dev.jsonl"),
+                "val_labels": os.path.join(task_data_path, "dev-labels.lst"),
+            },
+            "name": task_name,
+        },
+        path=task_config_path,
+    )
+
+
+def download_swag_data_and_write_config(
+    task_name: str, task_data_path: str, task_config_path: str
+):
+    os.makedirs(task_data_path, exist_ok=True)
+    download_utils.download_and_unzip(
+        "https://github.com/rowanz/swagaf/archive/master.zip", task_data_path,
+    )
+    for phase in ["train", "val", "test"]:
+        os.rename(
+            os.path.join(task_data_path, "swagaf-master", "data", f"{phase}.csv"),
+            os.path.join(task_data_path, f"{phase}.csv"),
+        )
+    shutil.rmtree(os.path.join(task_data_path, "swagaf-master"))
+    py_io.write_json(
+        data={
+            "task": task_name,
+            "paths": {
+                "train": os.path.join(task_data_path, "train.csv"),
+                "val": os.path.join(task_data_path, "val.csv"),
+                "test": os.path.join(task_data_path, "test.csv"),
+            },
             "name": task_name,
         },
         path=task_config_path,

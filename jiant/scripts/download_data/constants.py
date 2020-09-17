@@ -5,7 +5,9 @@ DIRECT_SUPERGLUE_TASKS_TO_DATA_URLS = {
     "multirc": f"https://dl.fbaipublicfiles.com/glue/superglue/data/v2/MultiRC.zip",
     "record": f"https://dl.fbaipublicfiles.com/glue/superglue/data/v2/ReCoRD.zip",
 }
+OTHER_DOWNLOAD_TASKS = {"abductive_nli", "swag"}
 DIRECT_DOWNLOAD_TASKS = set(
     list(SQUAD_TASKS)
     + list(DIRECT_SUPERGLUE_TASKS_TO_DATA_URLS)
+    + list(OTHER_DOWNLOAD_TASKS)
 )

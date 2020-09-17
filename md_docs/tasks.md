@@ -4,7 +4,7 @@
 
 | Name | `task_name` | `jiant` | Downloader | `jiant_task_name` | Misc | 
 |---|---|:---:|:---:|---|---|
-| Abductive NLI | abductive_nli | ✅ |  | abductive_nli |  |
+| Abductive NLI | abductive_nli | ✅ | ✅ | abductive_nli |  |
 | SuperGLUE Winogender Diagnostic | superglue_axg | ✅ | ✅ | superglue_axg | SuperGLUE |
 | Acceptability Definiteness | acceptability_definiteness | ✅ |  | acceptability_definiteness | Function Words |
 | Adversarial NLI | `adversarial_nli_{round}` | ✅ |  | adversarial_nli | 3 rounds |
@@ -51,7 +51,7 @@
 | SST-2 | sst | ✅ | ✅ | sst | GLUE |
 | STS-B | stsb | ✅ | ✅ | stsb | GLUE |
 | SuperGLUE Broad Coverage Diagnostic | superglue_axg | ✅ | ✅ | superglue_axg | SuperGLUE |
-| SWAG | swag | ✅ |  | swag |  |
+| SWAG | swag | ✅ | ✅ | swag |  |
 | Tatoeba | `tatoeba_{lang}` | ✅ | ✅ | tatoeba | XTREME, multi-lang |
 | TyDiQA | `tydiqa_{lang}` | ✅ | ✅ | tydiqa | XTREME, multi-lang |
 | UDPOS | `udpos_{lang}` | ✅ | ✅ | udpos | XTREME, multi-lang |
