@@ -33,6 +33,18 @@ def download_task_data_and_write_config(task_name: str, task_data_path: str, tas
             task_data_path=task_data_path,
             task_config_path=task_config_path
         )
+    elif task_name == "qamr":
+        download_qamr_data_and_write_config(
+            task_name=task_name,
+            task_data_path=task_data_path,
+            task_config_path=task_config_path
+        )
+    elif task_name == "qasrl":
+        download_qasrl_data_and_write_config(
+            task_name=task_name,
+            task_data_path=task_data_path,
+            task_config_path=task_config_path
+        )
     else:
         raise KeyError(task_name)
 
@@ -153,6 +165,69 @@ def download_swag_data_and_write_config(
                 "train": os.path.join(task_data_path, "train.csv"),
                 "val": os.path.join(task_data_path, "val.csv"),
                 "test": os.path.join(task_data_path, "test.csv"),
+            },
+            "name": task_name,
+        },
+        path=task_config_path,
+    )
+
+
+def download_qamr_data_and_write_config(
+    task_name: str, task_data_path: str, task_config_path: str
+):
+    os.makedirs(task_data_path, exist_ok=True)
+    download_utils.download_and_unzip(
+        "https://github.com/uwnlp/qamr/archive/master.zip", task_data_path,
+    )
+    data_phase_list = ["train", "dev", "test"]
+    jiant_phase_list = ["train", "val", "test"]
+    for data_phase, jiant_phase in zip(data_phase_list, jiant_phase_list):
+        os.rename(
+            os.path.join(task_data_path, "qamr-master", "data", "filtered", f"{data_phase}.tsv"),
+            os.path.join(task_data_path, f"{jiant_phase}.tsv"),
+        )
+    os.rename(
+        os.path.join(task_data_path, "qamr-master", "data", "wiki-sentences.tsv"),
+        os.path.join(task_data_path, "wiki-sentences.tsv"),
+    )
+    shutil.rmtree(os.path.join(task_data_path, "qamr-master"))
+    py_io.write_json(
+        data={
+            "task": task_name,
+            "paths": {
+                "train": os.path.join(task_data_path, "train.tsv"),
+                "val": os.path.join(task_data_path, "val.tsv"),
+                "test": os.path.join(task_data_path, "test.tsv"),
+                "wiki_dict": os.path.join(task_data_path, "wiki-sentences.tsv"),
+            },
+            "name": task_name,
+        },
+        path=task_config_path,
+    )
+
+
+def download_qasrl_data_and_write_config(
+    task_name: str, task_data_path: str, task_config_path: str
+):
+    os.makedirs(task_data_path, exist_ok=True)
+    download_utils.download_and_untar(
+        "http://qasrl.org/data/qasrl-v2.tar", task_data_path,
+    )
+    data_phase_list = ["train", "dev", "test"]
+    jiant_phase_list = ["train", "val", "test"]
+    for data_phase, jiant_phase in zip(data_phase_list, jiant_phase_list):
+        os.rename(
+            os.path.join(task_data_path, "qasrl-v2", "orig", f"{data_phase}.jsonl.gz"),
+            os.path.join(task_data_path, f"{jiant_phase}.jsonl.gz"),
+        )
+    shutil.rmtree(os.path.join(task_data_path, "qasrl-v2"))
+    py_io.write_json(
+        data={
+            "task": task_name,
+            "paths": {
+                "train": os.path.join(task_data_path, "train.jsonl.gz"),
+                "val": os.path.join(task_data_path, "val.jsonl.gz"),
+                "test": os.path.join(task_data_path, "test.jsonl.gz"),
             },
             "name": task_name,
         },
