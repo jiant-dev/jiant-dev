@@ -305,8 +305,8 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
             "cosmosqa": 8,
             "rte": 16,
             "cola": 16,
-            "boolq": 1,
-            "wic": 1,
+            "boolq": 16,
+            "wic": 16,
         }
     }
     max_steps = 0
