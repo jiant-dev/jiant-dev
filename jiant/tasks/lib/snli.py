@@ -93,7 +93,7 @@ class SnliTask(Task):
         examples = []
         for (i, line) in enumerate(lines):
             if "gold_label" in line:
-                # Loading from original data:
+                # Loading from original data
                 if line["gold_label"] == "-":
                     continue
                 examples.append(
@@ -105,7 +105,7 @@ class SnliTask(Task):
                     )
                 )
             else:
-                # Loading for NLP data
+                # Loading from NLP data
                 if line["label"] == -1:
                     continue
                 examples.append(
