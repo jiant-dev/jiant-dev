@@ -125,6 +125,11 @@ NLP_CONVERSION_DICT = {
     },
     "cosmosqa": {"path": "cosmos_qa", "phase_list": ["train", "val", "test"]},
     "socialiqa": {"path": "social_i_qa", "phase_list": ["train", "val"]},
+    "scitail": {
+        "path": "scitail",
+        "name": "tsv_format",
+        "phase_list": ["train", "val", "test"],
+    },
 }
 
 # NLP uses "validation", we use "val"
