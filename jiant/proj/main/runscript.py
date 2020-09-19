@@ -41,6 +41,7 @@ class RunConfiguration(zconf.RunConfig):
     delete_checkpoint_if_done = zconf.attr(action="store_true")
     force_overwrite = zconf.attr(action="store_true")
     seed = zconf.attr(type=int, default=-1)
+    runner_type = zconf.attr(default="", type=str)
 
     # === Training Learning Parameters === #
     learning_rate = zconf.attr(default=1e-5, type=float)
@@ -119,14 +120,37 @@ def setup_runner(
         fp16=args.fp16,
         max_grad_norm=args.max_grad_norm,
     )
-    runner = jiant_runner.JiantRunner(
-        jiant_task_container=jiant_task_container,
-        jiant_model=jiant_model,
-        optimizer_scheduler=optimizer_scheduler,
-        device=quick_init_out.device,
-        rparams=rparams,
-        log_writer=quick_init_out.log_writer,
-    )
+
+    if args.runner_type == "l2tww":
+        import copy
+        teacher_jiant_model = copy.deepcopy(jiant_model)
+
+        hidden_size = vars(jiant_model.encoder)["config"].hidden_size
+        student_num_layers = vars(jiant_model.encoder)["config"].num_hidden_layers
+        teacher_num_layers = vars(teacher_jiant_model.encoder)["config"].num_hidden_layers
+
+        runner = jiant_runner.L2TWWRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+            teacher_jiant_model=teacher_jiant_model,
+            hidden_size=hidden_size,
+            teacher_num_layers=teacher_num_layers,
+            student_num_layers=student_num_layers,
+            meta_optim_params={"lr": args.learning_rate},
+        )
+    else:
+        runner = jiant_runner.JiantRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+        )
     return runner
 
 
