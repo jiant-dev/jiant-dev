@@ -2,6 +2,9 @@ from typing import Dict
 from dataclasses import dataclass
 
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import higher
 
 import jiant.tasks.evaluate as evaluate
 import jiant.utils.torch_utils as torch_utils
@@ -247,7 +250,6 @@ class L2TWWRunner(JiantRunner):
         what_net = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
         where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
         self.what_where_net = self.MetaWhatAndWhere(what_net, where_network) #hidden_size, teacher_num_layers, student_num_layers)
-        import pdb; pdb.set_trace()
         self.meta_optimizer = torch.optim.Adam(self.what_where_net.parameters(), lr=meta_optim_params['lr'])
 
     class WhatNetwork(nn.Module):
@@ -361,7 +363,8 @@ class L2TWWRunner(JiantRunner):
         for i in range(task_specific_config.gradient_accumulation_steps):
             batch, batch_metadata = train_dataloader_dict[task_name].pop()
             batch = batch.to(self.device)
-            meta_batches.append(batch_metadata.to(self.device))
+            meta_batches.append(batch)
+            #meta_batches.append(batch_metadata.to(self.device))
             model_output = wrap_jiant_forward(
                 jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
             )
