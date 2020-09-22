@@ -62,7 +62,7 @@ class Batch(mlm_premasked_template.Batch):
 
 class MLMPretokenizedTask(Task):
     Example = Example
-    TokenizedExample = Example
+    TokenizedExample = TokenizedExample
     DataRow = DataRow
     Batch = Batch
 

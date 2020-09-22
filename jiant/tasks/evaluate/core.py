@@ -147,17 +147,20 @@ class SpanPredictionF1andEMScheme(BaseEvaluationScheme):
 
 class MLMPremaskedAccumulator(BaseAccumulator):
     def __init__(self):
+        self.loss_list = []
         self.logits_list = []
 
     def update(self, batch_logits, batch_loss, batch, batch_metadata):
         batch_size = len(batch)
-        non_masked = batch.masked_lm_labels.cpu().numpy() != mlm_template.NON_MASKED_TOKEN_LABEL_ID
+        # Select the tokens that we do MLM prediction on
+        masked_tokens_selector = batch.masked_lm_labels.cpu().numpy() != mlm_template.NON_MASKED_TOKEN_LABEL_ID
         for i in range(batch_size):
             # noinspection PyUnresolvedReferences
-            self.logits_list.append(batch_logits[i][non_masked[i]])
+            self.logits_list.append(batch_logits[i][masked_tokens_selector[i]])
+        self.loss_list.append(batch_loss)
 
     def get_accumulated(self):
-        return self.logits_list
+        return self.loss_list, self.logits_list
 
 
 class TatoebaAccumulator(BaseAccumulator):
@@ -767,7 +770,7 @@ class MLMPremaskedEvaluationScheme(MLMEvaluationScheme):
     def compute_metrics_from_accumulator(
         self, task, accumulator: BaseAccumulator, tokenizer, labels
     ) -> Metrics:
-        loss_list = accumulator.get_accumulated()
+        loss_list, _ = accumulator.get_accumulated()
         average_loss = mean(loss_list)
         perplexity = np.exp(average_loss)
         return Metrics(
