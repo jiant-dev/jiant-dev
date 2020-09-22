@@ -41,9 +41,7 @@ class Example(BaseExample):
             label_tokens += [tokenizer.pad_token] * len(tokenized_text)
 
         return TokenizedExample(
-            guid=self.guid,
-            masked_tokens=masked_tokens,
-            label_tokens=label_tokens,
+            guid=self.guid, masked_tokens=masked_tokens, label_tokens=label_tokens,
         )
 
 

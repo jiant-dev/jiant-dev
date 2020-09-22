@@ -64,7 +64,6 @@ class DataRow(BaseDataRow):
     tokens: list
 
 
-
 class BaseMLMBatch:
     def get_masked(self, mlm_probability, tokenizer, do_mask):
         raise NotImplementedError

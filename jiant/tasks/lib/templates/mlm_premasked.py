@@ -3,11 +3,8 @@ import torch
 from dataclasses import dataclass
 from typing import List
 
-import jiant.utils.python.io as py_io
 from jiant.tasks.lib.templates import mlm as mlm_template
 from jiant.tasks.core import (
-    Task,
-    TaskTypes,
     BaseExample,
     BaseTokenizedExample,
     BaseDataRow,
@@ -51,9 +48,7 @@ class Example(BaseExample):
             label_tokens += [tokenizer.pad_token] * len(tokenized_text)
 
         return TokenizedExample(
-            guid=self.guid,
-            masked_tokens=masked_tokens,
-            label_tokens=label_tokens,
+            guid=self.guid, masked_tokens=masked_tokens, label_tokens=label_tokens,
         )
 
 
@@ -77,7 +72,7 @@ class TokenizedExample(BaseTokenizedExample):
         # Handle label_tokens
         special_tokens_count = 2  # CLS, SEP
         pad_token = tokenizer.pad_token
-        unpadded_label_tokens, = truncate_sequences(
+        (unpadded_label_tokens,) = truncate_sequences(
             tokens_ls=[self.label_tokens],
             max_length=feat_spec.max_seq_length - special_tokens_count,
         )
@@ -90,8 +85,9 @@ class TokenizedExample(BaseTokenizedExample):
             ls=unpadded_label_token_ids, feat_spec=feat_spec, pad_idx=feat_spec.pad_token_id,
         )
         masked_lm_labels = np.array(masked_lm_labels)
-        masked_lm_labels[masked_lm_labels == feat_spec.pad_token_id] = \
-            mlm_template.NON_MASKED_TOKEN_LABEL_ID
+        masked_lm_labels[
+            masked_lm_labels == feat_spec.pad_token_id
+        ] = mlm_template.NON_MASKED_TOKEN_LABEL_ID
         return DataRow(
             guid=self.guid,
             masked_input_ids=np.array(masked_input_set.input_ids),

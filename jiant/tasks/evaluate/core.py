@@ -34,7 +34,6 @@ class BaseEvaluation:
 
 
 class BaseAccumulator:
-
     def update(self, batch_logits, batch_loss, batch, batch_metadata):
         raise NotImplementedError()
 
