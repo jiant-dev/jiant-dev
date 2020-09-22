@@ -78,7 +78,7 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
 
     def grad_sim(self, grad_a, grad_b, reduce=True):
         if reduce:
-            if self.grad_sim_metric == "cos":
+            if self.grad_sim_metric == "gradcos":
                 norm_a = torch.sqrt(sum([torch.sum(p * p) for g in grad_a for p in g]))
                 norm_b = torch.sqrt(sum([torch.sum(p * p) for g in grad_b for p in g]))
                 a_dot_b = sum(

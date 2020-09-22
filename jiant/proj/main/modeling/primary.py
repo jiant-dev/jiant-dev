@@ -79,8 +79,9 @@ class JiantModel(nn.Module):
 class JiantModelWithAdapterFusion(JiantModel):
     def __init__(self, attention_fusion, freeze_transformer=False, freeze_adapters=False, **kwargs):
         super().__init__(**kwargs)
+        self.attention_fusion = attention_fusion
         for i, layer in enumerate(self.encoder.encoder.layer):
-            if attention_fusion:
+            if self.attention_fusion:
                 self.encoder.encoder.layer[i].output = jiantmodules.BertOutputWithAdapterFusion(
                     layer.output,
                     self.task_dict.keys(),
@@ -104,7 +105,7 @@ class JiantModelWithAdapterFusion(JiantModel):
             for layer in self.encoder.encoder.layer:
                 for p in layer.output.adapters.parameters():
                     p.requires_grad = True
-        if attention_fusion:
+        if self.attention_fusion:
             for layer in self.encoder.encoder.layer:
                 for p in (
                     list(layer.output.key_layer.parameters())
@@ -114,6 +115,19 @@ class JiantModelWithAdapterFusion(JiantModel):
                     p.requires_grad = True
 
         self.model_taus = tau.create_tau_dict(list(self.named_modules()))
+
+    def forward(self, batch: tasks.BatchMixin, task: tasks.Task, compute_loss: bool = False):
+        outputs = JiantModel.forward(batch, task, compute_loss)
+        if compute_loss and self.attention_fusion:
+            fusion_regularization = torch.sum(
+                [
+                    layer.output.value_layer.weight
+                    - torch.ones_like(layer.output.value_layer.weight.diag()).diag()
+                    for layer in self.encoder.encoder.layer
+                ]
+            )
+            outputs["loss"] = outputs["loss"] + fusion_regularization
+        return outputs
 
 
 class JiantModelWithSluice(JiantModel):

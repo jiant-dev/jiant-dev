@@ -352,6 +352,49 @@ class MultiDDSRunner(JiantRunner):
         )
 
 
+class GradSimRunner(JiantRunner):
+    def __init__(self, independent_param, smoothing, target_task, **kwarg):
+        super().__init__(**kwarg)
+        self.independent_param = independent_param
+        self.smoothing = smoothing
+        self.target_task = target_task
+        self.task_grads = {}
+
+    def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
+        self.jiant_model.train()
+        task_name, task = self.jiant_task_container.task_sampler.pop()
+        task_specific_config = self.jiant_task_container.task_specific_configs[task_name]
+
+        loss_val = 0
+        for i in range(task_specific_config.gradient_accumulation_steps):
+            batch, batch_metadata = train_dataloader_dict[task_name].pop()
+            batch = batch.to(self.device)
+            model_output = wrap_jiant_forward(
+                jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
+            )
+            loss = self.complex_backpropagate(
+                loss=model_output.loss,
+                gradient_accumulation_steps=task_specific_config.gradient_accumulation_steps,
+            )
+            loss_val += loss.item()
+        if task_name in self.task_grads:
+            pass
+
+        self.optimizer_scheduler.step()
+        self.optimizer_scheduler.optimizer.zero_grad()
+
+        train_state.step(task_name=task_name)
+        self.log_writer.write_entry(
+            "loss_train",
+            {
+                "task": task_name,
+                "task_step": train_state.task_steps[task_name],
+                "global_step": train_state.global_steps,
+                "loss_val": loss_val / task_specific_config.gradient_accumulation_steps,
+            },
+        )
+
+
 class DistillationRunner(JiantRunner):
     def __init__(self, t_total, teacher_jiant_model, **kwarg):
         super().__init__(**kwarg)

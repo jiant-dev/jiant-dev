@@ -36,7 +36,7 @@ class RunConfiguration(zconf.RunConfig):
     sampler_type = zconf.attr(type=str, default="proportional_sampler")
     prob_sampler_task_probs = zconf.attr(type=str, default="")
     temperature_sampler_temperature = zconf.attr(type=float, default=1.0)
-    temperature_sampler_examples_cap = zconf.attr(type=float, default=10000)
+    temperature_sampler_examples_cap = zconf.attr(type=float, default=1000000000000)
     time_func_sampler_task_probs = zconf.attr(type=str, default="")
     multidds_sampler_lr = zconf.attr(type=float, default=1e-4)
     multidds_sampler_update_steps = zconf.attr(type=int, default=1000)
@@ -96,7 +96,7 @@ class RunConfiguration(zconf.RunConfig):
     reptile_num_sampled_tasks = zconf.attr(default=8, type=int)
     multidds_samper_update_freq = zconf.attr(default=1000, type=int)
     multidds_target_task = zconf.attr(default="", type=str)
-    grad_sim_metric = zconf.attr(default="cos", type=str)
+    grad_sim_metric = zconf.attr(default="gradcos", type=str)
     grad_sim_nonlinear = zconf.attr(default="")
 
 
