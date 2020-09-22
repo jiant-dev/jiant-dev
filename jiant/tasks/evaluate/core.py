@@ -153,7 +153,9 @@ class MLMPremaskedAccumulator(BaseAccumulator):
     def update(self, batch_logits, batch_loss, batch, batch_metadata):
         batch_size = len(batch)
         # Select the tokens that we do MLM prediction on
-        masked_tokens_selector = batch.masked_lm_labels.cpu().numpy() != mlm_template.NON_MASKED_TOKEN_LABEL_ID
+        masked_tokens_selector = (
+            batch.masked_lm_labels.cpu().numpy() != mlm_template.NON_MASKED_TOKEN_LABEL_ID
+        )
         for i in range(batch_size):
             # noinspection PyUnresolvedReferences
             self.logits_list.append(batch_logits[i][masked_tokens_selector[i]])
