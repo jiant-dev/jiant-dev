@@ -224,9 +224,3 @@ class GlueMixin:
             indexes.append(int(guid.split("-")[1]))
             predictions.append(str(cls.LABELS[pred]).lower())
         return (indexes, predictions)
-
-
-class SuperGlueMixin:
-    @classmethod
-    def super_glue_format_preds(cls, pred_dict):
-        raise NotImplementedError()
