@@ -162,7 +162,7 @@ class RecordAccumulator(ConcatenateLogitsAccumulator):
     def get_gold_label_list(self):
         return self.gold_label_list
 
-      
+
 class MLMPremaskedAccumulator(BaseAccumulator):
     def __init__(self):
         self.loss_list = []
