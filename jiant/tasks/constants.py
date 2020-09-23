@@ -20,8 +20,18 @@ SUPERGLUE_TASKS = {
     "wsc",
     "boolq",
     "record",
+    "rte",
     "superglue_broadcoverage_diagnostics",
     "superglue_winogender_diagnostics",
+}
+
+OTHER_NLP_TASKS = {
+    "snli",
+    "commonsenseqa",
+    "hellaswag",
+    "cosmosqa",
+    "socialiqa",
+    "scitail",
 }
 
 XTREME_TASKS = {

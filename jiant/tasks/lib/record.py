@@ -8,6 +8,7 @@ from jiant.tasks.core import (
     BaseTokenizedExample,
     BaseDataRow,
     BatchMixin,
+    SuperGlueMixin,
     Task,
     TaskTypes,
 )
@@ -107,7 +108,7 @@ class Batch(BatchMixin):
     label_set: set
 
 
-class ReCoRDTask(Task):
+class ReCoRDTask(SuperGlueMixin, Task):
     Example = Example
     TokenizedExample = Example
     DataRow = DataRow
