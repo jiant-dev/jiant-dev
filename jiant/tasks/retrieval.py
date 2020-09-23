@@ -19,17 +19,19 @@ from jiant.tasks.lib.edge_probing.dpr import DprTask
 from jiant.tasks.lib.glue_diagnostics import GlueDiagnosticsTask
 from jiant.tasks.lib.hellaswag import HellaSwagTask
 from jiant.tasks.lib.mlm_simple import MLMSimpleTask
+from jiant.tasks.lib.mlm_premasked import MLMPremaskedTask
+from jiant.tasks.lib.mlm_pretokenized import MLMPretokenizedTask
 from jiant.tasks.lib.mlqa import MlqaTask
 from jiant.tasks.lib.mnli import MnliTask
 from jiant.tasks.lib.mnli_mismatched import MnliMismatchedTask
 from jiant.tasks.lib.mrpc import MrpcTask
 from jiant.tasks.lib.multirc import MultiRCTask
-from jiant.tasks.lib.qamr import QAMRTask
-from jiant.tasks.lib.qasrl import QASRLTask
 from jiant.tasks.lib.edge_probing.ner import NerTask
 from jiant.tasks.lib.panx import PanxTask
 from jiant.tasks.lib.pawsx import PawsXTask
 from jiant.tasks.lib.edge_probing.pos import PosTask
+from jiant.tasks.lib.qamr import QAMRTask
+from jiant.tasks.lib.qasrl import QASRLTask
 from jiant.tasks.lib.qqp import QqpTask
 from jiant.tasks.lib.qnli import QnliTask
 from jiant.tasks.lib.record import ReCoRDTask
@@ -81,17 +83,19 @@ TASK_DICT = {
     "glue_diagnostics": GlueDiagnosticsTask,
     "hellaswag": HellaSwagTask,
     "mlm_simple": MLMSimpleTask,
+    "mlm_premasked": MLMPremaskedTask,
+    "mlm_pretokenized": MLMPretokenizedTask,
     "mlqa": MlqaTask,
     "mnli": MnliTask,
     "mnli_mismatched": MnliMismatchedTask,
     "multirc": MultiRCTask,
     "mrpc": MrpcTask,
-    "qamr": QAMRTask,
-    "qasrl": QASRLTask,
     "ner": NerTask,
     "pawsx": PawsXTask,
     "panx": PanxTask,
     "pos": PosTask,
+    "qamr": QAMRTask,
+    "qasrl": QASRLTask,
     "qnli": QnliTask,
     "qqp": QqpTask,
     "record": ReCoRDTask,
