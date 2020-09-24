@@ -51,7 +51,8 @@ def copy_state_dict(state_dict, target_device=None):
             unique_key = tuple(v.shape), v.data_ptr()
             if unique_key not in unique_dict:
                 unique_dict[unique_key] = v.to(target_device)
-            new_state_dict[k] = unique_dict[unique_key]
+            # Create a view
+            new_state_dict[k] = unique_dict[unique_key][:]
 
         return new_state_dict
 
