@@ -131,7 +131,9 @@ class JiantModelWithAdapterFusion(JiantModel):
 
 
 class JiantModelWithSluice(JiantModel):
-    def __init__(self, task_a, task_b, sluice_num_subspaces, sluice_init_var, **kwargs):
+    def __init__(
+        self, task_a, task_b, sluice_num_subspaces, sluice_init_var, sluice_lr_multiplier, **kwargs
+    ):
         super().__init__(**kwargs)
         self.encoder.encoder = jiantmodules.SluiceEncoder(
             self.encoder.encoder,
@@ -140,6 +142,7 @@ class JiantModelWithSluice(JiantModel):
             task_b,
             sluice_num_subspaces,
             sluice_init_var,
+            sluice_lr_multiplier,
         )
 
         self.model_taus = tau.create_tau_dict(list(self.named_modules()))

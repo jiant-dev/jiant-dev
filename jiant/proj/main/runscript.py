@@ -86,6 +86,7 @@ class RunConfiguration(zconf.RunConfig):
     sluice_task_b = zconf.attr(default="", type=str)
     sluice_num_subspaces = zconf.attr(default=4, type=int)
     sluice_init_var = zconf.attr(default=0.02, type=float)
+    sluice_lr_multiplier = zconf.attr(default=1.0, type=float)
     transnorm_replacement = zconf.attr(action="store_true")
     transnorm_update_rate = zconf.attr(default=0.1, type=float)
     transnorm_skip = zconf.attr(action="store_true")

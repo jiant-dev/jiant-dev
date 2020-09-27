@@ -105,6 +105,7 @@ def setup_jiant_model(
             task_b=args.sluice_task_b,
             sluice_num_subspaces=args.sluice_num_subspaces,
             sluice_init_var=args.sluice_init_var,
+            sluice_lr_multiplier=args.sluice_lr_multiplier,
         )
 
 

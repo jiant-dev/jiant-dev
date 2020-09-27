@@ -168,7 +168,14 @@ class BertOutputWithAdapterFusion(BertOutputWithAdapter):
 
 class SluiceEncoder(tau.TauMixin, nn.Module):
     def __init__(
-        self, bert_encoder, bert_config, task_a, task_b, sluice_num_subspaces, sluice_init_var
+        self,
+        bert_encoder,
+        bert_config,
+        task_a,
+        task_b,
+        sluice_num_subspaces,
+        sluice_init_var,
+        sluice_lr_multiplier,
     ):
         super().__init__()
         self.layer_a = bert_encoder.layer
@@ -176,16 +183,25 @@ class SluiceEncoder(tau.TauMixin, nn.Module):
         self.task_sharing = nn.ModuleList(
             [
                 SluiceTaskSharingUnit(
-                    bert_config.hidden_size, sluice_num_subspaces, sluice_init_var
+                    bert_config.hidden_size,
+                    sluice_num_subspaces,
+                    sluice_init_var,
+                    sluice_lr_multiplier,
                 )
                 for i in range(bert_config.num_hidden_layers)
             ]
         )
         self.layer_sharing_a = SluiceLayerSharingUnit(
-            bert_config.num_hidden_layers, bert_config.hidden_size, sluice_num_subspaces
+            bert_config.num_hidden_layers,
+            bert_config.hidden_size,
+            sluice_num_subspaces,
+            sluice_lr_multiplier,
         )
         self.layer_sharing_b = SluiceLayerSharingUnit(
-            bert_config.num_hidden_layers, bert_config.hidden_size, sluice_num_subspaces
+            bert_config.num_hidden_layers,
+            bert_config.hidden_size,
+            sluice_num_subspaces,
+            sluice_lr_multiplier,
         )
         self.task_a = task_a
         self.task_b = task_b
@@ -249,11 +265,13 @@ class SluiceEncoder(tau.TauMixin, nn.Module):
 
 
 class SluiceTaskSharingUnit(nn.Module):
-    def __init__(self, hidden_size, sluice_num_subspaces, sluice_init_var):
+    def __init__(self, hidden_size, sluice_num_subspaces, sluice_init_var, sluice_lr_multiplier):
         super().__init__()
         self.subspace_size = hidden_size // sluice_num_subspaces
+        self.sluice_lr_multiplier = sluice_lr_multiplier
         self.exchange_matrix = nn.Parameter(torch.eye(sluice_num_subspaces * 2))
         self.exchange_matrix.data.normal_(0, sluice_init_var).fill_diagonal_(1)
+        self.exchange_matrix.data /= self.sluice_lr_multiplier
         self.register_buffer(
             "channel_mask",
             torch.eye(self.subspace_size).repeat(
@@ -262,12 +280,9 @@ class SluiceTaskSharingUnit(nn.Module):
         )
 
     def forward(self, input_a, input_b):
-        full_exchange_matrix = (
-            self.exchange_matrix.repeat_interleave(self.subspace_size, dim=0).repeat_interleave(
-                self.subspace_size, dim=1
-            )
-            * self.channel_mask
-        )
+        full_exchange_matrix = (self.exchange_matrix * self.sluice_lr_multiplier).repeat_interleave(
+            self.subspace_size, dim=0
+        ).repeat_interleave(self.subspace_size, dim=1) * self.channel_mask
         input_ab = torch.cat([input_a, input_b], dim=-1)
         output_ab = torch.matmul(input_ab, full_exchange_matrix)
         output_a, output_b = torch.chunk(output_ab, chunks=2, dim=-1)
@@ -275,13 +290,17 @@ class SluiceTaskSharingUnit(nn.Module):
 
 
 class SluiceLayerSharingUnit(nn.Module):
-    def __init__(self, num_layers, hidden_size, sluice_num_subspaces):
+    def __init__(self, num_layers, hidden_size, sluice_num_subspaces, sluice_lr_multiplier):
         super().__init__()
         self.subspace_size = hidden_size // sluice_num_subspaces
+        self.sluice_lr_multiplier = sluice_lr_multiplier
         self.mix_matrix = nn.Parameter(torch.zeros(num_layers + 1, sluice_num_subspaces))
         self.mix_matrix.data[-1] += 1
+        self.mix_matrix.data /= self.sluice_lr_multiplier
 
     def forward(self, all_layer_states):
-        full_mix_matrix = self.mix_matrix.repeat_interleave(self.subspace_size, dim=1)
+        full_mix_matrix = (self.mix_matrix * self.sluice_lr_multiplier).repeat_interleave(
+            self.subspace_size, dim=1
+        )
         output = torch.sum(torch.stack(all_layer_states, dim=-2) * full_mix_matrix, dim=-2)
         return output

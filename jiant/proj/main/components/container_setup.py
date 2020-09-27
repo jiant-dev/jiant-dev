@@ -300,9 +300,17 @@ def create_jiant_task_container_from_args(args) -> JiantTaskContainer:
     batch_size_set_dict = {
         "base": {
             "mnli": 16,
+            "mnli-sample": 16,
+            "mnli-remain": 16,
             "ccg": 16,
+            "ccg-sample": 16,
+            "ccg-remain": 16,
             "squadv1": 16,
+            "squadv1-sample": 16,
+            "squadv1-remain": 16,
             "cosmosqa": 8,
+            "cosmosqa-sample": 8,
+            "cosmosqa-remain": 8,
             "rte": 16,
             "cola": 16,
             "boolq": 16,
