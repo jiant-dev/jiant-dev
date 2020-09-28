@@ -96,6 +96,9 @@ def setup_runner(
         )
         jiant_model.to(quick_init_out.device)
 
+    if args.runner_type == "l2tww":
+        args.optimizer_type = "meta_sgd"
+
     optimizer_scheduler = model_setup.create_optimizer(
         model=jiant_model,
         learning_rate=args.learning_rate,

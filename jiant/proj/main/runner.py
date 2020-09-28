@@ -325,30 +325,41 @@ class L2TWWRunner(JiantRunner):
                 matching_loss += diff
             return matching_loss
 
+    def outer_objective(self, batch, task):
+        outer_model_output = wrap_jiant_forward(
+            jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
+        )
+        outer_loss = outer_model_output.loss
+
+
     def run_inner_loop(self,  meta_batches, task, inner_steps=1):
         self.teacher_jiant_model.eval()
-        with higher.innerloop_ctx(self.jiant_model, self.optimizer_scheduler.optimizer) as (fmodel, diffopt):
-            for batch in meta_batches:
-                for inner_idx in range(inner_steps):
-                    model_output = wrap_jiant_forward(
-                        jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
-                    )
 
+        #with higher.innerloop_ctx(self.jiant_model, self.optimizer_scheduler.optimizer) as (fmodel, diffopt):
+
+        for batch in meta_batches:
+            for inner_idx in range(inner_steps):
+                self.optimizer_scheduler.optimizer.zero_grad()
+                model_output = wrap_jiant_forward(
+                    jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
+                )
+
+                with torch.no_grad():
                     teacher_model_output = wrap_jiant_forward(
                         jiant_model=self.teacher_jiant_model, batch=batch, task=task, compute_loss=True,
                     )
 
-                    beta = 0.5
-                    matching_loss = self.what_where_net(teacher_model_output.other[0], model_output.other[0])
-                    total_inner_loss = model_output.loss + matching_loss * beta
-                    diffopt.step(total_inner_loss)
-                outer_model_output = wrap_jiant_forward(
-                        jiant_model=fmodel, batch=batch, task=task, compute_loss=True,
-                    )
-                outer_loss = outer_model_output.loss
-                outer_loss.backward()
-                self.meta_optimizer.step()
+                beta = 0.5
+                matching_loss = self.what_where_net(teacher_model_output.other[0], model_output.other[0])
+                total_inner_loss = model_output.loss + matching_loss * beta
+                total_inner_loss.backward()
+                self.optimizer_scheduler.optimizer.step(None)
 
+            self.meta_optimizer.zero_grad()
+            self.optimizer_scheduler.optimizer.zero_grad()
+            self.outer_objective(batch, task).backward()
+            self.optimizer_scheduler.optimizer.meta_backward()
+            self.meta_optimizer.step()
 
     def run_train_step(self, train_dataloader_dict: dict, train_state: TrainState):
 
@@ -374,7 +385,7 @@ class L2TWWRunner(JiantRunner):
             )
             loss_val += loss.item()
 
-        self.optimizer_scheduler.step()
+        self.optimizer_scheduler.step(None)
         self.optimizer_scheduler.optimizer.zero_grad()
 
         self.run_inner_loop(meta_batches, task)

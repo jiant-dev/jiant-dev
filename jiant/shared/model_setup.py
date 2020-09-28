@@ -2,6 +2,7 @@ import transformers
 import torch
 
 from jiant.ext.radam import RAdam
+from jiant.ext.meta_sgd import MetaSGD
 from jiant.shared.model_resolution import ModelArchitectures, resolve_tokenizer_class
 
 
@@ -129,24 +130,21 @@ def create_optimizer_from_params(
     if optimizer_type == "adam":
         if verbose:
             print("Using AdamW")
-        optimizer_grouped_parameters = [
-            {
-                "params": [p for n, p in used_named_parameters if not any(nd in n for nd in no_decay)],
-                "weight_decay": 0.01,
-            },
-            {
-                "params": [p for n, p in used_named_parameters if any(nd in n for nd in no_decay)],
-                "weight_decay": 0.0,
-            },
-        ]
-        optimizer = torch.optim.Adam(optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon)
-        #optimizer = transformers.AdamW(
-        #    optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon
-        #)
+        optimizer = transformers.AdamW(
+            optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon
+        )
     elif optimizer_type == "radam":
         if verbose:
             print("Using RAdam")
         optimizer = RAdam(optimizer_grouped_parameters, lr=learning_rate, eps=optimizer_epsilon)
+    elif optimizer_type == "meta_sgd":
+        if verbose:
+            print("Using RAdam")
+        optimizer = MetaSGD(optimizer_grouped_parameters,
+                                   named_parameters,
+                                   lr=learning_rate,
+                                   momentum=0.9,
+                                   weight_decay=0.01, rollback=True)
     else:
         raise KeyError(optimizer_type)
 
