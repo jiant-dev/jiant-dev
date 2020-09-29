@@ -27,7 +27,7 @@ class MetaSGD(optim.SGD):
     def __init__(self, params, modules, lr=0.1, momentum=0, weight_decay=0, rollback=False, cpu=False):
         super(MetaSGD, self).__init__(params, lr, momentum=momentum, weight_decay=weight_decay)
         self.prev_states = []
-        self.modules = modules + [self]
+        self.modules = [self] #modules + [self]
         self.rollback = rollback
         self.cpu = cpu
 

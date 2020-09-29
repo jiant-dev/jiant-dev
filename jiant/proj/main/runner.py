@@ -250,6 +250,7 @@ class L2TWWRunner(JiantRunner):
         what_net = self.WhatNetwork(hidden_size, teacher_num_layers, student_num_layers)
         where_network = self.WhereNetwork(hidden_size, teacher_num_layers, student_num_layers)
         self.what_where_net = self.MetaWhatAndWhere(what_net, where_network) #hidden_size, teacher_num_layers, student_num_layers)
+        self.what_where_net.to(self.device)
         self.meta_optimizer = torch.optim.Adam(self.what_where_net.parameters(), lr=meta_optim_params['lr'])
 
     class WhatNetwork(nn.Module):
@@ -258,7 +259,6 @@ class L2TWWRunner(JiantRunner):
             self.hidden_size = hidden_size
             self.teacher_num_layers = teacher_num_layers
             self.student_num_layers = student_num_layers
-            print("initiazliging what:")
             # WeightNet (l, hidden* num_target_layers) for all l in source
             # outputs = softmax across hidden for all pairs
             self.what_network_linear = []
@@ -269,12 +269,12 @@ class L2TWWRunner(JiantRunner):
         def forward(self, teacher_states):
             # TODO: compute L_wfm
             outputs = []
-            for i in range(len(teacher_states)):
-                out = self.what_network_linear[i](teacher_states[i])
-                out = out.reshape(self.student_num_layers, self.hidden_size)
-                out = F.softmax(out, 1)
-                outputs.extend(out)
-
+            for i in range(1,len(teacher_states)):
+                out = self.what_network_linear[i-1](teacher_states[i])
+                bsz, seq_len = out.size(0), out.size(1)
+                out = out.reshape(bsz, seq_len, self.student_num_layers, self.hidden_size)
+                out = F.softmax(out, 3) # softmax over hidden
+                outputs.append(out)
             return outputs
 
     class WhereNetwork(nn.Module):
@@ -295,8 +295,8 @@ class L2TWWRunner(JiantRunner):
         def forward(self, teacher_states):
             # TODO: compute L_wfm
             outputs = []
-            for i in range(self.teacher_num_layers):
-                out = F.relu(self.where_network_linear[i](teacher_states[i])).squeeze()
+            for i in range(1,len(teacher_states)):
+                out = F.relu(self.where_network_linear[i-1](teacher_states[i])).squeeze()
                 outputs.extend(out)
             return outputs
 
@@ -312,16 +312,17 @@ class L2TWWRunner(JiantRunner):
             # TODO: compute L_wfm
             weights = self.what_network(teacher_states)
             loss_weights = self.where_network(teacher_states)
-            matching_loss = self.what_where_net(teacher_states, student_states, weights,
-                                                loss_weights)
-
+            #matching_loss = self.what_where_net(teacher_states, student_states, weights,
+            #                                    loss_weights)
+            weights = torch.stack(weights)
+            weights = torch.transpose(weights, 0,1)
             matching_loss = 0.0
-            for m in range(len(teacher_states)):
-                for n in range(len(student_states)):
+            for m in range(1, len(teacher_states)):
+                for n in range(1, len(student_states)):
                     # diff = teacher_states[m] - self.gammas[n](student_states[n])
                     diff = (teacher_states[m] - student_states[n]).pow(2)  # BSZ * Hidden * SEQ_LEN
-                    diff = diff.mean(3).mean(2)
-                    diff = (diff.mul(weights[m][n]).sum(1) * loss_weights[m][n]).mean(0)
+                    diff = diff.mean(2).mean(1)
+                    diff = (torch.mul(diff, weights[:,m-1,n-1].permute( 1,2,0)).sum(2).sum(1) * loss_weights[m-1][n-1]).mean() 
                 matching_loss += diff
             return matching_loss
 
@@ -330,6 +331,8 @@ class L2TWWRunner(JiantRunner):
             jiant_model=self.jiant_model, batch=batch, task=task, compute_loss=True,
         )
         outer_loss = outer_model_output.loss
+
+        return outer_loss
 
 
     def run_inner_loop(self,  meta_batches, task, inner_steps=1):
@@ -385,7 +388,7 @@ class L2TWWRunner(JiantRunner):
             )
             loss_val += loss.item()
 
-        self.optimizer_scheduler.step(None)
+        self.optimizer_scheduler.optimizer.step(None)
         self.optimizer_scheduler.optimizer.zero_grad()
 
         self.run_inner_loop(meta_batches, task)

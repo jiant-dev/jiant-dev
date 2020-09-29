@@ -128,9 +128,14 @@ def setup_runner(
         import copy
         teacher_jiant_model = copy.deepcopy(jiant_model)
 
-        hidden_size = vars(jiant_model.encoder)["config"].hidden_size
-        student_num_layers = vars(jiant_model.encoder)["config"].num_hidden_layers
-        teacher_num_layers = vars(teacher_jiant_model.encoder)["config"].num_hidden_layers
+        try:
+            hidden_size = vars(jiant_model.encoder)["config"].hidden_size
+            student_num_layers = vars(jiant_model.encoder)["config"].num_hidden_layers
+            teacher_num_layers = vars(teacher_jiant_model.encoder)["config"].num_hidden_layers
+        except:
+            hidden_size = vars(jiant_model.module.encoder)["config"].hidden_size
+            student_num_layers = vars(jiant_model.module.encoder)["config"].num_hidden_layers
+            teacher_num_layers = vars(teacher_jiant_model.module.encoder)["config"].num_hidden_layers
 
         runner = jiant_runner.L2TWWRunner(
             jiant_task_container=jiant_task_container,
