@@ -946,6 +946,7 @@ def get_evaluation_scheme_for_task(task) -> BaseEvaluationScheme:
             tasks.SWAGTask,
             tasks.HellaSwagTask,
             tasks.SocialIQATask,
+            tasks.MCTestTask,
         ),
     ):
         return MultipleChoiceAccuracyEvaluationScheme()
