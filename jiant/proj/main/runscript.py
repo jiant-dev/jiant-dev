@@ -27,6 +27,7 @@ class RunConfiguration(zconf.RunConfig):
     model_config_path = zconf.attr(default=None, type=str)
     model_tokenizer_path = zconf.attr(default=None, type=str)
     model_load_mode = zconf.attr(default="from_transformers", type=str)
+    teacher_model_path = zconf.attr(default="", type=str)
 
     # === Running Setup === #
     do_train = zconf.attr(action="store_true")
@@ -98,6 +99,15 @@ def setup_runner(
 
     if args.runner_type == "l2tww":
         args.optimizer_type = "meta_sgd"
+        import copy
+        teacher_jiant_model = copy.deepcopy(jiant_model)
+        
+        if args.teacher_model_path == "":
+            print("Please specify teacher model") 
+        jiant_model_setup.delegate_load_from_path(
+            jiant_model=teacher_jiant_model, weights_path=args.teacher_model_path, load_mode=args.model_load_mode
+        )
+        jiant_model.to(quick_init_out.device)
 
     optimizer_scheduler = model_setup.create_optimizer(
         model=jiant_model,
@@ -125,9 +135,6 @@ def setup_runner(
     )
 
     if args.runner_type == "l2tww":
-        import copy
-        teacher_jiant_model = copy.deepcopy(jiant_model)
-
         try:
             hidden_size = vars(jiant_model.encoder)["config"].hidden_size
             student_num_layers = vars(jiant_model.encoder)["config"].num_hidden_layers
