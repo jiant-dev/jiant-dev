@@ -98,13 +98,17 @@ class MCTACOTask(Task):
     def _create_examples(cls, lines, set_type):
         # noinspection DuplicatedCode
         examples = []
+        last_question = ""
+        question_count = -1
         for (i, line) in enumerate(lines):
             sentence, question, answer, label, category = line.split("\t")
-
+            if last_question != question:
+                question_count += 1
+                last_question = question
             examples.append(
                 Example(
                     # NOTE: get_glue_preds() is dependent on this guid format.
-                    guid="%s-%s" % (set_type, i),
+                    guid="%s-q%s-%s" % (set_type, question_count, i),
                     sentence_question=sentence + question,
                     answer=answer,
                     label=label if set_type != "test" else cls.LABELS[-1],
