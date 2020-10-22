@@ -1,9 +1,0 @@
-{
-  "task": "sst",
-  "paths": {
-    "train": "data/sst/train.jsonl",
-    "val": "data/sst/val.jsonl",
-    "test": "data/sst/test.jsonl"
-  },
-  "name": "sst"
-}

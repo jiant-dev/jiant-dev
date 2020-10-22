@@ -1,9 +1,0 @@
-{
-  "task": "mnli",
-  "paths": {
-    "train": "data/mnli/mnli_train.jsonl",
-    "val": "data/mnli/mnli_val.jsonl",
-    "test": "data/mnli/mnli_test.jsonl"
-  },
-  "name": "mnli"
-}
