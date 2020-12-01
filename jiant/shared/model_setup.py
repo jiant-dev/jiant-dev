@@ -76,30 +76,49 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
             shared_param_grad = deepcopy(shared_param_grad)
         return shared_param_grad
 
+    def weight_grad(self, grad_sim):
+        for g_param, g_sim in zip(self.optimizer.param_groups, grad_sim):
+            for p_param, p_sim in zip(g_param, g_sim):
+                p_param.grad *= g_sim
+
     def grad_sim(self, grad_a, grad_b, reduce=True):
+        assert self.grad_sim_metric in ["cos", "fisher_cos", "dot_product"]
+        if "fisher" in self.grad_sim_metric.split("_"):
+            grad_a = [[p ** 2 for p in g] for g in grad_a]
+            grad_b = [[p ** 2 for p in g] for g in grad_b]
+
+        grad_sim = [
+            [torch.sum(p_a * p_b) for p_a, p_b in zip(g_a, g_b)] for g_a, g_b in zip(grad_a, grad_b)
+        ]
         if reduce:
-            if self.grad_sim_metric == "gradcos":
-                norm_a = torch.sqrt(sum([torch.sum(p * p) for g in grad_a for p in g]))
-                norm_b = torch.sqrt(sum([torch.sum(p * p) for g in grad_b for p in g]))
-                a_dot_b = sum(
-                    [
-                        torch.sum(p_a * p_b)
-                        for g_a, g_b in zip(grad_a, grad_b)
-                        for p_a, p_b in zip(g_a, g_b)
-                    ]
-                )
-                grad_sim = a_dot_b / norm_a / norm_b
-            elif self.grad_sim_metric == "fisher":
-                raise NotImplementedError
-            else:
-                raise KeyError(self.grad_sim_metric)
-        else:
-            raise NotImplementedError
+            grad_sim = [[sum([sum(g) for g in grad_sim])]]
+
+        if "cos" in self.grad_sim_metric.split("_"):
+            sqr_a = [[p ** 2 for p in g] for g in grad_a]
+            sqr_b = [[p ** 2 for p in g] for g in grad_b]
+            if reduce:
+                sqr_a = [[sum([sum(g) for g in sqr_a])]]
+                sqr_b = [[sum([sum(g) for g in sqr_b])]]
+            grad_sim = [
+                [sim / torch.sqrt(a) / torch.sqrt(b) for sim, a, b in zip(g_sim, g_a, g_b)]
+                for g_sim, g_a, g_b in zip(grad_sim, sqr_a, sqr_b)
+            ]
 
         if self.grad_sim_nonlinear == "":
+            pass
+        elif self.grad_sim_nonlinear.startswith("stepfn"):
+            threshold = float(self.grad_sim.split("_")[1])
+            grad_sim = [[(p > threshold).float() for p in g] for g in grad_sim]
+
+        if reduce:
+            return grad_sim[0][0]
+        else:
             return grad_sim
-        elif self.grad_sim_nonlinear == "step":
-            return grad_sim > 0
+
+
+class OptimizerSchedulerForReptile(OptimizerScheduler):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 
 def create_optimizer(
@@ -229,7 +248,7 @@ def create_optimizer_from_params(
             grad_sim_nonlinear=args.grad_sim_nonlinear,
         )
     elif args.runner_type == "reptile":
-        optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
+        optimizer_scheduler = OptimizerSchedulerForReptile(optimizer=optimizer, scheduler=scheduler)
     else:
         raise KeyError(args.runner_type)
     return optimizer_scheduler

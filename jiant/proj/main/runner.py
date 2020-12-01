@@ -377,8 +377,30 @@ class GradSimRunner(JiantRunner):
                 gradient_accumulation_steps=task_specific_config.gradient_accumulation_steps,
             )
             loss_val += loss.item()
-        if task_name in self.task_grads:
-            pass
+        task_grad = self.optimizer_scheduler.get_shared_grad(copy=False)
+
+        with torch.no_grad():
+            if task_name in self.task_grads:
+                self.task_grads[task_name] = [
+                    [
+                        p_a * self.smoothing + p_b * (1 - self.smoothing)
+                        for p_a, p_b in zip(g_a, g_b)
+                    ]
+                    for g_a, g_b in zip(self.task_grads[task_name], task_grad)
+                ]
+            else:
+                self.task_grads[task_name] = task_grad
+            if task_name != self.target_task:
+                if self.independent_param:
+                    grad_sim = self.optimizer_scheduler.grad_sim(
+                        self.task_grads[self.target_task], self.task_grads[task_name], reduce=False
+                    )
+                else:
+                    grad_sim = self.optimizer_scheduler.grad_sim(
+                        self.task_grads[self.target_task], self.task_grads[task_name], reduce=True
+                    )
+                    grad_sim = [[grad_sim for p in g] for g in task_grad]
+                self.optimizer_scheduler.weight_grad(grad_sim)
 
         self.optimizer_scheduler.step()
         self.optimizer_scheduler.optimizer.zero_grad()
