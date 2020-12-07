@@ -95,8 +95,17 @@ class RunConfiguration(zconf.RunConfig):
     runner_type = zconf.attr(default="default", type=str)
     reptile_inner_steps = zconf.attr(default=5, type=int)
     reptile_num_sampled_tasks = zconf.attr(default=8, type=int)
-    multidds_samper_update_freq = zconf.attr(default=1000, type=int)
     target_task = zconf.attr(default="", type=str)
+    
+    multidds_skip_learner = zconf.attr(action="store_true")
+    multidds_samper_update_freq = zconf.attr(default=1000, type=int)
+    multidds_force_skip_tasks = zconf.attr(default="", type=str)
+    multidds_fixed_sampling_task_prob = zconf.attr(default="", type=str)
+    multidds_queue_size = zconf.attr(type=int, default=500)
+    multidds_temperature = zconf.attr(type=float, default=0.1)
+    multidds_accumulate_target_grad = zconf.attr(action="store_true")
+
+
     grad_sim_metric = zconf.attr(default="fisher_cos", type=str)
     grad_sim_nonlinear = zconf.attr(default="", type=str)
     grad_sim_smoothing = zconf.attr(default=0, type=float)
@@ -197,6 +206,8 @@ def setup_runner(
             log_writer=quick_init_out.log_writer,
             sampler_update_freq=args.multidds_samper_update_freq,
             target_task=args.target_task,
+            accumulate_target_grad=args.multidds_accumulate_target_grad,
+            output_dir=args.output_dir
         )
     elif args.runner_type == "grad_sim":
         runner = jiant_runner.GradSimRunner(
