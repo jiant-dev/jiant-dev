@@ -46,9 +46,10 @@ class OptimizerScheduler:
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-    def step(self):
+    def step(self, skip_scheduler=False):
         self.optimizer.step()
-        self.scheduler.step()
+        if not skip_scheduler:
+            self.scheduler.step()
 
     def state_dict(self):
         return {
@@ -67,11 +68,10 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
         self.grad_sim_metric = grad_sim_metric
         self.grad_sim_nonlinear = grad_sim_nonlinear
 
-    def get_shared_grad(self, copy=False):
-        shared_param_grad = [
-            [p.grad for p in g["params"]] if g["shared"] else []
-            for g in self.optimizer.param_groups
-        ]
+    def get_shared_grad(self, copy=False, get_base=True):
+        shared_param_grad = [[p.grad for p, is_base in zip(g["params"], g["is_base_encoder"])
+                              if get_base == is_base]  if g["shared"] else []
+                             for g in self.optimizer.param_groups]
         if copy:
             shared_param_grad = deepcopy(shared_param_grad)
         return shared_param_grad
@@ -181,37 +181,55 @@ def create_optimizer_from_params(
             "params": [
                 p
                 for n, p in used_named_parameters
-                if n.startswith("encoder.e") and (not any(nd in n for nd in no_decay))
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                and (not any(nd in n for nd in no_decay))
             ],
             "weight_decay": 0.01,
             "shared": True,
+            "is_base_encoder": [
+                n.startswith("encoder.e")
+                for n, p in used_named_parameters
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                and (not any(nd in n for nd in no_decay))
+            ]
         },
         {
             "params": [
                 p
                 for n, p in used_named_parameters
-                if (not n.startswith("encoder.e")) and (not any(nd in n for nd in no_decay))
+                if (not n.startswith("encoder.e") and not n.startswith("dds_model.encoder.e")) \
+                and (not any(nd in n for nd in no_decay))
             ],
             "weight_decay": 0.005,
             "shared": False,
+            "is_base_encoder": None
         },
         {
             "params": [
                 p
                 for n, p in used_named_parameters
-                if n.startswith("encoder.e") and any(nd in n for nd in no_decay)
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                and any(nd in n for nd in no_decay)
             ],
             "weight_decay": 0.0,
             "shared": True,
+            "is_base_encoder": [
+                n.startswith("encoder.e")
+                for n, p in used_named_parameters
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                and any(nd in n for nd in no_decay)
+            ]
         },
         {
             "params": [
                 p
                 for n, p in used_named_parameters
-                if (not n.startswith("encoder.e")) and any(nd in n for nd in no_decay)
+                if (not n.startswith("encoder.e") and not n.startswith("dds_model.encoder.e")) \
+                and any(nd in n for nd in no_decay)
             ],
             "weight_decay": 0.0,
             "shared": False,
+            "is_base_encoder": None
         },
     ]
 
@@ -240,7 +258,7 @@ def create_optimizer_from_params(
 
     if args.runner_type in ["default", "distill"]:
         optimizer_scheduler = OptimizerScheduler(optimizer=optimizer, scheduler=scheduler)
-    elif args.runner_type in ["multidds", "grad_sim"]:
+    elif args.runner_type in ["multidds", "dds", "grad_sim"]:
         optimizer_scheduler = OptimizerSchedulerWithGradOps(
             optimizer=optimizer,
             scheduler=scheduler,

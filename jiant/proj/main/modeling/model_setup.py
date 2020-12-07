@@ -81,6 +81,15 @@ def setup_jiant_model(
             tokenizer=tokenizer,
             args=args,
         )
+    elif args.architecture == "with_dds":
+        return primary.JiantModelWithDDSModel(
+            task_dict=task_dict,
+            encoder=encoder,
+            taskmodels_dict=taskmodels_dict,
+            task_to_taskmodel_map=taskmodels_config.task_to_taskmodel_map,
+            tokenizer=tokenizer,
+            args=args,
+        )
     elif args.architecture == "adapterfusion":
         return primary.JiantModelWithAdapterFusion(
             task_dict=task_dict,
