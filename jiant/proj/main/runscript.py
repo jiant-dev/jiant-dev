@@ -96,9 +96,11 @@ class RunConfiguration(zconf.RunConfig):
     reptile_inner_steps = zconf.attr(default=5, type=int)
     reptile_num_sampled_tasks = zconf.attr(default=8, type=int)
     multidds_samper_update_freq = zconf.attr(default=1000, type=int)
-    multidds_target_task = zconf.attr(default="", type=str)
-    grad_sim_metric = zconf.attr(default="gradcos", type=str)
-    grad_sim_nonlinear = zconf.attr(default="")
+    target_task = zconf.attr(default="", type=str)
+    grad_sim_metric = zconf.attr(default="fisher_cos", type=str)
+    grad_sim_nonlinear = zconf.attr(default="", type=str)
+    grad_sim_smoothing = zconf.attr(default=0, type=float)
+    grad_sim_indep = zconf.attr(action="store_true")
 
 
 @zconf.run_config
@@ -194,10 +196,20 @@ def setup_runner(
             rparams=rparams,
             log_writer=quick_init_out.log_writer,
             sampler_update_freq=args.multidds_samper_update_freq,
-            target_task=args.multidds_target_task,
+            target_task=args.target_task,
         )
     elif args.runner_type == "grad_sim":
-        raise NotImplementedError
+        runner = jiant_runner.GradSimRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+            independent_param=args.grad_sim_indep,
+            smoothing=args.grad_sim_smoothing,
+            target_task=args.target_task,
+        )
     elif args.runner_type == "distill":
         raise NotImplementedError
     elif args.runner_type == "l2tww":

@@ -66,6 +66,15 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
         super().__init__(**kwargs)
         self.grad_sim_metric = grad_sim_metric
         self.grad_sim_nonlinear = grad_sim_nonlinear
+        if grad_sim_nonlinear == "":
+            self.nonlinear_fn = lambda x: x
+        elif grad_sim_nonlinear.startswith("stepfn"):
+            self.threshold = float(self.grad_sim_nonlinear.split("_")[1])
+            self.nonlinear_fn = lambda x: (x > self.threshold).float()
+        elif grad_sim_nonlinear == "relu":
+            self.nonlinear_fn = torch.relu
+        elif grad_sim_nonlinear == "sqr":
+            self.nonlinear_fn = lambda x: (x * x)
 
     def get_shared_grad(self, copy=False):
         shared_param_grad = [
@@ -78,8 +87,8 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
 
     def weight_grad(self, grad_sim):
         for g_param, g_sim in zip(self.optimizer.param_groups, grad_sim):
-            for p_param, p_sim in zip(g_param, g_sim):
-                p_param.grad *= g_sim
+            for p_param, p_sim in zip(g_param["params"], g_sim):
+                p_param.grad *= p_sim
 
     def grad_sim(self, grad_a, grad_b, reduce=True):
         assert self.grad_sim_metric in ["cos", "fisher_cos", "dot_product"]
@@ -94,8 +103,8 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
             grad_sim = [[sum([sum(g) for g in grad_sim])]]
 
         if "cos" in self.grad_sim_metric.split("_"):
-            sqr_a = [[p ** 2 for p in g] for g in grad_a]
-            sqr_b = [[p ** 2 for p in g] for g in grad_b]
+            sqr_a = [[(p ** 2).sum() for p in g] for g in grad_a]
+            sqr_b = [[(p ** 2).sum() for p in g] for g in grad_b]
             if reduce:
                 sqr_a = [[sum([sum(g) for g in sqr_a])]]
                 sqr_b = [[sum([sum(g) for g in sqr_b])]]
@@ -104,11 +113,7 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
                 for g_sim, g_a, g_b in zip(grad_sim, sqr_a, sqr_b)
             ]
 
-        if self.grad_sim_nonlinear == "":
-            pass
-        elif self.grad_sim_nonlinear.startswith("stepfn"):
-            threshold = float(self.grad_sim.split("_")[1])
-            grad_sim = [[(p > threshold).float() for p in g] for g in grad_sim]
+        grad_sim = [[self.nonlinear_fn(p) for p in g] for g in grad_sim]
 
         if reduce:
             return grad_sim[0][0]
