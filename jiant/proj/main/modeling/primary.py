@@ -5,7 +5,8 @@ import torch.nn as nn
 
 import jiant.proj.main.modeling.taskmodels as taskmodels
 import jiant.tasks as tasks
-from jiant.proj.main.components.outputs import construct_output_from_dict
+import jiant.proj.main.modeling.heads as heads
+from jiant.proj.main.components.outputs import construct_output_from_dict, LogitsOutput, LogitsAndLossOutput
 import jiant.shared.task_aware_unit as tau
 import jiant.proj.main.modeling.modules as jiantmodules
 
@@ -32,7 +33,11 @@ class JiantModel(nn.Module):
             self.saved_weights = copy.deepcopy(list(self.encoder.encoder.parameters()))
         self.model_taus = tau.create_tau_dict(list(self.named_modules()))
 
-    def forward(self, batch: tasks.BatchMixin, task: tasks.Task, compute_loss: bool = False):
+    def forward(self,
+                batch: tasks.BatchMixin,
+                task: tasks.Task,
+                compute_loss: bool = False,
+                unreduced_loss: bool = False):
         """Calls to this forward method are delegated to the forward of the appropriate taskmodel.
 
         When JiantModel forward is called, the task name from the task argument is used as a key
@@ -42,6 +47,7 @@ class JiantModel(nn.Module):
             batch (tasks.BatchMixin): model input.
             task (tasks.Task): task to which to delegate the forward call.
             compute_loss (bool): whether to calculate and return the loss.
+            unreduced_loss (bool): whether to return instance-wise losses or reduce them.
 
         Returns:
             Dict containing the model output, optionally including the loss.
@@ -59,7 +65,8 @@ class JiantModel(nn.Module):
         taskmodel = self.taskmodels_dict[taskmodel_key]
         tau.set_tau_task(self.model_taus, task_name)
         outputs = taskmodel(
-            batch=batch, task=task, tokenizer=self.tokenizer, compute_loss=compute_loss,
+            batch=batch, task=task, tokenizer=self.tokenizer,
+            compute_loss=compute_loss, unreduced_loss=unreduced_loss
         ).to_dict()
         if compute_loss and self.compute_weight_regularization() is not None:
             outputs["loss"] = outputs["loss"] + self.compute_weight_regularization()
@@ -74,6 +81,40 @@ class JiantModel(nn.Module):
             return self.weight_regularization_coef * sum(diff_norm)
         else:
             return None
+
+
+class JiantModelWithDDSModel(JiantModel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        encoder = copy.deepcopy(kwargs["encoder"])
+        regression_head = heads.RegressionHead(
+            hidden_size=encoder.config.hidden_size,
+            hidden_dropout_prob=encoder.config.hidden_dropout_prob,
+        )
+        # # NOTE: Do not change attribute dds_model to something else.
+        # # If you do, make sure to change it in runscript.py as well (after delegate_load_from_path)
+        self.dds_model = taskmodels.RegressionModel(
+            encoder=encoder,
+            regression_head=regression_head
+        )
+
+    def dds_weights_forward(
+            self,
+            batch: tasks.BatchMixin,
+            rewards: torch.Tensor = None,
+            compute_loss: bool = False
+        ):
+        dds_weight_logits = self.dds_model(
+            batch=batch, task=None, tokenizer=None, compute_loss=False
+        ).logits.view(-1)
+        dds_weights = dds_weight_logits.softmax(dim=-1)
+
+        if not compute_loss:
+            return LogitsOutput(logits=dds_weights)
+
+        dds_loss = -(rewards*dds_weights).sum()
+
+        return LogitsAndLossOutput(logits=dds_weights, loss=dds_loss)
 
 
 class JiantModelWithAdapterFusion(JiantModel):

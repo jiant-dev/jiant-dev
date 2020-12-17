@@ -105,11 +105,14 @@ class RunConfiguration(zconf.RunConfig):
     multidds_temperature = zconf.attr(type=float, default=0.1)
     multidds_accumulate_target_grad = zconf.attr(action="store_true")
 
-
     grad_sim_metric = zconf.attr(default="fisher_cos", type=str)
     grad_sim_nonlinear = zconf.attr(default="", type=str)
     grad_sim_smoothing = zconf.attr(default=0, type=float)
     grad_sim_indep = zconf.attr(action="store_true")
+
+    dds_target_optimization_choice = zconf.attr(default="", type=str)
+    dds_square_rewards = zconf.attr(action="store_true")
+    dds_aprx_eps = zconf.attr(default=1e-4, type=float)
 
 
 @zconf.run_config
@@ -149,6 +152,10 @@ def setup_runner(
         jiant_model_setup.delegate_load_from_path(
             jiant_model=jiant_model, weights_path=args.model_path, load_mode=args.model_load_mode
         )
+
+        if hasattr(jiant_model, "dds_model"):
+            jiant_model.dds_model.encoder.load_state_dict(jiant_model.encoder.state_dict())
+
         jiant_model.to(quick_init_out.device)
 
     optimizer_scheduler = model_setup.create_optimizer(
@@ -208,6 +215,20 @@ def setup_runner(
             target_task=args.target_task,
             accumulate_target_grad=args.multidds_accumulate_target_grad,
             output_dir=args.output_dir
+        )
+    elif args.runner_type == "dds":
+        runner = jiant_runner.DDSRunner(
+            jiant_task_container=jiant_task_container,
+            jiant_model=jiant_model,
+            optimizer_scheduler=optimizer_scheduler,
+            device=quick_init_out.device,
+            rparams=rparams,
+            log_writer=quick_init_out.log_writer,
+            target_task=args.target_task,
+            output_dir=args.output_dir,
+            target_optimization_choice=args.dds_target_optimization_choice,
+            square_rewards=args.dds_square_rewards,
+            aprx_eps=args.dds_aprx_eps
         )
     elif args.runner_type == "grad_sim":
         runner = jiant_runner.GradSimRunner(
