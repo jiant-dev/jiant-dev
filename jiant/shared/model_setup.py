@@ -78,9 +78,12 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
             self.nonlinear_fn = lambda x: (x * x)
 
     def get_shared_grad(self, copy=False, get_base=True):
-        shared_param_grad = [[p.grad for p, is_base in zip(g["params"], g["is_base_encoder"])
-                              if get_base == is_base]  if g["shared"] else []
-                             for g in self.optimizer.param_groups]
+        shared_param_grad = [
+            [p.grad for p, is_base in zip(g["params"], g["is_base_encoder"]) if get_base == is_base]
+            if g["shared"]
+            else []
+            for g in self.optimizer.param_groups
+        ]
         if copy:
             shared_param_grad = deepcopy(shared_param_grad)
         return shared_param_grad
@@ -109,7 +112,10 @@ class OptimizerSchedulerWithGradOps(OptimizerScheduler):
                 sqr_a = [[sum([sum(g) for g in sqr_a])]]
                 sqr_b = [[sum([sum(g) for g in sqr_b])]]
             grad_sim = [
-                [sim / torch.sqrt(a) / torch.sqrt(b) for sim, a, b in zip(g_sim, g_a, g_b)]
+                [
+                    sim / (torch.sqrt(a) * torch.sqrt(b) + 1e-10)
+                    for sim, a, b in zip(g_sim, g_a, g_b)
+                ]
                 for g_sim, g_a, g_b in zip(grad_sim, sqr_a, sqr_b)
             ]
 
@@ -186,7 +192,7 @@ def create_optimizer_from_params(
             "params": [
                 p
                 for n, p in used_named_parameters
-                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e"))
                 and (not any(nd in n for nd in no_decay))
             ],
             "weight_decay": 0.01,
@@ -194,26 +200,26 @@ def create_optimizer_from_params(
             "is_base_encoder": [
                 n.startswith("encoder.e")
                 for n, p in used_named_parameters
-                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e"))
                 and (not any(nd in n for nd in no_decay))
-            ]
+            ],
         },
         {
             "params": [
                 p
                 for n, p in used_named_parameters
-                if (not n.startswith("encoder.e") and not n.startswith("dds_model.encoder.e")) \
+                if (not n.startswith("encoder.e") and not n.startswith("dds_model.encoder.e"))
                 and (not any(nd in n for nd in no_decay))
             ],
             "weight_decay": 0.005,
             "shared": False,
-            "is_base_encoder": None
+            "is_base_encoder": None,
         },
         {
             "params": [
                 p
                 for n, p in used_named_parameters
-                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e"))
                 and any(nd in n for nd in no_decay)
             ],
             "weight_decay": 0.0,
@@ -221,20 +227,20 @@ def create_optimizer_from_params(
             "is_base_encoder": [
                 n.startswith("encoder.e")
                 for n, p in used_named_parameters
-                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e")) \
+                if (n.startswith("encoder.e") or n.startswith("dds_model.encoder.e"))
                 and any(nd in n for nd in no_decay)
-            ]
+            ],
         },
         {
             "params": [
                 p
                 for n, p in used_named_parameters
-                if (not n.startswith("encoder.e") and not n.startswith("dds_model.encoder.e")) \
+                if (not n.startswith("encoder.e") and not n.startswith("dds_model.encoder.e"))
                 and any(nd in n for nd in no_decay)
             ],
             "weight_decay": 0.0,
             "shared": False,
-            "is_base_encoder": None
+            "is_base_encoder": None,
         },
     ]
 
